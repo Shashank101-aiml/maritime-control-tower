@@ -40,8 +40,8 @@ A FastAPI backend for maritime event logging, route planning, risk management, a
 1. Clone the repository:
 
 ```bash
-git clone <https://github.com/Shashank101-aiml/Agentic-Logistics-Control-Tower.git>
-cd maritime-agentic-control-system/backend
+git clone <https://github.com/Shashank101-aiml/maritime-control-tower.git>
+cd maritime-control-tower/backend
 ```
 
 2. Create and activate a Python virtual environment:
@@ -60,13 +60,12 @@ pip install -r requirements.txt
 4. Create a `.env` file in `backend/app` or project root with required config:
 
 ```text
-SECRET_KEY=change-this-secret
+SECRET_KEY=...
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 DATABASE_URL=sqlite:///./sql_app.db
 FIRST_SUPERUSER_EMAIL=admin@example.com
 FIRST_SUPERUSER_PASSWORD=admin
-OPENAI_API_KEY=your_openai_api_key
 ```
 
 ## Database
