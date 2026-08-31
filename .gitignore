@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+backend/.env
+backend/app/props.env
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Node dependencies
+node_modules/
+
+# Build output
+dist/
+frontend/dist/
+
+# Test & tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Logs
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Deployment state
+.netlify/
+
+# ---------------------------------------------------------------------
+# Data & trained models
+#
+# None of this belongs in git: it totals ~378 MB, and
+# data/raw/ais_2023H2.parquet alone is 154 MB, which exceeds GitHub's
+# 100 MB per-file hard limit (the push would be rejected outright).
+# Large blobs also stay in history forever once committed.
+#
+# All of it is reproducible from the scripts in pipeline/:
+#   clean_datasets.py            -> data/cleaned/
+#   build_*_features.py          -> data/features/
+#   merge_congestion_datasets.py -> data/features/
+#   train_*.py, pipeline.py      -> models/saved_models/, data/processed/
+# Source datasets go in data/raw/ (see README for where each came from).
+# ---------------------------------------------------------------------
+data/raw/*
+# ...except the tiny ingestion fallback that MaritimeClient loads by
+# default. Without it a fresh clone has no offline event source.
+!data/raw/example.json
+
+data/cleaned/
+data/features/
+data/processed/
+models/saved_models/*.joblib

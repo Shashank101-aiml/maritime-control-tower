@@ -1,0 +1,39 @@
+# The backend Dockerfile does `COPY . .`, so anything not excluded here
+# is baked into the image layer. Most important: .env holds real API
+# credentials (AISSTREAM_API_KEY, SECRET_KEY) and must never ship in an
+# image — pass them at runtime via env_file / -e instead.
+
+# Secrets
+.env
+.env.*
+app/props.env
+
+# Virtual environment (huge, and Linux images must install their own)
+.venv/
+venv/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Test & tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local database — the container should use its own storage
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+
+# Not needed at runtime
+tests/
+Dockerfile
+.dockerignore

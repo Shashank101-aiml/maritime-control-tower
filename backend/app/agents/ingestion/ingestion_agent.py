@@ -1,0 +1,131 @@
+from typing import Any, Dict, Optional
+
+from app.agents.ingestion.live_conditions_client import LiveConditionsClient
+from app.agents.ingestion.maritime_client import MaritimeClient
+from app.agents.ingestion.news_client import NewsClient
+from app.agents.ingestion.weather_client import WeatherClient
+from app.core.config import settings
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
+
+FALLBACK_EVENT = {
+    "event_type": "Storm",
+    "location": "Arabian Sea",
+    "severity": "critical",
+}
+
+
+class IngestionAgent:
+    def __init__(
+        self,
+        maritime_client: Optional[MaritimeClient] = None,
+        weather_client: Optional[WeatherClient] = None,
+        news_client: Optional[NewsClient] = None,
+        live_client: Optional[LiveConditionsClient] = None,
+    ) -> None:
+        self.maritime_client = maritime_client or MaritimeClient()
+        self.weather_client = weather_client or WeatherClient(api_key=settings.WEATHER_API_KEY)
+        self.news_client = news_client or NewsClient(api_key=settings.NEWS_API_KEY)
+        self.live_client = live_client or LiveConditionsClient()
+
+    def collect_data(self, source_payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        event, _ = self.collect_data_with_confidence(source_payload)
+        return event
+
+    def collect_data_with_confidence(
+        self, source_payload: Optional[Dict[str, Any]] = None
+    ) -> "tuple[Dict[str, Any], float]":
+        """Same as collect_data, but also reports how much the ingested event
+        should be trusted based on where it actually came from."""
+        if source_payload is not None:
+            # Caller-supplied payloads are unverified, so treat them as
+            # moderately trustworthy rather than assuming full confidence.
+            return self._normalize_event(source_payload), 0.7
+
+        event, confidence = self._collect_maritime_event()
+        event["weather"] = self._collect_weather(event.get("location"))
+        event["related_news"] = self._collect_news(event.get("event_type"))
+        return event, confidence
+
+    def _collect_maritime_event(self) -> "tuple[Dict[str, Any], float]":
+        """Source chain, most trustworthy first:
+        1. Live sea-state feed (Open-Meteo, no API key) -> confidence 0.95
+        2. Local sample file                            -> confidence 0.80
+        3. Hardcoded fallback constant                  -> confidence 0.50
+        Confidence drops with each step down so governance can see how
+        stale/synthetic the underlying observation actually was.
+        """
+        if settings.ENABLE_LIVE_INGESTION:
+            try:
+                live_event = self.live_client.get_event()
+                logger.info(
+                    "Live conditions ingested: %s at %s (%s)",
+                    live_event.get("event_type"),
+                    live_event.get("location"),
+                    live_event.get("severity"),
+                )
+                normalized = self._normalize_event(live_event)
+                normalized["conditions"] = live_event.get("conditions")
+                normalized["latitude"] = live_event.get("latitude")
+                normalized["longitude"] = live_event.get("longitude")
+                return normalized, 0.95
+            except Exception as exc:
+                logger.warning("Live conditions feed unavailable: %s", exc)
+
+        try:
+            raw_event = self.maritime_client.get_event()
+        except (FileNotFoundError, ValueError) as exc:
+            logger.warning("Maritime source data unavailable, using fallback event: %s", exc)
+            return dict(FALLBACK_EVENT), 0.5
+
+        return self._normalize_event(raw_event), 0.80
+
+    def _collect_weather(self, location: Optional[str]) -> Optional[Dict[str, Any]]:
+        if not location or not settings.WEATHER_API_KEY:
+            return None
+        try:
+            return self.weather_client.fetch_current_weather(location)
+        except Exception as exc:  # network/API failures shouldn't break ingestion
+            logger.warning("Weather enrichment failed for %s: %s", location, exc)
+            return None
+
+    def _collect_news(self, event_type: Optional[str]) -> list:
+        if not settings.NEWS_API_KEY:
+            return []
+        try:
+            query = f"maritime {event_type}" if event_type else None
+            return self.news_client.fetch_news(query=query, limit=5)
+        except Exception as exc:  # network/API failures shouldn't break ingestion
+            logger.warning("News enrichment failed: %s", exc)
+            return []
+
+    def _normalize_event(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "event_type": str(payload.get("event_type", "unknown")).strip(),
+            "severity": self._normalize_severity(payload.get("severity")),
+            "source": self._normalize_source(payload),
+            "description": payload.get("description"),
+            "location": payload.get("location"),
+            "timestamp": payload.get("timestamp"),
+        }
+
+    def _normalize_severity(self, severity: Any) -> str:
+        if severity is None:
+            return "info"
+        severity_value = str(severity).strip().lower()
+        if severity_value in {"high", "critical", "urgent"}:
+            return "critical"
+        if severity_value in {"medium", "moderate"}:
+            return "warning"
+        if severity_value in {"low", "minor"}:
+            return "info"
+        return severity_value
+
+    def _normalize_source(self, payload: Dict[str, Any]) -> Optional[str]:
+        return (
+            payload.get("source")
+            or payload.get("location")
+            or payload.get("source_system")
+            or None
+        )
