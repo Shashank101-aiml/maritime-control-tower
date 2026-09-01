@@ -1,4 +1,7 @@
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.api.dependencies.auth import get_current_active_superuser
 from app.api.dependencies.database import get_db
@@ -105,3 +108,63 @@ def update_agent_status(
     )
 
     return {"status": "success", "agent_id": agent_id, "new_status": status}
+
+
+@router.get("/activity")
+def read_activity(hours: int = 24, db: Session = Depends(get_db)):
+    """Hourly agent-execution counts over the last `hours`.
+
+    Backed entirely by rows in agent_executions, so it reflects real
+    recorded activity. The Event Monitor timeline previously rendered a
+    hardcoded array of invented hourly telemetry counts; this replaces
+    that with history the system actually has.
+
+    `recorded_from` lets the UI say how much history exists rather than
+    implying a full 24h window it may not have yet — nothing is
+    backfilled, so a freshly-started instance legitimately has only a
+    few populated buckets.
+    """
+    hours = max(1, min(hours, 168))
+    now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    window_start = now - timedelta(hours=hours - 1)
+
+    traces = (
+        db.query(AgentExecutionTrace)
+        .filter(AgentExecutionTrace.started_at >= window_start)
+        .all()
+    )
+
+    buckets = {
+        (window_start + timedelta(hours=i)): {"total": 0, "flagged": 0}
+        for i in range(hours)
+    }
+
+    for trace in traces:
+        if not trace.started_at:
+            continue
+        key = trace.started_at.replace(minute=0, second=0, microsecond=0)
+        bucket = buckets.get(key)
+        if bucket is None:
+            continue
+        bucket["total"] += 1
+        # "Flagged" = the run did not complete cleanly on its own: it
+        # errored, or governance held/rejected it.
+        if trace.error or trace.approval_status in ("PENDING", "REJECTED"):
+            bucket["flagged"] += 1
+
+    earliest = db.query(func.min(AgentExecutionTrace.started_at)).scalar()
+
+    return {
+        "hours": hours,
+        "recorded_from": earliest.isoformat() if earliest else None,
+        "total_executions": len(traces),
+        "buckets": [
+            {
+                "hour": hour.isoformat() + "Z",
+                "label": hour.strftime("%H:%M"),
+                "total": data["total"],
+                "flagged": data["flagged"],
+            }
+            for hour, data in sorted(buckets.items())
+        ],
+    }

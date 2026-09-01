@@ -1,103 +1,157 @@
-import React, { useState } from 'react';
-import { Activity } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Activity, RefreshCw } from 'lucide-react';
+import { apiFetch } from '../../services/apiClient';
 
+const BASE_URL = 'http://localhost:8000/api';
+
+/**
+ * Hourly agent-execution activity over the last 24h.
+ *
+ * This replaces a chart that rendered a hardcoded array of invented
+ * hourly telemetry counts — it claimed ~59 events across 24 hours while
+ * the panel beneath it listed 8 real readings. Everything here comes
+ * from recorded agent_executions rows.
+ *
+ * Nothing is backfilled, so a recently started instance genuinely has
+ * only a few populated hours. The footnote states how much history
+ * exists rather than implying a full day of it.
+ */
 export default function EventTimelineChart() {
-  const [activeBar, setActiveBar] = useState(null);
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [hovered, setHovered] = useState(null);
 
-  const hours = [
-    { time: '00:00', events: 2, highSev: 0 },
-    { time: '03:00', events: 5, highSev: 1 },
-    { time: '06:00', events: 3, highSev: 0 },
-    { time: '09:00', events: 8, highSev: 3 },
-    { time: '12:00', events: 12, highSev: 4 },
-    { time: '15:00', events: 16, highSev: 6 },
-    { time: '18:00', events: 9, highSev: 2 },
-    { time: '21:00', events: 4, highSev: 1 }
-  ];
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await apiFetch(`${BASE_URL}/governance/activity?hours=24`);
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      setData(await res.json());
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+      setData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const maxEvents = 18;
+  useEffect(() => {
+    load();
+    const timer = setInterval(load, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const buckets = data?.buckets || [];
+  const peak = Math.max(1, ...buckets.map((b) => b.total));
+  // Round the axis up to a clean number so gridline labels read well.
+  const axisMax = peak <= 5 ? 5 : Math.ceil(peak / 10) * 10;
+  const hasHistory = (data?.total_executions ?? 0) > 0;
+
+  const coverage = () => {
+    if (!data?.recorded_from) return 'No activity recorded yet.';
+    const from = new Date(data.recorded_from + 'Z');
+    const hrs = (Date.now() - from.getTime()) / 3600000;
+    const span = hrs < 1
+      ? `${Math.max(1, Math.round(hrs * 60))} min`
+      : `${hrs.toFixed(1)} h`;
+    return `${data.total_executions} executions recorded over ${span} of history. Older hours are empty because nothing is backfilled.`;
+  };
 
   return (
-    <div className="glass-panel" style={{ padding: '24px' }}>
+    <div className="panel">
       <div className="section-header">
-        <h3 className="section-title" style={{ fontSize: '1.15rem' }}>
-          <Activity size={20} color="var(--accent-cyan)" />
-          Telemetry Event Frequency (24h Timeline)
+        <h3 className="section-title">
+          <Activity size={17} color="var(--primary)" />
+          Agent execution activity (24 h)
         </h3>
-        <div style={{ display: 'flex', gap: '14px', fontSize: '0.8rem' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-cyan)' }}>
-            <span style={{ width: '10px', height: '10px', background: 'var(--accent-cyan)', borderRadius: '2px', display: 'inline-block' }}></span>
-            Total Events
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '0.75rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-subtle)' }}>
+            <i style={{ width: 9, height: 9, borderRadius: 2, background: 'var(--primary)', display: 'inline-block' }} />
+            Completed
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-rose)' }}>
-            <span style={{ width: '10px', height: '10px', background: 'var(--accent-rose)', borderRadius: '2px', display: 'inline-block' }}></span>
-            High Severity Hazards
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-subtle)' }}>
+            <i style={{ width: 9, height: 9, borderRadius: 2, background: 'var(--warning)', display: 'inline-block' }} />
+            Held or failed
           </span>
+          {loading && <RefreshCw size={13} className="spin" color="var(--text-subtle)" />}
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '180px', marginTop: '32px', paddingBottom: '10px', borderBottom: '1px solid var(--border-subtle)' }}>
-        {hours.map((h, i) => {
-          const totalHeightPct = (h.events / maxEvents) * 100;
-          const highHeightPct = (h.highSev / maxEvents) * 100;
-          const isHovered = activeBar === i;
-
-          return (
-            <div 
-              key={h.time}
-              onMouseEnter={() => setActiveBar(i)}
-              onMouseLeave={() => setActiveBar(null)}
-              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, height: '100%', justifyContent: 'flex-end', position: 'relative', cursor: 'pointer' }}
-            >
-              {isHovered && (
-                <div style={{
-                  position: 'absolute',
-                  top: '-45px',
-                  background: 'var(--surface)',
-                  border: '1px solid var(--accent-cyan)',
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  fontSize: '0.75rem',
-                  whiteSpace: 'nowrap',
-                  zIndex: 10,
-                  boxShadow: '0 4px 12px var(--surface-subtle)'
-                }}>
-                  <strong>{h.time}</strong>: {h.events} Total ({h.highSev} High Hazard)
-                </div>
-              )}
-
-              <div style={{ width: '32px', height: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', position: 'relative' }}>
-                {/* Total events bar */}
-                <div style={{
-                  width: '100%',
-                  height: `${totalHeightPct}%`,
-                  background: isHovered ? 'var(--accent-cyan)' : 'var(--primary-border)',
-                  borderRadius: '6px 6px 0 0',
-                  transition: 'all 0.3s ease',
-                  position: 'absolute',
-                  bottom: 0
-                }} />
-
-                {/* High severity bar overlay */}
-                <div style={{
-                  width: '100%',
-                  height: `${highHeightPct}%`,
-                  background: 'var(--accent-rose)',
-                  borderRadius: '6px 6px 0 0',
-                  transition: 'all 0.3s ease',
-                  position: 'absolute',
-                  bottom: 0,
-                  boxShadow: h.highSev > 0 ? '0 0 10px var(--danger-border)' : 'none'
-                }} />
+      {error ? (
+        <div className="chart-empty">
+          <p>Activity unavailable — {error}</p>
+        </div>
+      ) : !hasHistory && !loading ? (
+        <div className="chart-empty">
+          <p>No agent executions recorded yet.</p>
+          <p className="chart-empty-sub">
+            Run the agent pipeline or request a prediction and activity will appear here.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="chart-plot">
+            {/* y-axis gridlines so a value can actually be read off the chart */}
+            {[0, 0.25, 0.5, 0.75, 1].map((f) => (
+              <div key={f} className="chart-gridline" style={{ bottom: `${f * 100}%` }}>
+                <span>{Math.round(axisMax * f)}</span>
               </div>
+            ))}
 
-              <span style={{ fontSize: '0.75rem', color: isHovered ? 'var(--text-strong)' : 'var(--text-muted)', marginTop: '10px', fontWeight: isHovered ? 700 : 400 }}>
-                {h.time}
-              </span>
+            <div className="chart-bars">
+              {buckets.map((b, i) => {
+                const clean = b.total - b.flagged;
+                const isHovered = hovered === i;
+                return (
+                  <div
+                    key={b.hour}
+                    className="chart-bar-slot"
+                    onMouseEnter={() => setHovered(i)}
+                    onMouseLeave={() => setHovered(null)}
+                  >
+                    {isHovered && b.total > 0 && (
+                      <div className="chart-tip">
+                        <strong>{b.label}</strong> · {b.total} run{b.total === 1 ? '' : 's'}
+                        {b.flagged > 0 && ` · ${b.flagged} held/failed`}
+                      </div>
+                    )}
+                    <div className="chart-bar-stack">
+                      {/* Stacked, not overlaid: the previous version drew the
+                          high-severity bar on top of the total, so the visible
+                          portion misrepresented its own magnitude. */}
+                      <div
+                        className="chart-seg"
+                        style={{
+                          height: `${(clean / axisMax) * 100}%`,
+                          background: isHovered ? 'var(--primary-hover)' : 'var(--primary)',
+                        }}
+                      />
+                      <div
+                        className="chart-seg"
+                        style={{
+                          height: `${(b.flagged / axisMax) * 100}%`,
+                          background: 'var(--warning)',
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
+          </div>
+
+          <div className="chart-xaxis">
+            {buckets.map((b, i) => (
+              // 24 labels will not fit; show every third.
+              <span key={b.hour}>{i % 3 === 0 ? b.label : ''}</span>
+            ))}
+          </div>
+
+          <p className="form-note">{coverage()}</p>
+        </>
+      )}
     </div>
   );
 }
