@@ -28,13 +28,30 @@ FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
 
 DEFAULT_TIMEOUT_SECONDS = 15
 
-# Open-Meteo reports a 900s update interval, so anything shorter than
-# that is re-fetching identical data. Without this cache every request to
-# /events, /risks or /dashboard triggered a fresh 8-corridor sweep and
-# took 25-29 seconds.
-CACHE_TTL_SECONDS = 600
-_cache: Dict[str, Any] = {"expires_at": 0.0, "events": None}
+# Open-Meteo publishes on 15-minute boundaries (:00, :15, :30, :45) and
+# reports interval=900 to say so. The cache therefore expires just after
+# the next boundary rather than on a fixed TTL: a flat 600s window could
+# leave a freshly published observation unseen for up to 10 minutes,
+# while still re-fetching identical data in between.
+#
+# Without any cache, every request to /events, /risks or /dashboard
+# triggered a fresh 8-corridor sweep and took 25-29 seconds.
+SOURCE_INTERVAL_SECONDS = 900
+# Grace period so we ask only after the new observation is actually up.
+PUBLISH_LAG_SECONDS = 60
+# Floor, so a failing upstream cannot be hammered once per request.
+MIN_CACHE_SECONDS = 60
+
+_cache: Dict[str, Any] = {"expires_at": 0.0, "events": None, "fetched_at": None}
 _cache_lock = threading.Lock()
+
+
+def _seconds_until_next_publication() -> float:
+    """Time until the next 15-minute boundary, plus the publish lag."""
+    now = datetime.now(timezone.utc)
+    seconds_into_slot = (now.minute * 60 + now.second) % SOURCE_INTERVAL_SECONDS
+    remaining = SOURCE_INTERVAL_SECONDS - seconds_into_slot + PUBLISH_LAG_SECONDS
+    return max(MIN_CACHE_SECONDS, remaining)
 
 # Corridors are independent, so they are fetched concurrently rather than
 # one after another.
@@ -206,9 +223,24 @@ class LiveConditionsClient:
         if use_cache and events:
             with _cache_lock:
                 _cache["events"] = events
-                _cache["expires_at"] = time.monotonic() + CACHE_TTL_SECONDS
+                _cache["expires_at"] = time.monotonic() + _seconds_until_next_publication()
+                _cache["fetched_at"] = datetime.now(timezone.utc)
 
         return events
+
+    @staticmethod
+    def cache_status() -> Dict[str, Any]:
+        """When this data was fetched and when it will next be refreshed,
+        so the UI can show freshness instead of leaving the reader unable
+        to tell live data from a frozen feed."""
+        with _cache_lock:
+            fetched_at = _cache.get("fetched_at")
+            expires_in = max(0.0, _cache["expires_at"] - time.monotonic())
+        return {
+            "fetched_at": fetched_at.isoformat().replace("+00:00", "Z") if fetched_at else None,
+            "refresh_in_seconds": round(expires_in),
+            "source_interval_seconds": SOURCE_INTERVAL_SECONDS,
+        }
 
     def get_event(self) -> Dict[str, Any]:
         """The most severe condition across all monitored corridors — the

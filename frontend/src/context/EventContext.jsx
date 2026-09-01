@@ -10,6 +10,7 @@ export const EventProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [filterSeverity, setFilterSeverity] = useState('ALL');
   const [activeAlert, setActiveAlert] = useState(null);
+  const [freshness, setFreshness] = useState(null);
 
   const fetchAllEvents = useCallback(async () => {
     setLoading(true);
@@ -27,8 +28,10 @@ export const EventProvider = ({ children }) => {
     }
 
     if (historyResult.status === 'fulfilled') {
-      setEventHistory(historyResult.value);
-      const severe = historyResult.value.find(
+      const { readings, freshness: meta } = historyResult.value;
+      setEventHistory(readings);
+      setFreshness(meta);
+      const severe = readings.find(
         (e) => e.severity === 'HIGH' || e.severity === 'CRITICAL'
       );
       if (severe) setActiveAlert(severe);
@@ -45,7 +48,7 @@ export const EventProvider = ({ children }) => {
 
   useEffect(() => {
     fetchAllEvents();
-    const interval = setInterval(fetchAllEvents, 15000); // 15-second telemetry loop
+    const interval = setInterval(fetchAllEvents, 30000); // source publishes every 15 min; this only needs to notice the cache turning over
     return () => clearInterval(interval);
   }, [fetchAllEvents]);
 
@@ -68,6 +71,7 @@ export const EventProvider = ({ children }) => {
         setFilterSeverity,
         activeAlert,
         dismissAlert,
+        freshness,
         refreshEvents: fetchAllEvents
       }}
     >

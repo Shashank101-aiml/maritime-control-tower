@@ -5,6 +5,7 @@ import EventCard from '../components/EventCard';
 import EventTimelineChart from '../components/Charts/EventTimelineChart';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { SEVERITY_LEVELS } from '../types/Event';
+import FreshnessIndicator from '../components/FreshnessIndicator';
 
 export default function EventMonitor() {
   const { 
@@ -13,9 +14,10 @@ export default function EventMonitor() {
     highSeverityCount, 
     loading, 
     error, 
-    filterSeverity, 
-    setFilterSeverity, 
-    refreshEvents 
+    filterSeverity,
+    setFilterSeverity,
+    refreshEvents,
+    freshness
   } = useEvents();
 
   return (
@@ -68,10 +70,13 @@ export default function EventMonitor() {
       {/* Events Feed Grid */}
       <div className="glass-panel" style={{ padding: '24px' }}>
         <div className="section-header" style={{ marginBottom: '16px' }}>
-          <h3 className="section-title" style={{ fontSize: '1.15rem' }}>
-            <Filter size={20} color="var(--accent-amber)" />
-            Telemetry Logs ({eventHistory.length} Recorded)
-          </h3>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '14px', flexWrap: 'wrap' }}>
+            <h3 className="section-title" style={{ fontSize: '1.15rem' }}>
+              <Filter size={20} color="var(--accent-amber)" />
+              Telemetry Logs ({eventHistory.length} Recorded)
+            </h3>
+            <FreshnessIndicator freshness={freshness} />
+          </div>
           {highSeverityCount > 0 && (
             <span className="status-badge" style={{ background: 'var(--danger-soft)', borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' }}>
               <AlertTriangle size={14} /> {highSeverityCount} CRITICAL HAZARDS ACTIVE

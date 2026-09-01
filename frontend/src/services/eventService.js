@@ -28,7 +28,7 @@ export const getEventHistory = async () => {
     throw new Error(data.error || 'Live conditions feed is unavailable.');
   }
 
-  return data.conditions.map((c, i) =>
+  const readings = data.conditions.map((c, i) =>
     createEvent({
       id: `${c.location}-${i}`,
       event_type: c.event_type,
@@ -41,4 +41,17 @@ export const getEventHistory = async () => {
       classification_reason: c.classification_reason,
     })
   );
+
+  // Freshness travels with the data so the UI can show how current it
+  // is — otherwise a feed that legitimately updates every 15 minutes is
+  // indistinguishable from one that has stopped.
+  return {
+    readings,
+    freshness: {
+      fetchedAt: data.fetched_at ?? null,
+      refreshInSeconds: data.refresh_in_seconds ?? null,
+      sourceIntervalSeconds: data.source_interval_seconds ?? null,
+      observedAt: data.conditions[0]?.conditions?.observed_at ?? null,
+    },
+  };
 };
