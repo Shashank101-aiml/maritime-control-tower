@@ -1,7 +1,7 @@
 import { createRecommendation } from '../types/Recommendation';
 import { apiFetch } from './apiClient';
 
-const BASE_URL = 'http://localhost:8000/api';
+import { API_BASE_URL as BASE_URL } from '../config';
 
 /**
  * Route recommendation produced by the agent workflow.

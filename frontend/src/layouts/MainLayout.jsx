@@ -5,7 +5,7 @@ import AlertBanner from '../components/AlertBanner';
 import { EventProvider, useEventContext } from '../context/EventContext';
 import { RiskProvider } from '../context/RiskContext';
 
-const HEALTH_URL = 'http://localhost:8000/health';
+import { HEALTH_URL } from '../config';
 
 /** Polls the backend so the shell reports real connectivity rather than a
  *  hardcoded "OPERATIONAL" label. */

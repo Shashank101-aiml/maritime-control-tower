@@ -1,7 +1,7 @@
 import { createRiskAssessment } from '../types/Risk';
 import { apiFetch } from './apiClient';
 
-const BASE_URL = 'http://localhost:8000/api';
+import { API_BASE_URL as BASE_URL } from '../config';
 
 /**
  * Current risk assessment, scored by the trained model on live conditions.

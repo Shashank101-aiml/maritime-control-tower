@@ -1,5 +1,5 @@
 import { apiFetch } from './apiClient';
-const BASE_URL = 'http://localhost:8000/api';
+import { API_BASE_URL as BASE_URL } from '../config';
 
 export const fetchDashboard = async () => {
   const res = await apiFetch(`${BASE_URL}/dashboard`);

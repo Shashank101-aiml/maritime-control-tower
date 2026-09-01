@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000/api';
+import { API_BASE_URL as BASE_URL } from '../config';
 const TOKEN_KEY = 'mc_access_token';
 
 /** Wrapped in try/catch: localStorage throws in private-mode browsers

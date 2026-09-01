@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Settings as SettingsIcon, Save, ShieldCheck, Database, Sliders, Bell, CheckCircle2 } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 export default function Settings() {
-  const [apiEndpoint, setApiEndpoint] = useState('http://localhost:8000/api');
+  const [apiEndpoint, setApiEndpoint] = useState(API_BASE_URL);
   const [pollingInterval, setPollingInterval] = useState('15');
   const [riskThreshold, setRiskThreshold] = useState('50');
   const [simMode, setSimMode] = useState(true);
