@@ -1,8 +1,11 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from app.agents.ingestion.ingestion_agent import IngestionAgent
 from app.agents.ingestion.live_conditions_client import LiveConditionsClient
+from app.api.dependencies.database import get_db
 from app.core.logging import get_logger
+from app.services.observation_service import record_conditions
 
 logger = get_logger(__name__)
 
@@ -17,7 +20,7 @@ def get_events():
 
 
 @router.get("/conditions")
-def get_conditions():
+def get_conditions(db: Session = Depends(get_db)):
     """Live sea state for every monitored maritime corridor, worst first.
 
     Backed by Open-Meteo (no API key). Returns an explicit `source` of
@@ -27,6 +30,9 @@ def get_conditions():
     try:
         client = LiveConditionsClient()
         events = client.get_all_events()
+        # Append to history. De-duplicated on (location, observed_at),
+        # so polling faster than the source publishes costs nothing.
+        record_conditions(db, events)
         return {
             "source": "live",
             "provider": "open-meteo",

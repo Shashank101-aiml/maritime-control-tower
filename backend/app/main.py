@@ -98,7 +98,10 @@ def seed_first_superuser():
 
 
 def seed_governance_agents():
-    Base.metadata.create_all(bind=engine)
+    # Schema is owned by Alembic now. create_all() only ever creates
+    # missing tables — it never alters an existing one — so any model
+    # change after the first run was silently ignored.
+    # Run `alembic upgrade head` before starting the app.
     db = next(get_db())
     
     agents = [

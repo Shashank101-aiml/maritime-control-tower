@@ -47,6 +47,13 @@ export default function RiskTrendChart({ trends }) {
 
   const areaPoints = `${paddingX},${height - paddingY} ${points} ${width - paddingX},${height - paddingY}`;
 
+  const peak = Math.max(...data.map((d) => d.score));
+  const peakTone = peak >= 75
+    ? { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' }
+    : peak >= 40
+      ? { fg: 'var(--warning)', bg: 'var(--warning-soft)', border: 'var(--warning-border)' }
+      : { fg: 'var(--success)', bg: 'var(--success-soft)', border: 'var(--success-border)' };
+
   return (
     <div className="glass-panel" style={{ padding: '24px', width: '100%' }}>
       <div className="section-header">
@@ -54,8 +61,10 @@ export default function RiskTrendChart({ trends }) {
           <ShieldAlert size={20} color="var(--accent-rose)" />
           Fleet Risk Score Trajectory (24h Trend)
         </h3>
-        <span className="status-badge" style={{ fontSize: '0.75rem', background: 'var(--danger-soft)', borderColor: 'var(--accent-rose)', color: 'var(--accent-rose)' }}>
-          PEAK HAZARD: 68/100
+        {/* Computed from the recorded series. This badge previously read
+            a hardcoded "PEAK HAZARD: 68/100" regardless of the data. */}
+        <span className="status-badge" style={{ fontSize: '0.75rem', background: peakTone.bg, borderColor: peakTone.border, color: peakTone.fg }}>
+          PEAK: {peak}/100 · {data.length} reading{data.length === 1 ? '' : 's'}
         </span>
       </div>
 
