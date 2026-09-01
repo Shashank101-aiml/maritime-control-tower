@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Activity, RefreshCw } from 'lucide-react';
 import { apiFetch } from '../../services/apiClient';
 
-const BASE_URL = 'http://localhost:8000/api';
+import { API_BASE_URL as BASE_URL } from '../../config';
 
 /**
  * Hourly agent-execution activity over the last 24h.

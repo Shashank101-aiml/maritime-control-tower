@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
@@ -41,9 +43,24 @@ from app.models.user import User
 
 logger = get_logger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Names below are defined further down this module; that's fine —
+    # this body only runs once uvicorn starts serving, by which point the
+    # whole module (seed_governance_agents, seed_first_superuser,
+    # ais_collector) has finished importing.
+    seed_governance_agents()
+    seed_first_superuser()
+    ais_collector.start()  # No-op when AISSTREAM_API_KEY is unset.
+    yield
+    ais_collector.stop()
+
+
 app = FastAPI(
     title="Maritime Agentic Control System",
-    description="Backend API for Maritime Agentic AI Control & Route Planning"
+    description="Backend API for Maritime Agentic AI Control & Route Planning",
+    lifespan=lifespan,
 )
 
 # Rate limiting, keyed on client IP. The Limiter instance lives in
@@ -127,19 +144,6 @@ def seed_governance_agents():
             db.commit()
 
 ais_collector = AISStreamCollector(settings.AISSTREAM_API_KEY)
-
-
-@app.on_event("startup")
-def startup_event():
-    seed_governance_agents()
-    seed_first_superuser()
-    # No-ops when AISSTREAM_API_KEY is unset.
-    ais_collector.start()
-
-
-@app.on_event("shutdown")
-def shutdown_event():
-    ais_collector.stop()
 
 @app.get("/")
 def root():

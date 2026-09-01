@@ -6,7 +6,7 @@ import RiskTrendChart from '../components/Charts/RiskTrendChart';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { apiFetch } from '../services/apiClient';
 
-const BASE_URL = 'http://localhost:8000/api';
+import { API_BASE_URL as BASE_URL } from '../config';
 
 const TONES = {
   CRITICAL: { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' },

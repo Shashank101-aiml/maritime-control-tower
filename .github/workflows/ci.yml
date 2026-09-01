@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Apply migrations
+        # The suite talks to app.main's TestClient against the default
+        # SQLite DATABASE_URL. Base.metadata.create_all() was removed in
+        # favor of Alembic owning the schema, so a fresh checkout has no
+        # tables until this runs.
+        run: python -m alembic upgrade head
+
+      - name: Run tests
+        # ENABLE_LIVE_INGESTION is forced off by tests/conftest.py, so this
+        # never touches the network.
+        run: python -m pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        # No VITE_API_BASE_URL is set here on purpose: src/config.js falls
+        # back to http://localhost:8000 at runtime, so the build doesn't
+        # need one to succeed. This step is really a compile check — it
+        # catches the syntax/import errors a hand-rolled JSX app has no
+        # other net for, since there's no separate lint or typecheck step.
+        run: npm run build

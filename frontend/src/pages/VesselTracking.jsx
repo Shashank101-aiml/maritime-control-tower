@@ -4,7 +4,7 @@ import { getVessels } from '../services/vesselService';
 import VesselMap from '../components/VesselMap';
 import { apiFetch } from '../services/apiClient';
 
-const BASE_URL = 'http://localhost:8000/api';
+import { API_BASE_URL as BASE_URL } from '../config';
 
 const TONES = {
   CRITICAL: 'var(--danger)',

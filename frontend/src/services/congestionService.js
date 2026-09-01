@@ -1,5 +1,5 @@
 import { apiFetch } from './apiClient';
-const BASE_URL = 'http://localhost:8000/api';
+import { API_BASE_URL as BASE_URL } from '../config';
 
 /**
  * Calls the congestion prediction agent. No mock fallback here -- unlike
