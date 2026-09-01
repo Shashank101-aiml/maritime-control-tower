@@ -8,7 +8,7 @@ router = APIRouter()
 @router.get("/dashboard")
 def get_dashboard_summary():
     event = IngestionAgent().collect_data()
-    risk = RiskAgent().calculate_risk(event)
+    risk = RiskAgent().calculate_risk(event).model_dump()
     risk_score = risk.get("score", 0)
     return {
         "active_vessels": 42,

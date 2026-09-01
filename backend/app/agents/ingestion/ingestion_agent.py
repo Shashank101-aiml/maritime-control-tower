@@ -6,6 +6,7 @@ from app.agents.ingestion.news_client import NewsClient
 from app.agents.ingestion.weather_client import WeatherClient
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.schemas.agent_io import IngestedEvent
 
 logger = get_logger(__name__)
 
@@ -30,23 +31,27 @@ class IngestionAgent:
         self.live_client = live_client or LiveConditionsClient()
 
     def collect_data(self, source_payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Dict form, for the HTTP routes (dashboard/events/risks) that
+        were already written against dict access before agent hand-offs
+        were typed. See collect_data_with_confidence() for the typed
+        version other agents should consume."""
         event, _ = self.collect_data_with_confidence(source_payload)
-        return event
+        return event.model_dump()
 
     def collect_data_with_confidence(
         self, source_payload: Optional[Dict[str, Any]] = None
-    ) -> "tuple[Dict[str, Any], float]":
+    ) -> "tuple[IngestedEvent, float]":
         """Same as collect_data, but also reports how much the ingested event
         should be trusted based on where it actually came from."""
         if source_payload is not None:
             # Caller-supplied payloads are unverified, so treat them as
             # moderately trustworthy rather than assuming full confidence.
-            return self._normalize_event(source_payload), 0.7
+            return IngestedEvent(**self._normalize_event(source_payload)), 0.7
 
         event, confidence = self._collect_maritime_event()
         event["weather"] = self._collect_weather(event.get("location"))
         event["related_news"] = self._collect_news(event.get("event_type"))
-        return event, confidence
+        return IngestedEvent(**event), confidence
 
     def _collect_maritime_event(self) -> "tuple[Dict[str, Any], float]":
         """Source chain, most trustworthy first:

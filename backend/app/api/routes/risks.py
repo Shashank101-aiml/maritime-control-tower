@@ -44,7 +44,7 @@ def get_risk(db: Session = Depends(get_db)):
     this endpoint alone only ever describes one of them.
     """
     event = IngestionAgent().collect_data()
-    risk_data = RiskAgent().calculate_risk(event)
+    risk_data = RiskAgent().calculate_risk(event).model_dump()
 
     # Retained so the trajectory chart has real history to plot. Recording
     # never raises — a lost history row must not fail the request.
@@ -90,7 +90,7 @@ def get_risk_by_corridor():
     agent = RiskAgent()
     corridors = []
     for event in events:
-        risk_data = agent.calculate_risk(event)
+        risk_data = agent.calculate_risk(event).model_dump()
         vessels, vessel_count = _vessels_at(event.get("latitude"), event.get("longitude"), all_vessels)
         corridors.append({
             "location": event.get("location"),
