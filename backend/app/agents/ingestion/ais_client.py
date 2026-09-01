@@ -112,6 +112,23 @@ def corridor_bounding_boxes() -> List[List[List[float]]]:
     return boxes
 
 
+def vessels_in_box(lat: float, lon: float, vessels: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Vessels from a list_vessels() snapshot whose last known position
+    falls inside one corridor's box -- the same box AISStream was asked
+    to subscribe to, so "in this corridor" means the same thing here as
+    it did in the subscription."""
+    lat_min, lat_max = lat - CORRIDOR_BOX_HALF_DEGREES, lat + CORRIDOR_BOX_HALF_DEGREES
+    lon_min, lon_max = lon - CORRIDOR_BOX_HALF_DEGREES, lon + CORRIDOR_BOX_HALF_DEGREES
+    matched = []
+    for vessel in vessels:
+        vlat, vlon = vessel.get("latitude"), vessel.get("longitude")
+        if vlat is None or vlon is None:
+            continue
+        if lat_min <= vlat <= lat_max and lon_min <= vlon <= lon_max:
+            matched.append(vessel)
+    return matched
+
+
 class VesselRegistry:
     """Thread-safe store of the latest known position per MMSI."""
 
