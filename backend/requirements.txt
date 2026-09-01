@@ -35,6 +35,9 @@ xgboost==3.4.1
 joblib==1.5.3
 pyarrow==25.0.1
 openpyxl==3.1.5
+
+# --- Graph / digital twin (Slice 05) ---
+networkx==3.6.1
 matplotlib==3.11.1
 
 # --- Testing ---

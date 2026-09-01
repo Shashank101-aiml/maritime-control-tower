@@ -28,6 +28,7 @@ setup_logging()
 from app.api.routes.congestion import router as congestion_router
 from app.api.routes.delay import router as delay_router
 from app.api.routes.fuel import router as fuel_router
+from app.api.routes.twin import router as twin_router
 
 from app.api.routes.auth import router as auth_router
 
@@ -179,3 +180,4 @@ app.include_router(governance_router, prefix="/api/governance", tags=["governanc
 app.include_router(congestion_router, prefix="/api", tags=["congestion"], dependencies=protected)
 app.include_router(delay_router, prefix="/api", tags=["delay"], dependencies=protected)
 app.include_router(fuel_router, prefix="/api", tags=["fuel"], dependencies=protected)
+app.include_router(twin_router, prefix="/api", tags=["twin"], dependencies=protected)
