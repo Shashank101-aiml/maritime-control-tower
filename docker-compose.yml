@@ -10,7 +10,11 @@ services:
       # Named volume, so history survives `docker compose down`.
       - maritime-db-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      # Published on 5433 by default: a native PostgreSQL service often
+      # already holds 5432 on the host, and Docker will happily bind
+      # alongside it, leaving host connections silently reaching the
+      # wrong server. Containers talk to this one as db:5432 regardless.
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
     healthcheck:
       # The backend waits for this rather than racing the database on
       # startup and failing its migrations.
