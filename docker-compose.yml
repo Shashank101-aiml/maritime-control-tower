@@ -40,6 +40,11 @@ services:
       # Mounted read-only at the path the existing code already expects,
       # rather than changing the path logic to fit the container.
       - ./models:/models:ro
+      # Same issue, same fix, for the digital twin's port_congestion.csv
+      # read (app/twin/digital_twin.py, parents[3] on the host / root
+      # inside the container since that file sits one level shallower
+      # than the agents above).
+      - ./data:/data:ro
     env_file:
       - ./backend/.env
     environment:
