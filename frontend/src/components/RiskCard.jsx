@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, AlertTriangle, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, AlertTriangle, ArrowUpRight, CheckCircle2, MapPin, Ship } from 'lucide-react';
 import { getRiskLevel } from '../types/Risk';
 
 const TONES = {
@@ -31,6 +31,43 @@ export default function RiskCard({ risk, onMitigate, mitigationActive }) {
           {level} · {risk.risk_score}/100
         </span>
       </div>
+
+      {risk.location && (
+        <div style={{ marginBottom: '14px' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '6px',
+            fontSize: '0.8rem', color: 'var(--text-subtle)'
+          }}>
+            <MapPin size={13} />
+            {risk.location}
+            <span style={{ color: 'var(--border-strong)' }}>·</span>
+            <Ship size={13} />
+            {!risk.vessels_configured
+              ? 'vessel tracking not configured'
+              : risk.vessel_count === null
+                ? 'vessel count unavailable'
+                : `${risk.vessel_count} vessel${risk.vessel_count === 1 ? '' : 's'} in this corridor`}
+          </div>
+
+          {risk.vessels?.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+              {risk.vessels.slice(0, 6).map((v) => (
+                <span key={v.mmsi} className="status-badge" style={{
+                  fontSize: '0.7rem', background: 'var(--surface-subtle)',
+                  borderColor: 'var(--border)', color: 'var(--text-body)'
+                }}>
+                  {v.name || `MMSI ${v.mmsi}`}
+                </span>
+              ))}
+              {risk.vessel_count > 6 && (
+                <span style={{ fontSize: '0.72rem', color: 'var(--text-subtle)', alignSelf: 'center' }}>
+                  +{risk.vessel_count - 6} more
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
         <div className="result-metric">

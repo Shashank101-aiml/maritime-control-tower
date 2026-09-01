@@ -21,6 +21,17 @@ export const getRiskHistory = async (hours = 24) => {
 };
 
 /**
+ * Risk score for every monitored corridor, each with its own location,
+ * sea-state metrics, and the vessels currently positioned there.
+ * GET /risks alone only ever describes a single (the worst) corridor.
+ */
+export const getRiskCorridors = async () => {
+  const res = await apiFetch(`${BASE_URL}/risks/corridors`);
+  if (!res.ok) throw new Error(`Corridor risk request failed (${res.status})`);
+  return res.json();
+};
+
+/**
  * Fleet-level risk view. `trends` now comes from recorded history
  * (risk_readings), not an invented curve — buckets with no reading stay
  * null rather than being plotted as zero.
