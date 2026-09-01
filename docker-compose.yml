@@ -31,6 +31,15 @@ services:
     container_name: maritime-backend
     ports:
       - "8000:8000"
+    volumes:
+      # The congestion/delay/fuel/risk agents locate the trained models by
+      # walking up from their own file (parents[4]), which on the host
+      # lands on the repo root. Since this service's build context is
+      # ./backend, that same arithmetic lands on the container's
+      # filesystem root instead — models/ was never part of the image.
+      # Mounted read-only at the path the existing code already expects,
+      # rather than changing the path logic to fit the container.
+      - ./models:/models:ro
     env_file:
       - ./backend/.env
     environment:

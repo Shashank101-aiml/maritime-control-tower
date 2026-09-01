@@ -1,6 +1,7 @@
 from typing import List, Optional
+from typing_extensions import Annotated
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, NoDecode
 from pydantic import AnyUrl, field_validator
 
 
@@ -14,7 +15,17 @@ class Settings(BaseSettings):
     # allow_origins=["*"] together with allow_credentials=True, which is
     # invalid per the CORS spec and let any site call the API.
     # Comma-separated in .env.
-    CORS_ORIGINS: List[str] = [
+    #
+    # NoDecode: pydantic-settings normally tries to json.loads() a raw env
+    # string for any List-typed field before _split_origins below ever
+    # runs, so a plain CSV value like "a,b,c" fails at the settings-source
+    # level with SettingsError -- never reaching the validator meant to
+    # handle exactly that. NoDecode skips that JSON-decode attempt and
+    # hands the raw string straight to _split_origins instead. This was
+    # never exercised until CORS_ORIGINS was first set as a real env var
+    # (previously always empty, silently falling back to the Python-list
+    # default below, which needs no decoding).
+    CORS_ORIGINS: Annotated[List[str], NoDecode] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
