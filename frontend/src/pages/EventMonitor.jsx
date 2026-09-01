@@ -87,8 +87,14 @@ export default function EventMonitor() {
             <p>{error}</p>
           </div>
         ) : eventHistory.length === 0 ? (
+          /* Distinguish "the feed returned nothing" from "the filter
+             excluded everything". The single message previously blamed
+             the filter even when the filter was ALL and the real cause
+             was a failed fetch. */
           <p style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-            No telemetry events matching the selected severity filter.
+            {rawHistory.length === 0
+              ? 'No telemetry readings available from the live feed.'
+              : `No readings at ${filterSeverity} severity — ${rawHistory.length} reading${rawHistory.length === 1 ? '' : 's'} at other levels.`}
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
