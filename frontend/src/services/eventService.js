@@ -38,6 +38,7 @@ export const getEventHistory = async () => {
       description: c.description,
       coordinates: { lat: c.latitude, lng: c.longitude },
       conditions: c.conditions,
+      classification_reason: c.classification_reason,
     })
   );
 };

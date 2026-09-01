@@ -112,15 +112,50 @@ class LiveConditionsClient:
         }
 
     def classify(self, conditions: Dict[str, Any]) -> Dict[str, str]:
-        """Map observed sea state onto a severity band and event label."""
+        """Map observed sea state onto a severity band and event label.
+
+        Also reports which measurement crossed which threshold, so the
+        UI can explain a classification rather than asserting it. The
+        thresholds live here only; duplicating them in the frontend
+        would let the two drift apart.
+        """
         wave = _as_float(conditions.get("wave_height_m"))
         gusts = _as_float(conditions.get("wind_gusts_kmh"))
 
         for min_wave, min_gust, severity, label in SEVERITY_THRESHOLDS:
-            if wave >= min_wave or gusts >= min_gust:
-                return {"severity": severity, "event_type": label}
+            wave_hit = wave >= min_wave
+            gust_hit = gusts >= min_gust
+            if wave_hit or gust_hit:
+                if wave_hit and gust_hit:
+                    reason = (
+                        f"Wave height {wave} m and gusts {gusts} km/h both at or above "
+                        f"the {severity} thresholds ({min_wave} m / {min_gust} km/h)."
+                    )
+                elif wave_hit:
+                    reason = (
+                        f"Wave height {wave} m is at or above the {severity} "
+                        f"threshold of {min_wave} m."
+                    )
+                else:
+                    reason = (
+                        f"Gusts {gusts} km/h are at or above the {severity} "
+                        f"threshold of {min_gust} km/h."
+                    )
+                return {
+                    "severity": severity,
+                    "event_type": label,
+                    "classification_reason": reason,
+                }
 
-        return {"severity": "info", "event_type": "Calm Conditions"}
+        return {
+            "severity": "info",
+            "event_type": "Calm Conditions",
+            "classification_reason": (
+                f"Wave height {wave} m and gusts {gusts} km/h are below the "
+                f"lowest alert threshold ({SEVERITY_THRESHOLDS[-1][0]} m / "
+                f"{SEVERITY_THRESHOLDS[-1][1]} km/h)."
+            ),
+        }
 
     def _observe(self, location: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """One corridor's current reading, or None if it can't be reached."""
@@ -133,6 +168,7 @@ class LiveConditionsClient:
         return {
             "event_type": classified["event_type"],
             "severity": classified["severity"],
+            "classification_reason": classified.get("classification_reason"),
             "location": location["name"],
             "latitude": location["lat"],
             "longitude": location["lon"],
