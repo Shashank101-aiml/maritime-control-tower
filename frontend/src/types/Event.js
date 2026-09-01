@@ -1,46 +1,71 @@
 /**
  * @typedef {Object} TelemetryEvent
- * @property {string} id - Unique identifier for the event
- * @property {string} event_type - Type of event (e.g., Storm, Piracy Warning, Port Congestion)
- * @property {string} location - Geographic or maritime region (e.g., Arabian Sea, Gulf of Aden)
- * @property {string} severity - Severity level: "HIGH" | "MEDIUM" | "LOW"
- * @property {string} timestamp - UTC or relative timestamp string
- * @property {Object} [coordinates] - Optional latitude and longitude
- * @property {string} [vessel_id] - Associated vessel identifier if applicable
+ * @property {string} id
+ * @property {string} event_type
+ * @property {string|null} location
+ * @property {string} severity - CRITICAL | HIGH | WARNING | LOW | INFO
+ * @property {string|null} timestamp
+ * @property {{lat:number, lng:number}|null} coordinates
+ * @property {string|null} description
+ * @property {Object|null} conditions - raw sea-state readings when present
+ * @property {string|null} vessel_id
  */
 
 /**
- * Validates and normalizes a telemetry event object received from the API.
- * @param {Object} rawEvent
- * @returns {TelemetryEvent}
+ * Normalises an event from the API.
+ *
+ * Deliberately does NOT invent values. The previous version defaulted
+ * vessel_id to "FLEET-GENERAL", coordinates to 0,0 (Null Island),
+ * location to "International Waters" and timestamp to now — so corridor
+ * sea-state readings, which carry no vessel at all, were rendered as
+ * though a vessel had reported them. Missing data is null and the UI
+ * omits it.
  */
 export const createEvent = (rawEvent = {}) => {
+  const coords =
+    rawEvent.coordinates ??
+    (rawEvent.latitude != null && rawEvent.longitude != null
+      ? { lat: rawEvent.latitude, lng: rawEvent.longitude }
+      : null);
+
   return {
-    id: rawEvent.id || `EVT-${Math.floor(1000 + Math.random() * 9000)}`,
-    event_type: rawEvent.event_type || 'Unknown Telemetry Event',
-    location: rawEvent.location || 'International Waters',
-    severity: (rawEvent.severity || 'LOW').toUpperCase(),
-    timestamp: rawEvent.timestamp || new Date().toUTCString(),
-    coordinates: rawEvent.coordinates || { lat: 0.0, lng: 0.0 },
-    vessel_id: rawEvent.vessel_id || 'FLEET-GENERAL',
+    // Stable identity: the old version used Math.random(), producing a
+    // new key on every render.
+    id: rawEvent.id ?? `${rawEvent.location ?? 'unknown'}-${rawEvent.timestamp ?? ''}`,
+    event_type: rawEvent.event_type ?? 'Unclassified reading',
+    location: rawEvent.location ?? null,
+    severity: String(rawEvent.severity ?? 'INFO').toUpperCase(),
+    timestamp: rawEvent.timestamp ?? null,
+    coordinates: coords,
+    description: rawEvent.description ?? null,
+    conditions: rawEvent.conditions ?? null,
+    vessel_id: rawEvent.vessel_id ?? null,
   };
 };
 
+/** The severity bands the backend actually emits. */
+export const SEVERITY_LEVELS = ['CRITICAL', 'HIGH', 'WARNING', 'LOW', 'INFO'];
+
+const SEVERITY_TONES = {
+  CRITICAL: { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' },
+  HIGH: { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' },
+  WARNING: { fg: 'var(--warning)', bg: 'var(--warning-soft)', border: 'var(--warning-border)' },
+  LOW: { fg: 'var(--info)', bg: 'var(--info-soft)', border: 'var(--info-border)' },
+  INFO: { fg: 'var(--success)', bg: 'var(--success-soft)', border: 'var(--success-border)' },
+};
+
 /**
- * Helper to get color code for severity
- * @param {string} severity
- * @returns {string} CSS variable or hex color
+ * Full tone for a severity. The previous helper had no WARNING or INFO
+ * case, so both fell through to the LOW colour — a warning-level reading
+ * was indistinguishable from a calm one.
  */
-export const getSeverityColor = (severity) => {
-  switch ((severity || '').toUpperCase()) {
-    case 'HIGH':
-    case 'CRITICAL':
-      return 'var(--accent-rose)';
-    case 'MEDIUM':
-    case 'MODERATE':
-      return 'var(--accent-amber)';
-    case 'LOW':
-    default:
-      return 'var(--accent-cyan)';
-  }
+export const getSeverityTone = (severity) =>
+  SEVERITY_TONES[String(severity || '').toUpperCase()] || SEVERITY_TONES.INFO;
+
+export const getSeverityColor = (severity) => getSeverityTone(severity).fg;
+
+/** "INFO HAZARD" reads as nonsense; calm conditions are not a hazard. */
+export const getSeverityLabel = (severity) => {
+  const key = String(severity || '').toUpperCase();
+  return key === 'INFO' ? 'NOMINAL' : `${key} HAZARD`;
 };

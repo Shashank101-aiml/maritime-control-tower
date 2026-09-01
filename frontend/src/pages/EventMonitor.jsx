@@ -4,6 +4,7 @@ import { useEvents } from '../hooks/useEvents';
 import EventCard from '../components/EventCard';
 import EventTimelineChart from '../components/Charts/EventTimelineChart';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { SEVERITY_LEVELS } from '../types/Event';
 
 export default function EventMonitor() {
   const { 
@@ -32,7 +33,7 @@ export default function EventMonitor() {
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
           <div style={{ display: 'flex', background: 'var(--surface-subtle)', border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '4px' }}>
-            {['ALL', 'HIGH', 'MEDIUM', 'LOW'].map(sev => (
+            {['ALL', ...SEVERITY_LEVELS].map(sev => (
               <button
                 key={sev}
                 onClick={() => setFilterSeverity(sev)}
@@ -40,10 +41,10 @@ export default function EventMonitor() {
                   background: filterSeverity === sev ? 'var(--accent-cyan)' : 'transparent',
                   color: filterSeverity === sev ? '#ffffff' : 'var(--text-muted)',
                   border: 'none',
-                  padding: '6px 14px',
+                  padding: '6px 11px',
                   borderRadius: '6px',
                   fontWeight: 600,
-                  fontSize: '0.8rem',
+                  fontSize: '0.74rem',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease'
                 }}
