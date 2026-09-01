@@ -1,5 +1,10 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+
+from app.core.limiter import limiter
 
 from app.api.routes.events import router as event_router
 from app.api.routes.risks import router as risk_router
@@ -22,22 +27,75 @@ from app.api.routes.congestion import router as congestion_router
 from app.api.routes.delay import router as delay_router
 from app.api.routes.fuel import router as fuel_router
 
+from app.api.routes.auth import router as auth_router
+
+from app.api.dependencies.auth import get_current_active_user
+
+from app.core.constants import UserRole
+from app.core.logging import get_logger
+from app.core.security import hash_password
 from app.database.base import Base
 from app.api.dependencies.database import engine, get_db
 from app.models.governance import AgentIdentity, AgentHealth
+from app.models.user import User
+
+logger = get_logger(__name__)
 
 app = FastAPI(
     title="Maritime Agentic Control System",
     description="Backend API for Maritime Agentic AI Control & Route Planning"
 )
 
+# Rate limiting, keyed on client IP. The Limiter instance lives in
+# app.core.limiter so route modules can decorate without importing this
+# module back.
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+# Explicit origin allowlist. `allow_origins=["*"]` with
+# allow_credentials=True is invalid per the CORS spec and meant any
+# website could call this API.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+
+def seed_first_superuser():
+    """Creates the initial admin account if the users table is empty.
+
+    Without this there is no way to obtain a token on a fresh database,
+    so every protected route would be permanently unreachable.
+    """
+    db = next(get_db())
+    if db.query(User).count() > 0:
+        return
+
+    admin = User(
+        email=settings.FIRST_SUPERUSER_EMAIL,
+        username=settings.FIRST_SUPERUSER_USERNAME,
+        full_name="Initial Administrator",
+        hashed_password=hash_password(settings.FIRST_SUPERUSER_PASSWORD),
+        role=UserRole.ADMIN,
+        is_active=True,
+        is_superuser=True,
+    )
+    db.add(admin)
+    db.commit()
+
+    if settings.FIRST_SUPERUSER_PASSWORD == "admin":
+        logger.warning(
+            "Seeded superuser '%s' with the default password. Change "
+            "FIRST_SUPERUSER_PASSWORD before exposing this service.",
+            settings.FIRST_SUPERUSER_USERNAME,
+        )
+    else:
+        logger.info("Seeded initial superuser '%s'.", settings.FIRST_SUPERUSER_USERNAME)
+
 
 def seed_governance_agents():
     Base.metadata.create_all(bind=engine)
@@ -71,6 +129,7 @@ ais_collector = AISStreamCollector(settings.AISSTREAM_API_KEY)
 @app.on_event("startup")
 def startup_event():
     seed_governance_agents()
+    seed_first_superuser()
     # No-ops when AISSTREAM_API_KEY is unset.
     ais_collector.start()
 
@@ -91,15 +150,25 @@ def health():
         "status": "healthy"
     }
 
-app.include_router(event_router, prefix="/api")
-app.include_router(risk_router, prefix="/api")
-app.include_router(workflow_router, prefix="/api")
-app.include_router(dashboard_router, prefix="/api")
-app.include_router(recommendation_router, prefix="/api")
-app.include_router(agents_router, prefix="/api")
+# --- Public routes -----------------------------------------------------
+# Login must be reachable without a token, and health checks are polled
+# by load balancers and the frontend's connectivity indicator.
+app.include_router(auth_router, prefix="/api", tags=["auth"])
 app.include_router(health_router, prefix="/api")
-app.include_router(vessels_router, prefix="/api")
-app.include_router(governance_router, prefix="/api/governance", tags=["governance"])
-app.include_router(congestion_router, prefix="/api", tags=["congestion"])
-app.include_router(delay_router, prefix="/api", tags=["delay"])
-app.include_router(fuel_router, prefix="/api", tags=["fuel"])
+
+# --- Protected routes --------------------------------------------------
+# Applied at the router level so a newly added endpoint is authenticated
+# by default rather than needing to remember a per-route dependency.
+protected = [Depends(get_current_active_user)]
+
+app.include_router(event_router, prefix="/api", dependencies=protected)
+app.include_router(risk_router, prefix="/api", dependencies=protected)
+app.include_router(workflow_router, prefix="/api", dependencies=protected)
+app.include_router(dashboard_router, prefix="/api", dependencies=protected)
+app.include_router(recommendation_router, prefix="/api", dependencies=protected)
+app.include_router(agents_router, prefix="/api", dependencies=protected)
+app.include_router(vessels_router, prefix="/api", dependencies=protected)
+app.include_router(governance_router, prefix="/api/governance", tags=["governance"], dependencies=protected)
+app.include_router(congestion_router, prefix="/api", tags=["congestion"], dependencies=protected)
+app.include_router(delay_router, prefix="/api", tags=["delay"], dependencies=protected)
+app.include_router(fuel_router, prefix="/api", tags=["fuel"], dependencies=protected)

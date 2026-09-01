@@ -1,3 +1,4 @@
+import { apiFetch } from './apiClient';
 const BASE_URL = 'http://localhost:8000/api';
 
 /**
@@ -7,14 +8,14 @@ const BASE_URL = 'http://localhost:8000/api';
  * assuming success.
  */
 export const executeWorkflow = async () => {
-  const res = await fetch(`${BASE_URL}/run-workflow`);
+  const res = await apiFetch(`${BASE_URL}/run-workflow`);
   if (!res.ok) throw new Error(`Workflow request failed (${res.status})`);
   return res.json();
 };
 
 /** Live agent registry from the governance layer. */
 export const getAgentStatus = async () => {
-  const res = await fetch(`${BASE_URL}/agents`);
+  const res = await apiFetch(`${BASE_URL}/agents`);
   if (!res.ok) throw new Error(`Agent status request failed (${res.status})`);
   return res.json();
 };

@@ -4,6 +4,7 @@ import { useRisks } from '../hooks/useRisks';
 import RiskCard from '../components/RiskCard';
 import RiskTrendChart from '../components/Charts/RiskTrendChart';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { apiFetch } from '../services/apiClient';
 
 const BASE_URL = 'http://localhost:8000/api';
 
@@ -29,7 +30,7 @@ export default function RiskAnalysis() {
     setConditionsLoading(true);
     setConditionsError(null);
     try {
-      const res = await fetch(`${BASE_URL}/conditions`);
+      const res = await apiFetch(`${BASE_URL}/conditions`);
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data = await res.json();
       if (data.source !== 'live') throw new Error(data.error || 'Live feed unavailable.');

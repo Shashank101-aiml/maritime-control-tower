@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from app.api.dependencies.auth import get_current_active_superuser
 from app.api.dependencies.database import get_db
 from app.models.governance import AgentIdentity, AgentExecutionTrace, AuditLog, ApprovalRequest, AgentHealth
+from app.models.user import User
 from app.governance.registry import get_all_agents
 from app.governance.policy import resolve_approval
 from app.governance.audit import log_audit_event
@@ -78,15 +80,28 @@ def reject_request(approval_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.post("/agents/{agent_id}/status")
-def update_agent_status(agent_id: str, status: str, db: Session = Depends(get_db)):
+def update_agent_status(
+    agent_id: str,
+    status: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_superuser),
+):
+    """Quarantining or re-enabling an agent halts or resumes the whole
+    pipeline, so it requires a superuser rather than any signed-in user.
+    """
     agent = db.query(AgentIdentity).filter(AgentIdentity.id == agent_id).first()
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")
-        
+
     old_status = agent.status
     agent.status = status
     db.commit()
-    
-    log_audit_event(db, "AGENT_STATUS_CHANGED", agent_id, None, "USER", "AGENT", "UPDATE_STATUS", status, f"Status changed from {old_status} to {status}")
-    
+
+    # Record who made the change rather than an anonymous "USER".
+    log_audit_event(
+        db, "AGENT_STATUS_CHANGED", agent_id, None, current_user.username,
+        "AGENT", "UPDATE_STATUS", status,
+        f"Status changed from {old_status} to {status} by {current_user.username}",
+    )
+
     return {"status": "success", "agent_id": agent_id, "new_status": status}

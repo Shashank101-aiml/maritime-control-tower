@@ -802,6 +802,89 @@ h1, h2, h3, h4 {
 }
 
 /* ==========================================================================
+   Sign in
+   ========================================================================== */
+
+.login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--navy-900);
+}
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 30px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.login-title {
+  font-size: 1.4rem;
+  margin: 4px 0 0;
+}
+
+.login-sub {
+  font-size: 0.85rem;
+  color: var(--text-subtle);
+  margin: 0 0 4px;
+  line-height: 1.55;
+}
+
+.login-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  border: 1px solid var(--danger-border);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+}
+
+.login-submit {
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  color: var(--text-body);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 5px 12px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+
+.user-chip:hover {
+  border-color: var(--text-subtle);
+  color: var(--text-strong);
+}
+
+/* ==========================================================================
    Landing page
    ========================================================================== */
 
