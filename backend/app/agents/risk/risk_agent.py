@@ -1,28 +1,35 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from app.agents.risk.risk_model import get_risk_model
+from app.schemas.agent_io import IngestedEvent, RiskAssessment
 
 
 class RiskAgent:
     def calculate_risk(
         self,
-        event: Dict[str, Any],
+        event: Union[IngestedEvent, Dict[str, Any]],
         route: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
-        severity = self._normalize_severity(event.get("severity"))
-        normalized_event = {**event, "severity": severity}
+    ) -> RiskAssessment:
+        # Agents pass a typed IngestedEvent; the /risks and /dashboard
+        # HTTP routes still call this with the dict IngestionAgent.collect_data()
+        # returns. Both are accepted so this doesn't force every caller to
+        # convert, but the return type is always the typed contract.
+        event_dict = event.model_dump() if isinstance(event, IngestedEvent) else dict(event)
+
+        severity = self._normalize_severity(event_dict.get("severity"))
+        normalized_event = {**event_dict, "severity": severity}
 
         prediction = get_risk_model().predict(event=normalized_event, route=route)
 
-        return {
-            "score": prediction["score"],
-            "severity": severity,
-            "likelihood": prediction["likelihood"],
-            "impact": prediction["impact"],
-            "category": event.get("event_type", "operational"),
-            "description": event.get("description"),
-            "scoring_method": prediction["scoring_method"],
-        }
+        return RiskAssessment(
+            score=prediction["score"],
+            severity=severity,
+            likelihood=prediction["likelihood"],
+            impact=prediction["impact"],
+            category=event_dict.get("event_type") or "operational",
+            description=event_dict.get("description"),
+            scoring_method=prediction["scoring_method"],
+        )
 
     def _normalize_severity(self, severity: Any) -> str:
         if not severity:

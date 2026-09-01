@@ -7,6 +7,18 @@ from app.governance.audit import log_audit_event
 from datetime import datetime
 import uuid
 
+
+def _serializable(value):
+    """Agents hand each other typed Pydantic contracts (see
+    app/schemas/agent_io.py), but AgentExecutionTrace.output_data and
+    ApprovalRequest.recommendation are JSON columns -- they need plain
+    dicts, not model instances. This is the one place that boundary is
+    crossed, so agents and the coordinator never need to know about it."""
+    if hasattr(value, "model_dump"):
+        return value.model_dump()
+    return value
+
+
 class GovernanceEngine:
     def __init__(self, db: Session):
         self.db = db
@@ -41,17 +53,21 @@ class GovernanceEngine:
             id=execution_id,
             agent_id=agent_id,
             parent_execution_id=parent_execution_id,
-            input_data=input_data,
+            input_data=_serializable(input_data),
             started_at=datetime.utcnow()
         )
         self.db.add(trace)
         self.db.commit()
-        
+
         log_audit_event(self.db, "AGENT_STARTED", agent_id, execution_id, agent_id, action, "EXECUTE", "STARTED")
 
         # 4. Execute Task (The actual agent logic)
+        # task_func gets the original input_data -- typed contract or dict,
+        # whatever the caller passed. Only the trace/audit copy below is
+        # flattened to JSON.
         try:
             output_data, confidence = task_func(input_data)
+            output_data = _serializable(output_data)
             trace.output_data = output_data
             trace.confidence = confidence
         except Exception as e:

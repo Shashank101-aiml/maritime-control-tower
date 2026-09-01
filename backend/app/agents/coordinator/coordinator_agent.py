@@ -5,6 +5,7 @@ from app.agents.explanation.explanation_agent import ExplanationAgent
 from app.api.dependencies.database import get_db
 from app.governance.core import GovernanceEngine
 from app.models.governance import AgentExecutionTrace, ApprovalRequest, AgentIdentity
+from app.schemas.agent_io import IngestedEvent, RiskAssessment, RouteRecommendation
 from sqlalchemy.orm import Session
 import uuid
 
@@ -14,15 +15,15 @@ class CoordinatorAgent:
         if db is None:
             db = next(get_db())
         engine = GovernanceEngine(db)
-        
+
         # 0. Set or generate session ID
         if not session_id:
             session_id = str(uuid.uuid4())
-            
+
         # Load existing executions in this session to resume/skip steps
         existing_traces = db.query(AgentExecutionTrace).filter(AgentExecutionTrace.request_id == session_id).all()
         trace_map = {t.agent_id: t for t in existing_traces}
-        
+
         # Helper to check if an agent is quarantined/disabled beforehand
         def check_agent_status(agent_id: str):
             agent = db.query(AgentIdentity).filter(AgentIdentity.id == agent_id).first()
@@ -52,9 +53,12 @@ class CoordinatorAgent:
                     "session_id": session_id,
                     "error": f"Ingestion Agent failed: {str(e)}"
                 }
-        
-        event = trace1.output_data
-        
+
+        # GovernanceEngine stores every trace's output as plain JSON (it has
+        # to -- that's the DB column type), so rehydrate it into the typed
+        # contract here. This is the hand-off risk_agent actually consumes.
+        event = IngestedEvent.model_validate(trace1.output_data)
+
         # 2. Risk Agent
         trace2 = trace_map.get("risk-agent")
         if not trace2:
@@ -69,7 +73,7 @@ class CoordinatorAgent:
                 def calculate_risk(data):
                     risk_agent = RiskAgent()
                     result = risk_agent.calculate_risk(data)
-                    confidence = risk_agent.assess_confidence(result["score"], result["scoring_method"])
+                    confidence = risk_agent.assess_confidence(result.score, result.scoring_method)
                     return result, confidence
                 trace2, req2 = engine.execute_agent_task("risk-agent", "ANALYZE", event, calculate_risk, parent_execution_id=trace1.id)
                 trace2.request_id = session_id
@@ -80,7 +84,7 @@ class CoordinatorAgent:
                     "session_id": session_id,
                     "error": f"Risk Agent failed: {str(e)}"
                 }
-                
+
         # Check approval status for Risk Agent step
         if trace2.approval_status == "PENDING":
             app_req = db.query(ApprovalRequest).filter(ApprovalRequest.execution_id == trace2.id).first()
@@ -98,10 +102,14 @@ class CoordinatorAgent:
                 "session_id": session_id,
                 "error": "Pipeline execution was rejected at Risk Assessment step."
             }
-            
-        risk = trace2.output_data
-        risk_score = risk.get("score", 50) if isinstance(risk, dict) else 50
-        
+
+        # score is a required field on RiskAssessment -- if the risk agent
+        # ever fails to produce one, this raises here rather than silently
+        # treating a broken risk agent as "medium risk" (previously
+        # `risk.get("score", 50)`).
+        risk = RiskAssessment.model_validate(trace2.output_data)
+        risk_score = risk.score
+
         # 3. Route Agent
         trace3 = trace_map.get("route-agent")
         if not trace3:
@@ -114,8 +122,7 @@ class CoordinatorAgent:
                 }
             try:
                 def suggest_route(data):
-                    score = data.get("score", 50) if isinstance(data, dict) else data
-                    return RouteAgent().suggest_route(score), 0.9
+                    return RouteRecommendation(**RouteAgent().suggest_route(data)), 0.9
                 trace3, req3 = engine.execute_agent_task("route-agent", "PLAN", risk_score, suggest_route, parent_execution_id=trace2.id)
                 trace3.request_id = session_id
                 db.commit()
@@ -125,7 +132,7 @@ class CoordinatorAgent:
                     "session_id": session_id,
                     "error": f"Route Agent failed: {str(e)}"
                 }
-                
+
         # Check approval status for Route Agent step
         if trace3.approval_status == "PENDING":
             app_req = db.query(ApprovalRequest).filter(ApprovalRequest.execution_id == trace3.id).first()
@@ -143,9 +150,15 @@ class CoordinatorAgent:
                 "session_id": session_id,
                 "error": "Pipeline execution was rejected at Route Planning step."
             }
-            
-        route = trace3.output_data if trace3 else {"route": "Corridor Beta (Southern Bypass)", "reason": "Avoids severe cyclonic weather system by shifting waypoints 120 nm south."}
-        
+
+        # trace3 is always set by this point (either resumed from trace_map
+        # or just created above -- every earlier return covers the cases
+        # where it wouldn't be), so there is no real "no route" case to
+        # fall back for. The previous fallback here was a hardcoded
+        # "Corridor Beta (Southern Bypass)" that could never actually run,
+        # which is worse than no fallback: it looked like a real decision.
+        route = RouteRecommendation.model_validate(trace3.output_data)
+
         # 4. Explanation Agent
         trace4 = trace_map.get("explanation-agent")
         if not trace4:
@@ -158,8 +171,12 @@ class CoordinatorAgent:
                 }
             try:
                 def explain_route(data):
-                    return ExplanationAgent().explain(data, event=event, risk=risk), 0.95
-                trace4, req4 = engine.execute_agent_task("explanation-agent", "EXPLAIN", route, explain_route, parent_execution_id=trace3.id if trace3 else None)
+                    # ExplanationAgent/PromptBuilder are dict-based internally
+                    # and unaffected by this slice -- convert at the call site.
+                    return ExplanationAgent().explain(
+                        data.model_dump(), event=event.model_dump(), risk=risk.model_dump()
+                    ), 0.95
+                trace4, req4 = engine.execute_agent_task("explanation-agent", "EXPLAIN", route, explain_route, parent_execution_id=trace3.id)
                 trace4.request_id = session_id
                 db.commit()
             except Exception as e:
@@ -168,7 +185,7 @@ class CoordinatorAgent:
                     "session_id": session_id,
                     "error": f"Explanation Agent failed: {str(e)}"
                 }
-                
+
         # Check approval status for Explanation Agent step
         if trace4.approval_status == "PENDING":
             app_req = db.query(ApprovalRequest).filter(ApprovalRequest.execution_id == trace4.id).first()
@@ -186,14 +203,17 @@ class CoordinatorAgent:
                 "session_id": session_id,
                 "error": "Pipeline execution was rejected at Explanation step."
             }
-            
-        explanation = trace4.output_data if trace4 else "Multi-agent pipeline completed risk assessment and dynamic corridor generation."
+
+        # Same reasoning as the route fallback above: trace4 is always set
+        # here, so the old "else <fabricated sentence>" branch could never
+        # run. explain() returns a plain string, so no rehydration needed.
+        explanation = trace4.output_data
 
         return {
             "status": "COMPLETED",
             "session_id": session_id,
-            "event": event,
+            "event": event.model_dump(),
             "risk_score": risk_score,
-            "route": route,
+            "route": route.model_dump(),
             "explanation": explanation
-        }
+        }
