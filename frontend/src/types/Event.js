@@ -8,6 +8,7 @@
  * @property {{lat:number, lng:number}|null} coordinates
  * @property {string|null} description
  * @property {Object|null} conditions - raw sea-state readings when present
+ * @property {string|null} classification_reason - why this severity was assigned
  * @property {string|null} vessel_id
  */
 
@@ -39,6 +40,7 @@ export const createEvent = (rawEvent = {}) => {
     coordinates: coords,
     description: rawEvent.description ?? null,
     conditions: rawEvent.conditions ?? null,
+    classification_reason: rawEvent.classification_reason ?? null,
     vessel_id: rawEvent.vessel_id ?? null,
   };
 };

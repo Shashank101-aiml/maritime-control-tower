@@ -802,6 +802,215 @@ h1, h2, h3, h4 {
 }
 
 /* ==========================================================================
+   Telemetry event card (expandable)
+   ========================================================================== */
+
+.event-card {
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+
+.event-card.severe {
+  background: var(--danger-soft);
+}
+
+.event-card:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+}
+
+.event-card.open {
+  background: var(--surface);
+}
+
+/* The whole header is the control — a real button, so it is
+   keyboard-reachable and announces its expanded state. */
+.event-card-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  color: inherit;
+}
+
+.event-card-head:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.event-card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.event-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.event-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  font-size: 0.8rem;
+  color: var(--text-subtle);
+}
+
+.event-card-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mono {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.72rem;
+}
+
+.event-card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.event-card-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+.event-card-chevron {
+  color: var(--text-subtle);
+  flex-shrink: 0;
+  transition: transform 0.18s ease, color 0.12s ease;
+}
+
+.event-card:hover .event-card-chevron {
+  color: var(--text-strong);
+}
+
+.event-card.open .event-card-chevron {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+.event-card-detail {
+  padding: 0 16px 16px 70px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: eventReveal 0.16s ease-out;
+}
+
+@keyframes eventReveal {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-card-detail { animation: none; }
+  .event-card-chevron { transition: none; }
+}
+
+.event-reason {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--text-body);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.reading-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 10px;
+}
+
+.reading {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 11px;
+}
+
+.reading-label {
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-subtle);
+  margin-bottom: 3px;
+}
+
+.reading-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.reading-unit {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+.event-card-desc {
+  margin: 0;
+  font-size: 0.83rem;
+  color: var(--text-subtle);
+  line-height: 1.55;
+}
+
+.event-card-source {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 0.72rem;
+  color: var(--text-subtle);
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 640px) {
+  .event-card-detail { padding-left: 16px; }
+  .event-card-right { display: none; }
+}
+
+/* ==========================================================================
    Charts
    ========================================================================== */
 
