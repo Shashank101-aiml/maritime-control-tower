@@ -1,46 +1,64 @@
+"""Authentication dependencies.
+
+The previous version of this module imported `app.crud` and
+`app.api.dependencies.db`, neither of which exist in this codebase, so
+it raised ImportError and no route could ever have depended on it.
+"""
 
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from app import crud, models
-from app.api.dependencies.db import get_db
-from app.core.config import settings
+from app.api.dependencies.database import get_db
+from app.core.security import decode_access_token
+from app.models.user import User
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+CREDENTIALS_EXCEPTION = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
 
 
-def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> models.User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+def get_current_user(
+    db: Session = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
+) -> User:
+    subject: Optional[str] = decode_access_token(token)
+    if subject is None:
+        raise CREDENTIALS_EXCEPTION
 
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        user_id: Optional[str] = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except JWTError:
-        raise credentials_exception
+        user_id = int(subject)
+    except (TypeError, ValueError):
+        raise CREDENTIALS_EXCEPTION
 
-    user = crud.user.get(db, id=int(user_id))
-    if not user:
-        raise credentials_exception
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise CREDENTIALS_EXCEPTION
     return user
 
 
-def get_current_active_user(current_user: models.User = Depends(get_current_user)) -> models.User:
+def get_current_active_user(current_user: User = Depends(get_current_user)) -> User:
     if not current_user.is_active:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
+        )
     return current_user
 
 
-def get_current_active_superuser(current_user: models.User = Depends(get_current_user)) -> models.User:
+def get_current_active_superuser(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """Reserved for destructive operations (quarantining agents, etc.)."""
     if not current_user.is_superuser:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient privileges")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient privileges",
+        )
     return current_user

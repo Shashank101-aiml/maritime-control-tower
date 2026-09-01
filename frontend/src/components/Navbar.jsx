@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Anchor, Clock } from 'lucide-react';
+import { Anchor, Clock, User as UserIcon, LogOut } from 'lucide-react';
 
 const formatUtc = (date) =>
   date.toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
 
-export default function Navbar({ backendOnline, onBrandClick }) {
+export default function Navbar({ backendOnline, onBrandClick, user, onSignOut }) {
   const [time, setTime] = useState(() => formatUtc(new Date()));
 
   useEffect(() => {
@@ -55,6 +55,18 @@ export default function Navbar({ backendOnline, onBrandClick }) {
           <span className="pulse-dot" />
           {backendOnline ? 'Operational' : 'Offline'}
         </span>
+
+        {user && (
+          <button
+            className="user-chip"
+            onClick={onSignOut}
+            title={`Signed in as ${user.username}${user.is_superuser ? ' (admin)' : ''} — click to sign out`}
+          >
+            <UserIcon size={13} />
+            {user.username}
+            <LogOut size={13} />
+          </button>
+        )}
       </div>
     </header>
   );

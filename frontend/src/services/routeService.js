@@ -1,4 +1,5 @@
 import { createRecommendation } from '../types/Recommendation';
+import { apiFetch } from './apiClient';
 
 const BASE_URL = 'http://localhost:8000/api';
 
@@ -9,7 +10,7 @@ const BASE_URL = 'http://localhost:8000/api';
  * rather than substituting an invented recommendation.
  */
 export const getRecommendations = async () => {
-  const res = await fetch(`${BASE_URL}/recommendations`);
+  const res = await apiFetch(`${BASE_URL}/recommendations`);
   if (!res.ok) throw new Error(`Recommendation request failed (${res.status})`);
   return createRecommendation(await res.json());
 };

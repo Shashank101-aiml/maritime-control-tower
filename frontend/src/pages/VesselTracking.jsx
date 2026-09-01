@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Ship, Search, AlertTriangle, RefreshCw, Radio, Waves, Navigation } from 'lucide-react';
 import { getVessels } from '../services/vesselService';
 import VesselMap from '../components/VesselMap';
+import { apiFetch } from '../services/apiClient';
 
 const BASE_URL = 'http://localhost:8000/api';
 
@@ -30,7 +31,7 @@ export default function VesselTracking() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${BASE_URL}/conditions`);
+      const res = await apiFetch(`${BASE_URL}/conditions`);
       if (!res.ok) throw new Error(`Request failed (${res.status})`);
       const data = await res.json();
       if (data.source !== 'live') throw new Error(data.error || 'Live feed unavailable.');

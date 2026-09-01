@@ -1,3 +1,4 @@
+import { apiFetch } from './apiClient';
 const BASE_URL = 'http://localhost:8000/api';
 
 /**
@@ -6,7 +7,7 @@ const BASE_URL = 'http://localhost:8000/api';
  * misleading rather than a harmless placeholder.
  */
 export const predictCongestion = async (payload) => {
-  const res = await fetch(`${BASE_URL}/congestion/predict`, {
+  const res = await apiFetch(`${BASE_URL}/congestion/predict`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

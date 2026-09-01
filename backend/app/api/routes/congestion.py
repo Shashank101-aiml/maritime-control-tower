@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.agents.congestion.congestion_agent import get_congestion_agent
@@ -8,15 +8,17 @@ from app.api.dependencies.database import get_db
 from app.governance.core import GovernanceEngine
 from app.models.governance import ApprovalRequest
 from app.schemas.congestion import CongestionPredictionRequest
+from app.core.limiter import RATE_LIMIT, limiter
 
 router = APIRouter()
 
 
 @router.post("/congestion/predict")
-def predict_congestion(request: CongestionPredictionRequest, db: Session = Depends(get_db)):
+@limiter.limit(RATE_LIMIT)
+def predict_congestion(request: Request, payload: CongestionPredictionRequest, db: Session = Depends(get_db)):
     engine = GovernanceEngine(db)
     session_id = str(uuid.uuid4())
-    features = request.model_dump()
+    features = payload.model_dump()
 
     def run(data):
         agent = get_congestion_agent()

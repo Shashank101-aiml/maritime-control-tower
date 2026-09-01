@@ -1,4 +1,5 @@
 import { createRiskAssessment } from '../types/Risk';
+import { apiFetch } from './apiClient';
 
 const BASE_URL = 'http://localhost:8000/api';
 
@@ -7,7 +8,7 @@ const BASE_URL = 'http://localhost:8000/api';
  * No mock fallback — a fabricated risk score is worse than no score.
  */
 export const getRisks = async () => {
-  const res = await fetch(`${BASE_URL}/risks`);
+  const res = await apiFetch(`${BASE_URL}/risks`);
   if (!res.ok) throw new Error(`Risk request failed (${res.status})`);
   return createRiskAssessment(await res.json());
 };
@@ -20,8 +21,8 @@ export const getRisks = async () => {
  */
 export const getFleetRiskAssessment = async () => {
   const [riskRes, dashboardRes] = await Promise.all([
-    fetch(`${BASE_URL}/risks`),
-    fetch(`${BASE_URL}/dashboard`),
+    apiFetch(`${BASE_URL}/risks`),
+    apiFetch(`${BASE_URL}/dashboard`),
   ]);
 
   if (!riskRes.ok && !dashboardRes.ok) {

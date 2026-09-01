@@ -1,3 +1,4 @@
+import { apiFetch } from './apiClient';
 const BASE_URL = 'http://localhost:8000/api';
 
 /**
@@ -7,7 +8,7 @@ const BASE_URL = 'http://localhost:8000/api';
  * showing an ambiguous empty list.
  */
 export const getVessels = async () => {
-  const res = await fetch(`${BASE_URL}/vessels`);
+  const res = await apiFetch(`${BASE_URL}/vessels`);
   if (!res.ok) throw new Error(`Vessel request failed (${res.status})`);
   return res.json();
 };

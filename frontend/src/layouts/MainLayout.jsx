@@ -35,13 +35,18 @@ const useBackendHealth = () => {
   return online;
 };
 
-const MainContentWrapper = ({ activeTab, setActiveTab, onExitToLanding, children }) => {
+const MainContentWrapper = ({ activeTab, setActiveTab, onExitToLanding, user, onSignOut, children }) => {
   const { activeAlert, dismissAlert } = useEventContext();
   const backendOnline = useBackendHealth();
 
   return (
     <div className="app-container">
-      <Navbar backendOnline={backendOnline} onBrandClick={onExitToLanding} />
+      <Navbar
+          backendOnline={backendOnline}
+          onBrandClick={onExitToLanding}
+          user={user}
+          onSignOut={onSignOut}
+        />
       <div className="layout-body">
         <Sidebar
           activeTab={activeTab}
@@ -61,7 +66,7 @@ const MainContentWrapper = ({ activeTab, setActiveTab, onExitToLanding, children
   );
 };
 
-export default function MainLayout({ activeTab, setActiveTab, onExitToLanding, children }) {
+export default function MainLayout({ activeTab, setActiveTab, onExitToLanding, user, onSignOut, children }) {
   return (
     <EventProvider>
       <RiskProvider>
@@ -69,6 +74,8 @@ export default function MainLayout({ activeTab, setActiveTab, onExitToLanding, c
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           onExitToLanding={onExitToLanding}
+          user={user}
+          onSignOut={onSignOut}
         >
           {children}
         </MainContentWrapper>

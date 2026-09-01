@@ -1,7 +1,50 @@
 import pytest
 
 from app.agents.ingestion import live_conditions_client
+from app.api.dependencies.auth import get_current_active_user, get_current_active_superuser
 from app.core.config import settings
+from app.core.constants import UserRole
+from app.main import app
+from app.models.user import User
+
+
+def _test_user(superuser: bool = True) -> User:
+    """A stand-in principal — never touches the database."""
+    user = User(
+        id=1,
+        email="tester@example.com",
+        username="tester",
+        full_name="Test User",
+        hashed_password="unused",
+        role=UserRole.ADMIN if superuser else UserRole.OPERATOR,
+        is_active=True,
+        is_superuser=superuser,
+    )
+    return user
+
+
+@pytest.fixture(autouse=True)
+def authenticated_by_default():
+    """Every route is authenticated now, so the suite would otherwise be
+    49 assertions about 401s.
+
+    This overrides the auth dependency so existing tests keep exercising
+    the behaviour they were written for. Tests that need to verify the
+    auth boundary itself clear the override — see test_auth.py.
+    """
+    app.dependency_overrides[get_current_active_user] = lambda: _test_user()
+    app.dependency_overrides[get_current_active_superuser] = lambda: _test_user()
+    yield
+    app.dependency_overrides.pop(get_current_active_user, None)
+    app.dependency_overrides.pop(get_current_active_superuser, None)
+
+
+@pytest.fixture
+def unauthenticated():
+    """Drops the override so a test can assert the real 401 behaviour."""
+    app.dependency_overrides.clear()
+    yield
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture(autouse=True)

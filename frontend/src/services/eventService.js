@@ -1,4 +1,5 @@
 import { createEvent } from '../types/Event';
+import { apiFetch } from './apiClient';
 
 const BASE_URL = 'http://localhost:8000/api';
 
@@ -8,7 +9,7 @@ const BASE_URL = 'http://localhost:8000/api';
  * showing the user that the feed is down.
  */
 export const getEvents = async () => {
-  const res = await fetch(`${BASE_URL}/events`);
+  const res = await apiFetch(`${BASE_URL}/events`);
   if (!res.ok) throw new Error(`Events request failed (${res.status})`);
   const data = await res.json();
   return Array.isArray(data) ? data.map(createEvent) : [createEvent(data)];
@@ -19,7 +20,7 @@ export const getEvents = async () => {
  * the Open-Meteo feed via /api/conditions.
  */
 export const getEventHistory = async () => {
-  const res = await fetch(`${BASE_URL}/conditions`);
+  const res = await apiFetch(`${BASE_URL}/conditions`);
   if (!res.ok) throw new Error(`Conditions request failed (${res.status})`);
   const data = await res.json();
 
