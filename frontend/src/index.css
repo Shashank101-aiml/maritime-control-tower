@@ -802,6 +802,121 @@ h1, h2, h3, h4 {
 }
 
 /* ==========================================================================
+   Charts
+   ========================================================================== */
+
+/* Shown wherever a chart has no real data to draw, instead of inventing
+   a plausible-looking series. */
+.chart-empty {
+  text-align: center;
+  padding: 44px 20px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface-subtle);
+}
+
+.chart-empty p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-subtle);
+}
+
+.chart-empty-sub {
+  margin-top: 6px !important;
+  font-size: 0.8rem !important;
+}
+
+.chart-plot {
+  position: relative;
+  height: 190px;
+  margin-top: 22px;
+  padding-left: 30px;
+}
+
+.chart-gridline {
+  position: absolute;
+  left: 30px;
+  right: 0;
+  height: 1px;
+  background: var(--border);
+}
+
+.chart-gridline span {
+  position: absolute;
+  left: -30px;
+  top: -0.55em;
+  width: 24px;
+  text-align: right;
+  font-size: 0.68rem;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-bars {
+  position: absolute;
+  inset: 0 0 0 30px;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.chart-bar-slot {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+  cursor: default;
+}
+
+.chart-bar-stack {
+  width: 100%;
+  max-width: 22px;
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-start;
+  border-radius: 3px 3px 0 0;
+  overflow: hidden;
+}
+
+.chart-seg {
+  width: 100%;
+  transition: background 0.12s ease;
+}
+
+.chart-tip {
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 6px;
+  background: var(--navy-800);
+  border: 1px solid var(--border-strong);
+  color: var(--text-body);
+  padding: 5px 9px;
+  border-radius: var(--radius-sm);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+}
+
+.chart-xaxis {
+  display: flex;
+  gap: 3px;
+  padding-left: 30px;
+  margin-top: 7px;
+}
+
+.chart-xaxis span {
+  flex: 1;
+  text-align: center;
+  font-size: 0.68rem;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
    Sign in
    ========================================================================== */
 
