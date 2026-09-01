@@ -13,16 +13,23 @@ export const getRisks = async () => {
   return createRiskAssessment(await res.json());
 };
 
+/** Recorded risk scores over time, for the trajectory chart. */
+export const getRiskHistory = async (hours = 24) => {
+  const res = await apiFetch(`${BASE_URL}/risks/history?hours=${hours}`);
+  if (!res.ok) throw new Error(`Risk history request failed (${res.status})`);
+  return res.json();
+};
+
 /**
- * Fleet-level risk view. `trends` is intentionally empty: the backend
- * keeps no historical risk time series yet, and inventing a 24h curve
- * would misrepresent made-up numbers as measurements. The chart renders
- * an empty state until real history exists.
+ * Fleet-level risk view. `trends` now comes from recorded history
+ * (risk_readings), not an invented curve — buckets with no reading stay
+ * null rather than being plotted as zero.
  */
 export const getFleetRiskAssessment = async () => {
-  const [riskRes, dashboardRes] = await Promise.all([
+  const [riskRes, dashboardRes, historyRes] = await Promise.all([
     apiFetch(`${BASE_URL}/risks`),
     apiFetch(`${BASE_URL}/dashboard`),
+    apiFetch(`${BASE_URL}/risks/history?hours=24`),
   ]);
 
   if (!riskRes.ok && !dashboardRes.ok) {
@@ -31,6 +38,7 @@ export const getFleetRiskAssessment = async () => {
 
   const riskData = riskRes.ok ? await riskRes.json() : null;
   const dashboardData = dashboardRes.ok ? await dashboardRes.json() : null;
+  const history = historyRes.ok ? await historyRes.json() : null;
   const score = riskData?.risk_score ?? dashboardData?.average_fleet_risk ?? null;
 
   return {
@@ -38,7 +46,8 @@ export const getFleetRiskAssessment = async () => {
       ...(riskData?.details || {}),
       risk_score: score,
     }),
-    trends: [],
+    trends: history?.series?.filter((p) => p.score !== null) || [],
+    history,
     fleetSummary: {
       totalVessels: dashboardData?.active_vessels ?? null,
       vesselsAtRisk: null,

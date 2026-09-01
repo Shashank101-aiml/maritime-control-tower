@@ -17,6 +17,10 @@ slowapi==0.1.10
 
 # --- Database ---
 SQLAlchemy==2.0.52
+alembic==1.19.1
+# Postgres driver, used when DATABASE_URL points at Postgres
+# (docker compose). SQLite needs no driver.
+psycopg[binary]==3.3.5
 
 # --- HTTP / streaming clients ---
 requests==2.34.2

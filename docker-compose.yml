@@ -1,6 +1,25 @@
-version: '3.8'
-
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: maritime-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-maritime}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-maritime}
+      POSTGRES_DB: ${POSTGRES_DB:-maritime}
+    volumes:
+      # Named volume, so history survives `docker compose down`.
+      - maritime-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      # The backend waits for this rather than racing the database on
+      # startup and failing its migrations.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-maritime} -d ${POSTGRES_DB:-maritime}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
   backend:
     build:
       context: ./backend
@@ -10,6 +29,18 @@ services:
       - "8000:8000"
     env_file:
       - ./backend/.env
+    environment:
+      # Overrides the .env value so the container talks to the db
+      # service rather than a host-local SQLite file.
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-maritime}:${POSTGRES_PASSWORD:-maritime}@db:5432/${POSTGRES_DB:-maritime}
+    depends_on:
+      db:
+        condition: service_healthy
+    # Schema is applied by Alembic at container start; the app no longer
+    # creates tables itself.
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
     restart: unless-stopped
 
   frontend:
@@ -22,3 +53,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+
+volumes:
+  maritime-db-data:
