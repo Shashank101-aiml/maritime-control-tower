@@ -14,24 +14,33 @@ export const EventProvider = ({ children }) => {
   const fetchAllEvents = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const [latestEvents, history] = await Promise.all([
-        getEvents(),
-        getEventHistory()
-      ]);
-      setEvents(latestEvents);
-      setEventHistory(history);
+    // allSettled, not all: these are independent endpoints, and with
+    // Promise.all a failure in one discarded the other's successful
+    // result — a single flaky call blanked the whole page.
+    const [latestResult, historyResult] = await Promise.allSettled([
+      getEvents(),
+      getEventHistory(),
+    ]);
 
-      // Check for high severity alert
-      const highSev = history.find(e => e.severity === 'HIGH' || e.severity === 'CRITICAL');
-      if (highSev) {
-        setActiveAlert(highSev);
-      }
-    } catch (err) {
-      setError('Failed to synchronize telemetry stream.');
-    } finally {
-      setLoading(false);
+    if (latestResult.status === 'fulfilled') {
+      setEvents(latestResult.value);
     }
+
+    if (historyResult.status === 'fulfilled') {
+      setEventHistory(historyResult.value);
+      const severe = historyResult.value.find(
+        (e) => e.severity === 'HIGH' || e.severity === 'CRITICAL'
+      );
+      if (severe) setActiveAlert(severe);
+    }
+
+    const failures = [latestResult, historyResult]
+      .filter((r) => r.status === 'rejected')
+      .map((r) => r.reason?.message)
+      .filter(Boolean);
+
+    setError(failures.length ? failures[0] : null);
+    setLoading(false);
   }, []);
 
   useEffect(() => {
