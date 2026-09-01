@@ -802,6 +802,43 @@ h1, h2, h3, h4 {
 }
 
 /* ==========================================================================
+   Freshness indicator
+   ========================================================================== */
+
+.freshness {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.freshness-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--success);
+  flex-shrink: 0;
+  animation: freshPulse 2s ease-in-out infinite;
+}
+
+@keyframes freshPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .freshness-dot { animation: none; }
+}
+
+.freshness-sep {
+  color: var(--text-subtle);
+  opacity: 0.85;
+}
+
+/* ==========================================================================
    Telemetry event card (expandable)
    ========================================================================== */
 

@@ -11,6 +11,7 @@ export const useEvents = () => {
     loading,
     error,
     filterSeverity,
+    freshness,
     setFilterSeverity,
     activeAlert,
     dismissAlert,
@@ -20,6 +21,7 @@ export const useEvents = () => {
   const highSeverityCount = rawHistory.filter(e => e.severity === 'HIGH' || e.severity === 'CRITICAL').length;
 
   return {
+    freshness,
     events,
     eventHistory,
     rawHistory,

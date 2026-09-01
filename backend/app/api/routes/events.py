@@ -25,11 +25,14 @@ def get_conditions():
     than silently presenting stale or invented readings.
     """
     try:
-        events = LiveConditionsClient().get_all_events()
+        client = LiveConditionsClient()
+        events = client.get_all_events()
         return {
             "source": "live",
             "provider": "open-meteo",
             "count": len(events),
+            # Lets the UI show how fresh this is and when it next changes.
+            **client.cache_status(),
             "conditions": events,
         }
     except Exception as exc:
