@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 from typing_extensions import Annotated
 
 from pydantic_settings import BaseSettings, NoDecode
@@ -47,12 +47,39 @@ class Settings(BaseSettings):
     # Requests per minute per client IP on prediction/workflow routes.
     RATE_LIMIT_PER_MINUTE: int = 60
 
+    # How RouteOptimizer weighs the four normalized objectives when
+    # scoring candidate routes (spec's Optimization Agent explicitly
+    # wants these configurable, not hardcoded). Values don't need to sum
+    # to 1.0 -- RouteOptimizer normalizes by their sum at use time, so a
+    # partial override (e.g. just bumping "risk") still works sensibly.
+    # Same NoDecode + before-validator pattern as CORS_ORIGINS above,
+    # since a Dict-typed field hits the identical json.loads()-before-
+    # validator problem a List-typed one does.
+    ROUTE_OPTIMIZATION_WEIGHTS: Annotated[Dict[str, float], NoDecode] = {
+        "risk": 0.4,
+        "cost": 0.25,
+        "delay": 0.25,
+        "emissions": 0.1,
+    }
+
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def _split_origins(cls, value):
         """Accept `a,b,c` from .env as well as a real list."""
         if isinstance(value, str):
             return [origin.strip() for origin in value.split(",") if origin.strip()]
+        return value
+
+    @field_validator("ROUTE_OPTIMIZATION_WEIGHTS", mode="before")
+    @classmethod
+    def _parse_weights(cls, value):
+        """Accept `risk:0.4,cost:0.25,delay:0.25,emissions:0.1` from .env."""
+        if isinstance(value, str):
+            pairs = [pair.strip() for pair in value.split(",") if pair.strip()]
+            return {
+                key.strip(): float(raw)
+                for key, raw in (pair.split(":", 1) for pair in pairs)
+            }
         return value
 
     class Config:
