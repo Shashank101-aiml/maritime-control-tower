@@ -30,7 +30,13 @@ services:
       dockerfile: Dockerfile
     container_name: maritime-backend
     ports:
-      - "8000:8000"
+      # Published on 8001 by default: this host also runs other Docker
+      # projects (e.g. an aiiam_backend container) that already claim
+      # 8000, and `docker compose up` fails outright on that conflict
+      # rather than silently misrouting the way the 5432/Postgres case
+      # did -- but it's still one more thing to override per machine.
+      # Containers still talk to this one as backend:8000 regardless.
+      - "${BACKEND_HOST_PORT:-8001}:8000"
     volumes:
       # The congestion/delay/fuel/risk agents locate the trained models by
       # walking up from their own file (parents[4]), which on the host
@@ -65,6 +71,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # Vite bakes this in at build time -- must match wherever the
+        # backend service above actually publishes to on this host.
+        VITE_API_BASE_URL: http://localhost:${BACKEND_HOST_PORT:-8001}
     container_name: maritime-frontend
     ports:
       - "80:80"
