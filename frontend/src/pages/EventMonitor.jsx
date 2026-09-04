@@ -1,5 +1,7 @@
 import React from 'react';
-import { Radio, Filter, RefreshCw, AlertTriangle, MapPin, X, Waves, Info } from 'lucide-react';
+import {
+  Radio, Filter, RefreshCw, AlertTriangle, MapPin, X, Waves, Info, Navigation, Clock,
+} from 'lucide-react';
 import { useEvents } from '../hooks/useEvents';
 import EventCard from '../components/EventCard';
 import EventTimelineChart from '../components/Charts/EventTimelineChart';
@@ -16,6 +18,24 @@ const formatTime = (value) => {
   return parsed.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hour12: false }) + ' UTC';
 };
 
+/** 238° -> "238° WSW" */
+const bearing = (deg) => {
+  if (deg == null) return null;
+  const points = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+    'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+  return `${Math.round(deg)}° ${points[Math.round(deg / 22.5) % 16]}`;
+};
+
+const Metric = ({ label, value, unit }) =>
+  value == null ? null : (
+    <div className="reading">
+      <div className="reading-label">{label}</div>
+      <div className="reading-value">
+        {value}{unit ? <span className="reading-unit"> {unit}</span> : null}
+      </div>
+    </div>
+  );
+
 export default function EventMonitor() {
   const {
     eventHistory,
@@ -30,15 +50,22 @@ export default function EventMonitor() {
   } = useEvents();
 
   // Shared across tabs (see CorridorContext.jsx). This page both reads a
-  // selection made elsewhere (to filter the log feed below) and writes
-  // one from the Corridor Status panel further down -- so a corridor
-  // picked here shows up on Vessel Tracking's map, Risk Analysis's
-  // highlighted card, and Route Planning's auto-filled origin/destination,
-  // exactly as a selection made on Vessel Tracking shows up here.
+  // selection made elsewhere (to drive the dedicated status panel below)
+  // and writes one from the Corridor Status list further down -- so a
+  // corridor picked here shows up on Vessel Tracking's map, Risk
+  // Analysis's highlighted card, and Route Planning's auto-filled
+  // origin/destination, exactly as a selection made on Vessel Tracking
+  // shows up here.
   const { selectedCorridor, selectCorridor, clearCorridor } = useCorridorContext();
   const corridorFiltered = selectedCorridor
     ? eventHistory.filter((evt) => evt.location === selectedCorridor.location)
     : eventHistory;
+
+  // The full live reading for whichever corridor is selected -- this is
+  // what the dedicated status panel renders, not just its name.
+  const activeReading = selectedCorridor
+    ? rawHistory.find((c) => c.location === selectedCorridor.location)
+    : null;
 
   const toggleCorridor = (location) => {
     if (selectedCorridor?.location === location) clearCorridor();
@@ -92,23 +119,108 @@ export default function EventMonitor() {
         <EventTimelineChart />
       </div>
 
-      <div className="content-grid" style={{ gridTemplateColumns: '1.4fr 1fr', alignItems: 'start' }}>
-        <div>
-          {selectedCorridor && (
-            <div className="workflow-box" style={{
-              marginBottom: '20px', display: 'flex', alignItems: 'center',
-              justifyContent: 'space-between', background: 'var(--info-soft)', border: '1px solid var(--accent-cyan)',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-strong)', fontSize: '0.9rem' }}>
-                <MapPin size={16} color="var(--accent-cyan)" />
-                Showing telemetry for <strong>{selectedCorridor.location}</strong>
-              </div>
+      {/* Selected Corridor -- Live Status. A dedicated, always-visible
+          section (not just a filtered list row) showing everything
+          currently known about whichever corridor is selected, whether
+          that selection was made here or on Vessel Tracking's map. */}
+      {selectedCorridor && (
+        <div
+          className="glass-panel"
+          style={{
+            padding: '24px', marginBottom: '24px',
+            borderColor: activeReading ? getSeverityTone(activeReading.severity).border : 'var(--accent-cyan)',
+          }}
+        >
+          <div className="section-header" style={{ marginBottom: activeReading ? '16px' : 0 }}>
+            <h3 className="section-title" style={{ fontSize: '1.15rem' }}>
+              <MapPin size={20} color="var(--accent-cyan)" />
+              Selected Corridor — {selectedCorridor.location}
+            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {activeReading && (
+                <span
+                  className="status-badge"
+                  style={{
+                    background: getSeverityTone(activeReading.severity).bg,
+                    borderColor: getSeverityTone(activeReading.severity).border,
+                    color: getSeverityTone(activeReading.severity).fg,
+                  }}
+                >
+                  {getSeverityLabel(activeReading.severity)}
+                </span>
+              )}
               <button className="btn-secondary" onClick={clearCorridor} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
                 <X size={14} /> Clear
               </button>
             </div>
-          )}
+          </div>
 
+          {!activeReading ? (
+            <p style={{ color: 'var(--text-subtle)', fontSize: '0.85rem' }}>
+              No live reading for {selectedCorridor.location} in the current feed.
+            </p>
+          ) : (
+            <>
+              <p style={{ fontSize: '0.95rem', color: 'var(--text-strong)', marginBottom: '14px', fontWeight: 600 }}>
+                {activeReading.event_type}
+                {activeReading.description ? ` — ${activeReading.description}` : ''}
+              </p>
+
+              <div className="reading-grid">
+                <Metric label="Significant wave" value={activeReading.conditions?.wave_height_m} unit="m" />
+                <Metric label="Swell" value={activeReading.conditions?.swell_height_m} unit="m" />
+                <Metric label="Wind wave" value={activeReading.conditions?.wind_wave_height_m} unit="m" />
+                <Metric label="Wave period" value={activeReading.conditions?.wave_period_s} unit="s" />
+                <Metric label="Wind speed" value={activeReading.conditions?.wind_speed_kmh} unit="km/h" />
+                <Metric label="Gusts" value={activeReading.conditions?.wind_gusts_kmh} unit="km/h" />
+                {activeReading.conditions?.wind_direction_deg != null && (
+                  <div className="reading">
+                    <div className="reading-label">
+                      <Navigation size={10} style={{ display: 'inline', marginRight: 3 }} />
+                      Wind direction
+                    </div>
+                    <div className="reading-value">{bearing(activeReading.conditions.wind_direction_deg)}</div>
+                  </div>
+                )}
+              </div>
+
+              {activeReading.classification_reason && (
+                <div
+                  className="event-reason"
+                  style={{
+                    marginTop: '14px',
+                    borderColor: getSeverityTone(activeReading.severity).border,
+                    background: getSeverityTone(activeReading.severity).bg,
+                  }}
+                >
+                  <Info size={14} color={getSeverityTone(activeReading.severity).fg} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <span>{activeReading.classification_reason}</span>
+                </div>
+              )}
+
+              <div className="event-card-source" style={{ marginTop: '14px' }}>
+                {activeReading.coordinates && (
+                  <span className="mono">
+                    {activeReading.coordinates.lat.toFixed(4)}, {activeReading.coordinates.lng.toFixed(4)}
+                  </span>
+                )}
+                {activeReading.timestamp && (
+                  <span><Clock size={11} style={{ verticalAlign: '-2px', marginRight: '3px' }} />Observed {formatTime(activeReading.timestamp)}</span>
+                )}
+                <span>Source: Open-Meteo marine &amp; forecast</span>
+              </div>
+
+              <p className="form-note" style={{ marginTop: '12px' }}>
+                This selection is shared across tabs — it also focuses the map on Vessel Tracking,
+                highlights the corridor on Risk Analysis, and auto-fills Route Planning.
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="content-grid" style={{ gridTemplateColumns: '1.4fr 1fr', alignItems: 'start' }}>
+        <div>
           {/* Events Feed Grid */}
           <div className="glass-panel" style={{ padding: '24px' }}>
             <div className="section-header" style={{ marginBottom: '16px' }}>
@@ -172,8 +284,9 @@ export default function EventMonitor() {
             </h3>
           </div>
           <p className="form-note" style={{ marginTop: 0, marginBottom: '14px' }}>
-            Live sea state per monitored corridor. Select one to filter the log feed here and
-            focus it across Vessel Tracking, Risk Analysis, and Route Planning.
+            Live sea state per monitored corridor. Select one to see its full current status above,
+            filter the log feed here, and focus it across Vessel Tracking, Risk Analysis, and
+            Route Planning.
           </p>
 
           {loading && rawHistory.length === 0 ? (
@@ -214,19 +327,6 @@ export default function EventMonitor() {
               })}
             </div>
           )}
-
-          {selectedCorridor && (() => {
-            const active = rawHistory.find((c) => c.location === selectedCorridor.location);
-            return active?.classification_reason ? (
-              <div className="event-reason" style={{
-                marginTop: '14px', borderColor: getSeverityTone(active.severity).border,
-                background: getSeverityTone(active.severity).bg,
-              }}>
-                <Info size={14} color={getSeverityTone(active.severity).fg} style={{ flexShrink: 0, marginTop: 2 }} />
-                <span>{active.classification_reason}</span>
-              </div>
-            ) : null;
-          })()}
         </div>
       </div>
     </div>
