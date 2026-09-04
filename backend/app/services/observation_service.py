@@ -143,3 +143,54 @@ def risk_history(db: Session, hours: int = 24, buckets: int = 24) -> Dict[str, A
         "peak_score": max((r.score for r in rows), default=None),
         "series": series,
     }
+
+
+def risk_history_by_corridor(db: Session, hours: int = 72) -> Dict[str, Any]:
+    """Real per-corridor risk trend, one series per monitored corridor.
+
+    risk_history() above only ever has data for whichever single
+    corridor happened to be the fleet-wide worst at the moment each
+    /api/risks poll landed -- in practice that's meant months of
+    testing where every recorded RiskReading is for the same one
+    corridor, because it never stopped being the worst. This instead
+    re-scores every stored ConditionReading (real recorded sea-state,
+    all 8 corridors, from record_conditions()) through RiskAgent, so
+    every corridor gets its own real trend line built from data that
+    was already being recorded regardless.
+
+    No time-bucketing: condition readings publish upstream roughly
+    every 15 minutes and this deployment hasn't run continuously, so
+    forcing them into a fixed grid would mostly produce empty slots.
+    Real observed points are returned as-is, in order.
+    """
+    from app.agents.risk.risk_agent import RiskAgent
+
+    hours = max(1, min(hours, 168))
+    window_start = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=hours)
+
+    readings = (
+        db.query(ConditionReading)
+        .filter(ConditionReading.recorded_at >= window_start)
+        .order_by(ConditionReading.observed_at)
+        .all()
+    )
+
+    agent = RiskAgent()
+    by_corridor: Dict[str, List[Dict[str, Any]]] = {}
+    for r in readings:
+        try:
+            assessment = agent.calculate_risk(
+                {"event_type": r.event_type, "severity": r.severity, "location": r.location}
+            )
+        except Exception as exc:
+            logger.warning("Could not re-score condition reading %s for trend: %s", r.id, exc)
+            continue
+        by_corridor.setdefault(r.location, []).append(
+            {"time": r.observed_at, "score": assessment.score}
+        )
+
+    return {
+        "hours": hours,
+        "corridors": by_corridor,
+        "total_points": sum(len(v) for v in by_corridor.values()),
+    }

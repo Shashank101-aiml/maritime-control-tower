@@ -32,15 +32,29 @@ export const getRiskCorridors = async () => {
 };
 
 /**
+ * Real per-corridor risk trend -- one series per monitored corridor,
+ * built from stored sea-state readings re-scored through the risk
+ * model. Unlike getRiskHistory() above (which only has data for
+ * whichever corridor happened to be fleet-wide worst at each poll,
+ * historically just one corridor), this has real depth for all 8.
+ */
+export const getRiskHistoryByCorridor = async (hours = 72) => {
+  const res = await apiFetch(`${BASE_URL}/risks/history/by-corridor?hours=${hours}`);
+  if (!res.ok) throw new Error(`Corridor risk history request failed (${res.status})`);
+  return res.json();
+};
+
+/**
  * Fleet-level risk view. `trends` now comes from recorded history
  * (risk_readings), not an invented curve — buckets with no reading stay
  * null rather than being plotted as zero.
  */
 export const getFleetRiskAssessment = async () => {
-  const [riskRes, dashboardRes, historyRes] = await Promise.all([
+  const [riskRes, dashboardRes, historyRes, byCorridorRes] = await Promise.all([
     apiFetch(`${BASE_URL}/risks`),
     apiFetch(`${BASE_URL}/dashboard`),
     apiFetch(`${BASE_URL}/risks/history?hours=24`),
+    apiFetch(`${BASE_URL}/risks/history/by-corridor?hours=72`),
   ]);
 
   if (!riskRes.ok && !dashboardRes.ok) {
@@ -50,6 +64,7 @@ export const getFleetRiskAssessment = async () => {
   const riskData = riskRes.ok ? await riskRes.json() : null;
   const dashboardData = dashboardRes.ok ? await dashboardRes.json() : null;
   const history = historyRes.ok ? await historyRes.json() : null;
+  const byCorridor = byCorridorRes.ok ? await byCorridorRes.json() : null;
   const score = riskData?.risk_score ?? dashboardData?.average_fleet_risk ?? null;
 
   return {
@@ -58,6 +73,7 @@ export const getFleetRiskAssessment = async () => {
       risk_score: score,
     }),
     trends: history?.series?.filter((p) => p.score !== null) || [],
+    trendsByCorridor: byCorridor?.corridors || {},
     history,
     fleetSummary: {
       totalVessels: dashboardData?.active_vessels ?? null,

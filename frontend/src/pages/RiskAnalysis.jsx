@@ -22,7 +22,7 @@ const scoreTone = (score) => {
 
 export default function RiskAnalysis() {
   const {
-    currentRisk, trends, fleetSummary, isHighRisk,
+    currentRisk, trends, trendsByCorridor, fleetSummary, isHighRisk,
     loading, error, mitigationActive, activateMitigation, refreshRisk
   } = useRisks();
 
@@ -131,7 +131,7 @@ export default function RiskAnalysis() {
           </div>
 
           <div style={{ marginBottom: '24px' }}>
-            <RiskTrendChart trends={trends} />
+            <RiskTrendChart trends={trends} trendsByCorridor={trendsByCorridor} />
           </div>
 
           <div className="panel">
