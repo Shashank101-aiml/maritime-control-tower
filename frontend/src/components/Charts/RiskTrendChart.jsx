@@ -1,18 +1,43 @@
 import React from 'react';
-import { ShieldAlert } from 'lucide-react';
+import { Waves } from 'lucide-react';
 
-export default function RiskTrendChart({ trends }) {
-  const data = trends || [];
+// Fixed categorical palette, not the theme's semantic accent colors
+// (--accent-rose etc. mean severity elsewhere in this app) -- corridors
+// aren't ranked by severity here, they need to stay visually distinct
+// from each other regardless of which one is currently worst.
+const CORRIDOR_COLORS = [
+  '#22d3ee', '#34d399', '#fbbf24', '#fb7185',
+  '#a78bfa', '#60a5fa', '#fb923c', '#f472b6',
+];
 
-  // No invented curve: the backend stores no historical risk series yet,
-  // so an empty state is shown rather than a fabricated 24h trend.
-  if (data.length === 0) {
+const formatAxisLabel = (date) =>
+  date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+/**
+ * One real trend line per monitored corridor, not a single fleet-wide
+ * line. The single-series version of this chart (still available as
+ * GET /api/risks/history) only ever has data for whichever corridor
+ * happened to be fleet-wide worst at the moment each /api/risks poll
+ * landed -- in practice that meant risk_readings held months of
+ * history for exactly one corridor and nothing else, which made this
+ * chart nearly flat regardless of what was actually happening at the
+ * other 7. trendsByCorridor comes from GET /api/risks/history/by-corridor,
+ * which re-scores every stored sea-state reading (all 8 corridors) --
+ * real comparative signal, not a coincidence of which corridor stayed
+ * worst the longest.
+ */
+export default function RiskTrendChart({ trendsByCorridor }) {
+  const corridors = Object.entries(trendsByCorridor || {})
+    .filter(([, points]) => points && points.length > 0)
+    .sort(([, a], [, b]) => b.length - a.length);
+
+  if (corridors.length === 0) {
     return (
       <div className="panel">
         <div className="section-header">
           <h3 className="section-title">
-            <ShieldAlert size={17} color="var(--danger)" />
-            Fleet Risk Score Trajectory
+            <Waves size={17} color="var(--accent-cyan)" />
+            Risk Trend by Corridor
           </h3>
         </div>
         <div style={{
@@ -23,101 +48,115 @@ export default function RiskTrendChart({ trends }) {
           background: 'var(--surface-subtle)'
         }}>
           <p style={{ color: 'var(--text-subtle)', fontSize: '0.875rem' }}>
-            No risk history recorded yet.
+            No corridor risk history recorded yet.
           </p>
           <p style={{ color: 'var(--text-subtle)', fontSize: '0.8rem', marginTop: '6px' }}>
-            Scores are computed per request; persisting them over time will populate this trend.
+            Builds up as live sea-state conditions are polled for each monitored corridor.
           </p>
         </div>
       </div>
     );
   }
 
-  // SVG dimensions
-  const width = 600;
-  const height = 180;
-  const paddingX = 40;
+  const width = 640;
+  const height = 220;
+  const paddingX = 50;
   const paddingY = 20;
+  const plotWidth = width - paddingX * 2;
+  const plotHeight = height - paddingY * 2;
 
-  const points = data.map((d, i) => {
-    const x = paddingX + (i / (data.length - 1)) * (width - paddingX * 2);
-    const y = height - paddingY - (d.score / 100) * (height - paddingY * 2);
-    return `${x},${y}`;
-  }).join(' ');
+  const sortedByTime = corridors.map(([location, points]) => [
+    location,
+    [...points].sort((a, b) => new Date(a.time) - new Date(b.time)),
+  ]);
 
-  const areaPoints = `${paddingX},${height - paddingY} ${points} ${width - paddingX},${height - paddingY}`;
+  const allTimes = sortedByTime.flatMap(([, points]) => points.map((p) => new Date(p.time).getTime()));
+  const minTime = Math.min(...allTimes);
+  const maxTime = Math.max(...allTimes);
+  const timeSpan = maxTime - minTime || 1; // avoid a div-by-zero when every point shares one timestamp
 
-  const peak = Math.max(...data.map((d) => d.score));
-  const peakTone = peak >= 75
-    ? { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' }
-    : peak >= 40
-      ? { fg: 'var(--warning)', bg: 'var(--warning-soft)', border: 'var(--warning-border)' }
-      : { fg: 'var(--success)', bg: 'var(--success-soft)', border: 'var(--success-border)' };
+  const xFor = (isoTime) => paddingX + ((new Date(isoTime).getTime() - minTime) / timeSpan) * plotWidth;
+  const yFor = (score) => height - paddingY - (score / 100) * plotHeight;
+
+  const allScores = sortedByTime.flatMap(([, points]) => points.map((p) => p.score));
+  const peak = Math.max(...allScores);
+  const totalPoints = allScores.length;
+
+  const labelCount = 4;
+  const timeLabels = Array.from({ length: labelCount }, (_, i) =>
+    new Date(minTime + (timeSpan * i) / (labelCount - 1))
+  );
 
   return (
     <div className="glass-panel" style={{ padding: '24px', width: '100%' }}>
       <div className="section-header">
         <h3 className="section-title" style={{ fontSize: '1.15rem' }}>
-          <ShieldAlert size={20} color="var(--accent-rose)" />
-          Fleet Risk Score Trajectory (24h Trend)
+          <Waves size={20} color="var(--accent-cyan)" />
+          Risk Trend by Corridor
         </h3>
-        {/* Computed from the recorded series. This badge previously read
-            a hardcoded "PEAK HAZARD: 68/100" regardless of the data. */}
-        <span className="status-badge" style={{ fontSize: '0.75rem', background: peakTone.bg, borderColor: peakTone.border, color: peakTone.fg }}>
-          PEAK: {peak}/100 · {data.length} reading{data.length === 1 ? '' : 's'}
+        <span className="status-badge" style={{ fontSize: '0.75rem' }}>
+          PEAK: {peak}/100 · {totalPoints} reading{totalPoints === 1 ? '' : 's'} across {corridors.length} corridor{corridors.length === 1 ? '' : 's'}
         </span>
       </div>
 
       <div style={{ width: '100%', overflowX: 'auto', marginTop: '16px' }}>
         <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
-          <defs>
-            <linearGradient id="riskGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="var(--accent-rose)" stopOpacity="0.4" />
-              <stop offset="50%" stopColor="var(--accent-amber)" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="var(--accent-cyan)" stopOpacity="0.0" />
-            </linearGradient>
-          </defs>
-
-          {/* Grid lines */}
           <line x1={paddingX} y1={paddingY} x2={width - paddingX} y2={paddingY} stroke="var(--surface-subtle)" strokeDasharray="4 4" />
           <line x1={paddingX} y1={height / 2} x2={width - paddingX} y2={height / 2} stroke="var(--surface-subtle)" strokeDasharray="4 4" />
           <line x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} stroke="var(--border-strong)" />
 
-          {/* Area under curve */}
-          <polygon points={areaPoints} fill="url(#riskGradient)" />
-
-          {/* Line path */}
-          <polyline fill="none" stroke="var(--accent-rose)" strokeWidth="3" points={points} strokeLinecap="round" strokeLinejoin="round" />
-
-          {/* Data points and labels */}
-          {data.map((d, i) => {
-            const x = paddingX + (i / (data.length - 1)) * (width - paddingX * 2);
-            const y = height - paddingY - (d.score / 100) * (height - paddingY * 2);
-            const isHigh = d.score > 50;
-
+          {sortedByTime.map(([location, points], idx) => {
+            const color = CORRIDOR_COLORS[idx % CORRIDOR_COLORS.length];
+            const linePoints = points.map((p) => `${xFor(p.time)},${yFor(p.score)}`).join(' ');
             return (
-              <g key={i}>
-                <circle 
-                  cx={x} 
-                  cy={y} 
-                  r="5" 
-                  fill={isHigh ? 'var(--accent-rose)' : 'var(--accent-cyan)'} 
-                  stroke="var(--surface)" 
-                  strokeWidth="2"
-                  style={{ cursor: 'pointer' }}
-                >
-                  <title>{`${d.time}: Risk Score ${d.score}/100`}</title>
-                </circle>
-                <text x={x} y={height - 4} fill="var(--text-muted)" fontSize="10" textAnchor="middle" fontFamily="var(--font-body)">
-                  {d.time}
-                </text>
-                <text x={x} y={y - 10} fill={isHigh ? 'var(--accent-rose)' : 'var(--text-strong)'} fontSize="11" fontWeight="700" textAnchor="middle" fontFamily="var(--font-heading)">
-                  {d.score}
-                </text>
+              <g key={location}>
+                {points.length > 1 && (
+                  <polyline
+                    fill="none" stroke={color} strokeWidth="2" opacity="0.85"
+                    points={linePoints} strokeLinecap="round" strokeLinejoin="round"
+                  />
+                )}
+                {points.map((p, i) => (
+                  <circle
+                    key={i} cx={xFor(p.time)} cy={yFor(p.score)} r="3.5"
+                    fill={color} stroke="var(--surface)" strokeWidth="1.5"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <title>{`${location} — ${p.time}: ${p.score}/100`}</title>
+                  </circle>
+                ))}
               </g>
             );
           })}
+
+          {timeLabels.map((d, i) => (
+            <text
+              key={i}
+              x={paddingX + (plotWidth * i) / (labelCount - 1)}
+              y={height - 4}
+              fill="var(--text-muted)" fontSize="9.5" textAnchor="middle" fontFamily="var(--font-body)"
+            >
+              {formatAxisLabel(d)}
+            </text>
+          ))}
         </svg>
+      </div>
+
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', gap: '8px 18px',
+        marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--border)'
+      }}>
+        {sortedByTime.map(([location, points], idx) => {
+          const color = CORRIDOR_COLORS[idx % CORRIDOR_COLORS.length];
+          const latest = points[points.length - 1];
+          return (
+            <div key={location} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: 'var(--text-body)' }}>
+              <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />
+              {location}
+              <strong style={{ color: 'var(--text-strong)' }}>{latest.score}/100</strong>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

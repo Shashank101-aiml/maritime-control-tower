@@ -8,7 +8,7 @@ from app.agents.risk.risk_agent import RiskAgent
 from app.api.dependencies.database import get_db
 from app.core.config import settings
 from app.core.logging import get_logger
-from app.services.observation_service import record_risk, risk_history
+from app.services.observation_service import record_risk, risk_history, risk_history_by_corridor
 
 logger = get_logger(__name__)
 
@@ -68,15 +68,18 @@ def get_risk(db: Session = Depends(get_db)):
 
 
 @router.get("/risks/corridors")
-def get_risk_by_corridor():
+def get_risk_by_corridor(db: Session = Depends(get_db)):
     """Risk score for every monitored corridor, not just the worst one --
     each with its own location and the vessels currently positioned
     there. /risks alone shows a single aggregate number with no sense of
     which corridor it's about or what's actually passing through it;
     this is the per-corridor breakdown that backs it.
 
-    Read-only: unlike /risks, nothing here is written to risk_readings,
-    so polling this doesn't change the trend history.
+    Also records every corridor's score, not just the fleet-wide worst
+    one -- /risks alone only ever records whichever corridor happens to
+    be worst at that moment, which in practice meant risk_readings held
+    history for a single corridor and nothing else. This is what feeds
+    /risks/history/by-corridor real per-corridor depth going forward.
     """
     try:
         events = LiveConditionsClient().get_all_events()
@@ -91,6 +94,7 @@ def get_risk_by_corridor():
     corridors = []
     for event in events:
         risk_data = agent.calculate_risk(event).model_dump()
+        record_risk(db, risk_data, location=event.get("location"))
         vessels, vessel_count = _vessels_at(event.get("latitude"), event.get("longitude"), all_vessels)
         corridors.append({
             "location": event.get("location"),
@@ -122,3 +126,13 @@ def get_risk_history(hours: int = 24, buckets: int = 24, db: Session = Depends(g
     history actually exists.
     """
     return risk_history(db, hours=hours, buckets=buckets)
+
+
+@router.get("/risks/history/by-corridor")
+def get_risk_history_by_corridor(hours: int = 72, db: Session = Depends(get_db)):
+    """Real per-corridor risk trend -- see risk_history_by_corridor()'s
+    docstring for why this exists alongside /risks/history rather than
+    replacing it: that endpoint's series is fleet-wide-worst-only and in
+    practice has only ever held one corridor's history.
+    """
+    return risk_history_by_corridor(db, hours=hours)

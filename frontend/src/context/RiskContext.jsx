@@ -7,6 +7,7 @@ export const RiskProvider = ({ children }) => {
   const [riskData, setRiskData] = useState({
     currentRisk: null,
     trends: [],
+    trendsByCorridor: {},
     fleetSummary: { totalVessels: '--', vesselsAtRisk: '--', activeAlerts: '--' }
   });
   const [loading, setLoading] = useState(true);
@@ -50,6 +51,7 @@ export const RiskProvider = ({ children }) => {
       value={{
         currentRisk: riskData.currentRisk,
         trends: riskData.trends,
+        trendsByCorridor: riskData.trendsByCorridor,
         fleetSummary: riskData.fleetSummary,
         loading,
         error,

@@ -7,6 +7,7 @@ export const useRisks = () => {
   const {
     currentRisk,
     trends,
+    trendsByCorridor,
     fleetSummary,
     loading,
     error,
@@ -20,6 +21,7 @@ export const useRisks = () => {
   return {
     currentRisk,
     trends,
+    trendsByCorridor,
     fleetSummary,
     isHighRisk,
     loading,

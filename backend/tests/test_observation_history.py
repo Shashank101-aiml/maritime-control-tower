@@ -6,12 +6,14 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.agents.risk.risk_agent import RiskAgent
 from app.database.base import Base
 from app.models.observation import ConditionReading, RiskReading
 from app.services.observation_service import (
     record_conditions,
     record_risk,
     risk_history,
+    risk_history_by_corridor,
 )
 
 
@@ -118,3 +120,53 @@ def test_history_excludes_readings_outside_the_window(db):
     result = risk_history(db, hours=24)
     assert result["total_readings"] == 0
     assert result["peak_score"] is None
+
+
+class TestRiskHistoryByCorridor:
+    """risk_history() above only ever has data for whichever single
+    corridor happened to be fleet-wide worst at each /api/risks poll --
+    in practice that meant risk_readings held history for exactly one
+    corridor. This re-scores stored ConditionReading rows (real
+    sea-state, all corridors) through RiskAgent instead, so every
+    corridor gets its own real series."""
+
+    def test_groups_real_readings_by_corridor(self, db):
+        record_conditions(db, [
+            _condition("Arabian Sea", observed_at="2026-09-01T11:30"),
+            _condition("Gulf of Aden", observed_at="2026-09-01T11:30"),
+            _condition("Arabian Sea", observed_at="2026-09-01T11:45"),
+        ])
+        result = risk_history_by_corridor(db, hours=168)
+
+        assert set(result["corridors"].keys()) == {"Arabian Sea", "Gulf of Aden"}
+        assert len(result["corridors"]["Arabian Sea"]) == 2
+        assert len(result["corridors"]["Gulf of Aden"]) == 1
+        assert result["total_points"] == 3
+
+    def test_score_matches_a_direct_risk_agent_call(self, db):
+        """Not a fabricated number -- re-scoring the same event
+        attributes through RiskAgent directly must give the same score
+        RiskModel actually produces for it."""
+        record_conditions(db, [_condition("Arabian Sea", severity="critical")])
+        result = risk_history_by_corridor(db, hours=168)
+
+        expected = RiskAgent().calculate_risk(
+            {"event_type": "Moderate Swell & Strong Winds", "severity": "critical", "location": "Arabian Sea"}
+        )
+        assert result["corridors"]["Arabian Sea"][0]["score"] == expected.score
+
+    def test_excludes_readings_outside_the_window(self, db):
+        db.add(ConditionReading(
+            location="Arabian Sea", event_type="Storm", severity="critical",
+            observed_at="old", recorded_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=200),
+        ))
+        db.commit()
+
+        result = risk_history_by_corridor(db, hours=168)
+        assert result["corridors"] == {}
+        assert result["total_points"] == 0
+
+    def test_empty_when_nothing_recorded(self, db):
+        result = risk_history_by_corridor(db, hours=168)
+        assert result["corridors"] == {}
+        assert result["total_points"] == 0
