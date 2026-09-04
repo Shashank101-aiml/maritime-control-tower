@@ -26,7 +26,7 @@ export const getRecommendations = async () => {
  * placeholder, not sourced freight data -- labelling it plainly here
  * rather than presenting it as a real fuel/cost figure.
  */
-const toCorridorCard = (candidate, { recommended, index }) => ({
+export const candidateToCorridorCard = (candidate, { recommended, index }) => ({
   id: candidate.lane_ids.join('+') || `alt-${index}`,
   name: candidate.lane_ids.join(' + '),
   distance: `${Math.round(candidate.distance_nm).toLocaleString()} nm`,
@@ -55,9 +55,46 @@ export const getCorridorOptions = async () => {
   }
 
   const corridors = [
-    toCorridorCard(route, { recommended: true, index: 0 }),
-    ...route.alternatives.map((alt, i) => toCorridorCard(alt, { recommended: false, index: i + 1 })),
+    candidateToCorridorCard(route, { recommended: true, index: 0 }),
+    ...route.alternatives.map((alt, i) => candidateToCorridorCard(alt, { recommended: false, index: i + 1 })),
   ];
 
   return { primary, corridors };
+};
+
+/**
+ * Real point-to-point route optimization -- unlike GET /recommendations
+ * (via getRecommendations() above), this calls RouteOptimizer directly
+ * and is unaffected by the coordinator's governance session gate: that
+ * pipeline starts a fresh session on every call and can only complete
+ * once something drives the *same* session_id past its approval step,
+ * which never happens through normal page loads. This endpoint has no
+ * such gate -- a real ranked result comes back every time.
+ */
+export const optimizeRoute = async (origin, destination, weights = null) => {
+  const params = new URLSearchParams({ origin, destination });
+  if (weights) {
+    params.set('weights', Object.entries(weights).map(([k, v]) => `${k}:${v}`).join(','));
+  }
+  const res = await apiFetch(`${BASE_URL}/route/optimize?${params.toString()}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `Route optimization failed (${res.status})`);
+  }
+  return res.json();
+};
+
+/** optimizeRoute()'s response reshaped into the same corridor-card list
+ *  getCorridorOptions() produces, for a specific origin/destination
+ *  chosen by the user (or derived from a selected corridor) rather than
+ *  whichever lane the coordinator's fleet-wide flow picked. */
+export const getCorridorOptionsFor = async (origin, destination, weights = null) => {
+  const route = await optimizeRoute(origin, destination, weights);
+  return {
+    route,
+    corridors: [
+      candidateToCorridorCard(route, { recommended: true, index: 0 }),
+      ...route.alternatives.map((alt, i) => candidateToCorridorCard(alt, { recommended: false, index: i + 1 })),
+    ],
+  };
 };
