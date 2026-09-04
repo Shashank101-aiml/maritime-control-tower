@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigation, ShieldCheck, RefreshCw, AlertCircle, CheckCircle2, MapPin, Sliders } from 'lucide-react';
 import { getTwin, lanesCrossingCorridor } from '../services/twinService';
 import { getCorridorOptionsFor } from '../services/routeService';
@@ -83,21 +83,32 @@ export default function RouteRecommendations() {
     );
   }, [twin, selectedCorridor]);
 
+  // Guards against a stale response overwriting a fresher one -- the
+  // corridor auto-fill effect below can change origin/destination twice
+  // in quick succession right after the twin loads (default worst-edge
+  // pair, then the corridor-derived pair), firing two requests back to
+  // back. Without this, whichever network response happens to resolve
+  // last wins, even if it was requested first.
+  const requestIdRef = useRef(0);
+
   const runOptimize = useCallback(async () => {
     if (!origin || !destination) return;
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
     try {
       const result = await getCorridorOptionsFor(origin, destination, weights);
+      if (requestId !== requestIdRef.current) return;
       setRoute(result.route);
       setCorridors(result.corridors);
       setAdoptedId(result.corridors[0]?.id ?? null);
     } catch (err) {
+      if (requestId !== requestIdRef.current) return;
       setError(err.message);
       setRoute(null);
       setCorridors([]);
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [origin, destination]);
