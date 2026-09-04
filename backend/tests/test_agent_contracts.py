@@ -15,6 +15,7 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from app.agents.ingestion.live_conditions_client import LiveConditionsClient
 from app.agents.risk.risk_agent import RiskAgent
 from app.api.dependencies.database import get_db
 from app.main import app
@@ -99,7 +100,19 @@ def test_route_recommendation_round_trips_through_a_plain_dict():
     steps: model_dump() into a JSON column, then model_validate() back
     out on the next call (or on resuming a session from a persisted
     trace) -- confirm nothing is lost in that round trip."""
-    original = RouteRecommendation(route="Direct Deepwater Corridor", reason="Low risk.")
+    original = RouteRecommendation(
+        route="Shanghai to Rotterdam via shanghai-rotterdam-suez",
+        reason="Direct route via shanghai-rotterdam-suez -- 8478 nm, ~19.6 days, risk 24/100.",
+        origin="Shanghai",
+        destination="Rotterdam",
+        lane_ids=["shanghai-rotterdam-suez"],
+        distance_nm=8478,
+        transit_days=19.6,
+        cost_usd=8478,
+        emissions_estimate=8478,
+        risk=24,
+        score=0.0,
+    )
     as_dict = original.model_dump()
     rehydrated = RouteRecommendation.model_validate(as_dict)
     assert rehydrated == original
@@ -107,14 +120,21 @@ def test_route_recommendation_round_trips_through_a_plain_dict():
 
 class TestCoordinatorPipeline:
     """End-to-end through the real coordinator, database, and governance
-    engine -- not mocked. ENABLE_LIVE_INGESTION is off (conftest.py), so
-    this never touches the network."""
+    engine -- not mocked. ENABLE_LIVE_INGESTION is off (conftest.py) for
+    the ingestion step, but the route step's fetch_live_corridor_scores()
+    calls LiveConditionsClient directly (same as GET /api/twin) and
+    isn't gated by that flag -- monkeypatched here for the same reason
+    test_digital_twin.py's API-route test patches it: determinism, not
+    dependence on a third-party feed being reachable during a test run.
+    """
 
-    def test_full_pipeline_produces_real_typed_values(self):
+    def test_full_pipeline_produces_real_typed_values(self, monkeypatch):
         import uuid
 
         from app.agents.coordinator.coordinator_agent import CoordinatorAgent
         from app.governance.policy import resolve_approval
+
+        monkeypatch.setattr(LiveConditionsClient, "get_all_events", lambda self, use_cache=True: [])
 
         db = next(get_db())
         session_id = f"test-contract-pipeline-{uuid.uuid4()}"
@@ -146,5 +166,23 @@ class TestCoordinatorPipeline:
         assert result["route"]["route"] != "Corridor Beta (Southern Bypass)"
         assert "Multi-agent pipeline completed risk assessment" not in result["explanation"]
 
-        assert set(result["route"].keys()) == {"route", "reason"}
+        # None of route_agent.py's four retired fixed route names --
+        # confirms the real optimizer is in the loop, not the old ladder.
+        for fabricated_name in (
+            "Cape of Good Hope Bypass",
+            "Corridor Beta (Southern Bypass)",
+            "Suez Canal Commercial Passage",
+            "Direct Deepwater Corridor",
+        ):
+            assert fabricated_name not in result["route"]["route"]
+
+        # Real, digital-twin-backed fields (Slice 06) -- not a canned string.
+        route = result["route"]
+        assert route["origin"] in route["route"]
+        assert route["destination"] in route["route"]
+        assert len(route["lane_ids"]) >= 1
+        assert route["distance_nm"] > 0
+        assert 0 <= route["risk"] <= 100
+        assert isinstance(route["alternatives"], list)
+
         assert isinstance(result["event"]["event_type"], str)

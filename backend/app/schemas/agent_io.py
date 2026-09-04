@@ -52,14 +52,47 @@ class RiskAssessment(BaseModel):
     scoring_method: str
 
 
+class RouteAlternative(BaseModel):
+    """One scored candidate path through the digital twin between two
+    ports -- a real sequence of lanes, not a label. `score` is the
+    weighted composite (lower is better) computed by RouteOptimizer,
+    normalized against the other candidates considered for the same
+    query, so it's only comparable within one RouteRecommendation."""
+
+    lane_ids: List[str]
+    distance_nm: float
+    transit_days: float
+    cost_usd: float
+    emissions_estimate: float
+    risk: int = Field(..., ge=0, le=100)
+    score: float
+
+
 class RouteRecommendation(BaseModel):
     """Output of RouteAgent.suggest_route().
 
-    Placeholder shape matching today's rule-based ladder in
-    agents/route/route_agent.py. Slice 06 replaces that ladder with a
-    real multi-objective optimizer; this contract is what its output
-    needs to satisfy when it does.
+    Real multi-objective optimization over the digital twin
+    (app/twin/digital_twin.py) as of Slice 06 -- `route`/`reason` stay
+    as a human-readable summary of the top-ranked candidate so existing
+    consumers (recommendation.py, the frontend) don't break on the
+    shape change, but every other field here is real: an actual
+    sequence of shipping lanes with real distance/cost/risk, not a
+    label picked off a fixed ladder.
+
+    Ranking only -- no current-vs-recommended delta framing. That's the
+    Decision Agent's job (spec Slice 07), which consumes this ranked
+    list to build the comparison.
     """
 
     route: str
     reason: str
+    origin: str
+    destination: str
+    lane_ids: List[str]
+    distance_nm: float
+    transit_days: float
+    cost_usd: float
+    emissions_estimate: float
+    risk: int = Field(..., ge=0, le=100)
+    score: float
+    alternatives: List[RouteAlternative] = Field(default_factory=list)

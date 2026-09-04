@@ -6,6 +6,7 @@ from app.api.dependencies.database import get_db
 from app.governance.core import GovernanceEngine
 from app.models.governance import AgentExecutionTrace, ApprovalRequest, AgentIdentity
 from app.schemas.agent_io import IngestedEvent, RiskAssessment, RouteRecommendation
+from app.twin.digital_twin import fetch_live_corridor_scores, get_digital_twin
 from sqlalchemy.orm import Session
 import uuid
 
@@ -121,9 +122,31 @@ class CoordinatorAgent:
                     "error": f"Route Agent is {q_status}. Please resolve in governance dashboard."
                 }
             try:
+                # There is no specific vessel/shipment in this pipeline's
+                # data -- inventing an origin/destination would be exactly
+                # the kind of fabrication this project avoids elsewhere.
+                # Instead: find the real shipping lane most exposed right
+                # now (same live-annotated twin GET /api/twin uses) and
+                # route-optimize around that -- a real, different, and
+                # honestly-answerable question.
+                twin = get_digital_twin()
+                twin.annotate_risk(fetch_live_corridor_scores())
+                most_at_risk = twin.most_at_risk_edge()
+                if most_at_risk is None:
+                    return {
+                        "status": "FAILED",
+                        "session_id": session_id,
+                        "error": "Route Agent failed: the digital twin has no lanes to route through."
+                    }
+                origin, destination, _lane_id = most_at_risk
+
                 def suggest_route(data):
-                    return RouteRecommendation(**RouteAgent().suggest_route(data)), 0.9
-                trace3, req3 = engine.execute_agent_task("route-agent", "PLAN", risk_score, suggest_route, parent_execution_id=trace2.id)
+                    return RouteAgent().suggest_route(data["origin"], data["destination"]), 0.9
+                trace3, req3 = engine.execute_agent_task(
+                    "route-agent", "PLAN",
+                    {"origin": origin, "destination": destination},
+                    suggest_route, parent_execution_id=trace2.id,
+                )
                 trace3.request_id = session_id
                 db.commit()
             except Exception as e:

@@ -1,11 +1,6 @@
 from fastapi import APIRouter
 
-from app.agents.ingestion.live_conditions_client import LiveConditionsClient
-from app.agents.risk.risk_agent import RiskAgent
-from app.core.logging import get_logger
-from app.twin.digital_twin import get_digital_twin
-
-logger = get_logger(__name__)
+from app.twin.digital_twin import fetch_live_corridor_scores, get_digital_twin
 
 router = APIRouter()
 
@@ -20,17 +15,7 @@ def get_twin_graph():
     assumptions, and which are distance-based placeholders.
     """
     twin = get_digital_twin()
-
-    try:
-        events = LiveConditionsClient().get_all_events()
-        agent = RiskAgent()
-        corridor_scores = {
-            event["location"]: agent.calculate_risk(event).score for event in events
-        }
-    except Exception as exc:
-        logger.warning("Live conditions unavailable for twin risk annotation: %s", exc)
-        corridor_scores = {}
-
+    corridor_scores = fetch_live_corridor_scores()
     twin.annotate_risk(corridor_scores)
 
     return {

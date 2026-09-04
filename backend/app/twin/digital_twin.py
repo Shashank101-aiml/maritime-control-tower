@@ -33,9 +33,15 @@ from typing import Any, Dict, List, Optional
 
 import networkx as nx
 
-from app.agents.ingestion.live_conditions_client import MONITORED_LOCATIONS
+from app.agents.ingestion.live_conditions_client import (
+    MONITORED_LOCATIONS,
+    LiveConditionsClient,
+)
+from app.core.logging import get_logger
 from app.twin.coordinates import PORT_COORDINATES
 from app.twin.lanes import SHIPPING_LANES
+
+logger = get_logger(__name__)
 
 PORT_CONGESTION_CSV = (
     Path(__file__).resolve().parents[3] / "data" / "cleaned" / "port_congestion.csv"
@@ -203,6 +209,26 @@ class DigitalTwin:
             self.graph.edges[port_a, port_b, lane_id]["risk"] = risk
             self.graph.edges[port_a, port_b, lane_id]["risk_reason"] = reason
 
+    def most_at_risk_edge(self) -> Optional[tuple]:
+        """(port_a, port_b, lane_id) of whichever lane currently has the
+        highest annotated risk -- used when a caller (the coordinator's
+        fleet-wide flow) needs an origin/destination pair but has no
+        specific vessel's journey to work from. There is no invented
+        "current voyage" here: this answers a real, different question
+        -- "which real shipping lane is most exposed right now" -- and
+        that's an honest thing to route-optimize around.
+
+        Requires annotate_risk() to have already run: an edge with
+        risk=None compares against an int and raises TypeError rather
+        than silently being treated as zero risk.
+        """
+        if self.graph.number_of_edges() == 0:
+            return None
+        port_a, port_b, lane_id, _ = max(
+            self.graph.edges(keys=True, data=True), key=lambda edge: edge[3]["risk"]
+        )
+        return port_a, port_b, lane_id
+
     # -- Serialization --------------------------------------------------
 
     def to_dict(self) -> Dict[str, Any]:
@@ -227,3 +253,28 @@ def get_digital_twin() -> DigitalTwin:
     if _shared_twin is None:
         _shared_twin = DigitalTwin()
     return _shared_twin
+
+
+def fetch_live_corridor_scores() -> Dict[str, int]:
+    """Live sea-state risk per monitored corridor, via the same
+    RiskAgent computation GET /api/risks/corridors already uses.
+    Degrades to an empty dict (every edge falls back to congestion-only
+    risk in annotate_risk()) if the live feed is unavailable -- never a
+    fabricated score.
+
+    The single shared implementation of a pattern that would otherwise
+    be duplicated across every caller that needs to annotate the twin:
+    GET /api/twin, RouteAgent.suggest_route(), and the coordinator's
+    route step all call this rather than each running their own copy.
+    """
+    from app.agents.risk.risk_agent import RiskAgent
+
+    try:
+        events = LiveConditionsClient().get_all_events()
+        agent = RiskAgent()
+        return {
+            event["location"]: agent.calculate_risk(event).score for event in events
+        }
+    except Exception as exc:
+        logger.warning("Live conditions unavailable for twin risk annotation: %s", exc)
+        return {}

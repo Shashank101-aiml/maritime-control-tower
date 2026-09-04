@@ -1,55 +1,74 @@
-from typing import Any, Dict, Optional
+"""Real route recommendation, backed by RouteOptimizer over the digital
+twin (app/twin/digital_twin.py). Replaces a fabricated four-band
+if/elif ladder that returned one of four fixed route names --
+"Cape of Good Hope Bypass", "Corridor Beta (Southern Bypass)", "Suez
+Canal Commercial Passage", "Direct Deepwater Corridor" -- regardless of
+any real distance, risk, or cost.
+"""
+
+from typing import Dict, Optional
+
+from app.agents.route.optimizer import RouteCandidate, RouteOptimizer
+from app.core.config import settings
+from app.schemas.agent_io import RouteAlternative, RouteRecommendation
+from app.twin.digital_twin import fetch_live_corridor_scores, get_digital_twin
 
 
 class RouteAgent:
+    def __init__(self, optimizer: Optional[RouteOptimizer] = None) -> None:
+        self.optimizer = optimizer or RouteOptimizer()
+
     def suggest_route(
         self,
-        risk_score: Any,
-        current_route: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, str]:
-        if isinstance(risk_score, dict):
-            risk_score = risk_score.get("score", 50)
-        try:
-            risk_score = float(risk_score)
-        except (TypeError, ValueError):
-            risk_score = 50.0
+        origin: str,
+        destination: str,
+        weights: Optional[Dict[str, float]] = None,
+    ) -> RouteRecommendation:
+        """Ranks every real path from origin to destination through the
+        digital twin (risk annotated from the live feed, same as
+        GET /api/twin) and returns the best as the recommendation, the
+        rest as alternatives. Raises ValueError (propagated from
+        RouteOptimizer) if either port is unknown or unreachable within
+        the hop limit -- there is no honest fallback route to invent.
+        """
+        twin = get_digital_twin()
+        twin.annotate_risk(fetch_live_corridor_scores())
 
-        if risk_score >= 90:
-            return {
-                "route": "Cape of Good Hope Bypass",
-                "reason": "Extreme risk detected. Recommend a longer but safer passage to avoid severe condition cell."
-            }
+        candidates = self.optimizer.find_routes(
+            twin.graph, origin, destination, weights or settings.ROUTE_OPTIMIZATION_WEIGHTS
+        )
+        best, rest = candidates[0], candidates[1:]
 
-        if risk_score >= 70:
-            return {
-                "route": "Corridor Beta (Southern Bypass)",
-                "reason": "High risk conditions present. Shifting waypoints 120 nm south to bypass severe weather system."
-            }
+        return RouteRecommendation(
+            route=f"{origin} to {destination} via {' + '.join(best.lane_ids)}",
+            reason=self._describe(best),
+            origin=origin,
+            destination=destination,
+            lane_ids=best.lane_ids,
+            distance_nm=best.distance_nm,
+            transit_days=best.transit_days,
+            cost_usd=best.cost_usd,
+            emissions_estimate=best.emissions_estimate,
+            risk=best.risk,
+            score=best.score,
+            alternatives=[self._as_alternative(candidate) for candidate in rest],
+        )
 
-        if risk_score >= 40:
-            return {
-                "route": "Suez Canal Commercial Passage",
-                "reason": "Moderate risk. Proceed with caution along standard commercial channel."
-            }
+    def _describe(self, candidate: RouteCandidate) -> str:
+        hops = f"{len(candidate.lane_ids)}-leg" if len(candidate.lane_ids) > 1 else "direct"
+        return (
+            f"{hops.capitalize()} route via {', '.join(candidate.lane_ids)} -- "
+            f"{candidate.distance_nm:.0f} nm, ~{candidate.transit_days:.1f} days, "
+            f"risk {candidate.risk}/100."
+        )
 
-        return {
-            "route": "Direct Deepwater Corridor",
-            "reason": "Low risk conditions. Optimal direct high-speed navigation route."
-        }
-
-    def suggest_route_from_context(
-        self,
-        risk_score: float,
-        origin: Optional[str] = None,
-        destination: Optional[str] = None,
-        route_status: Optional[str] = None,
-    ) -> Dict[str, str]:
-        recommendation = self.suggest_route(risk_score)
-
-        if route_status and route_status.lower() in {"in_progress", "active"}:
-            recommendation["reason"] += " Current route is already active, so update cautiously."
-
-        if origin and destination:
-            recommendation["reason"] += f" Origin: {origin}, destination: {destination}."
-
-        return recommendation
+    def _as_alternative(self, candidate: RouteCandidate) -> RouteAlternative:
+        return RouteAlternative(
+            lane_ids=candidate.lane_ids,
+            distance_nm=candidate.distance_nm,
+            transit_days=candidate.transit_days,
+            cost_usd=candidate.cost_usd,
+            emissions_estimate=candidate.emissions_estimate,
+            risk=candidate.risk,
+            score=candidate.score,
+        )

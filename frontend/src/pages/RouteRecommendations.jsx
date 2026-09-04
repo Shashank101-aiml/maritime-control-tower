@@ -53,11 +53,13 @@ export default function RouteRecommendations() {
                 Primary AI Routing Synthesis (Explanation Agent)
               </div>
               <p style={{ fontSize: '1.05rem', color: 'var(--text-strong)', margin: '10px 0', lineHeight: 1.5 }}>
-                {primary.primary_recommendation}
+                {primary.primary_recommendation || 'No recommendation available yet.'}
               </p>
               <div style={{ display: 'flex', gap: '20px', marginTop: '14px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                <span>Analysis Timestamp: <strong style={{ color: 'var(--text-strong)' }}>{primary.timestamp}</strong></span>
-                <span>Assessed Corridor Risk: <strong style={{ color: primary.assessed_risk > 50 ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>{primary.assessed_risk}/100</strong></span>
+                <span>Analysis Timestamp: <strong style={{ color: 'var(--text-strong)' }}>{primary.timestamp || '—'}</strong></span>
+                <span>Assessed Corridor Risk: <strong style={{ color: primary.assessed_risk > 50 ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>
+                  {typeof primary.assessed_risk === 'number' ? `${primary.assessed_risk}/100` : 'Not yet assessed'}
+                </strong></span>
               </div>
             </div>
           )}
@@ -93,8 +95,11 @@ export default function RouteRecommendations() {
                     No scored corridor alternatives available.
                   </p>
                   <p style={{ color: 'var(--text-subtle)', fontSize: '0.8rem', marginTop: '6px' }}>
-                    The Route Agent currently returns a single recommended route (shown above)
-                    rather than a ranked set of alternatives.
+                    {primary?.suggested_route
+                      ? 'The last route optimization run found no alternative path within the digital twin\'s hop limit.'
+                      : primary?.status === 'PENDING_APPROVAL'
+                        ? 'Route optimization is waiting on a pending governance approval before it runs.'
+                        : 'Waiting for a completed route recommendation.'}
                   </p>
                 </div>
               ) : corridors.map((c) => (
