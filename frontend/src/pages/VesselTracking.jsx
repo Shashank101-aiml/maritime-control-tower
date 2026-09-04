@@ -3,6 +3,7 @@ import { Ship, Search, AlertTriangle, RefreshCw, Radio, Waves, Navigation } from
 import { getVessels } from '../services/vesselService';
 import VesselMap from '../components/VesselMap';
 import { apiFetch } from '../services/apiClient';
+import { useCorridorContext } from '../context/CorridorContext';
 
 import { API_BASE_URL as BASE_URL } from '../config';
 
@@ -20,12 +21,11 @@ export default function VesselTracking() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [ais, setAis] = useState(null);
-  const [focusedCorridor, setFocusedCorridor] = useState(null);
-
-  /** Wrapped in a fresh object each time so re-clicking the same corridor
-   *  still re-centres the map after the user has panned away. */
-  const focusCorridor = (corridor) =>
-    setFocusedCorridor({ location: corridor.location, at: Date.now() });
+  // Shared across tabs (see CorridorContext.jsx) rather than page-local
+  // state -- selecting a corridor here is now visible on Event Monitor,
+  // Risk Analysis, and Route Planning too, not just this map.
+  const { selectedCorridor: focusedCorridor, selectCorridor } = useCorridorContext();
+  const focusCorridor = (corridor) => selectCorridor(corridor.location);
 
   const load = async () => {
     setLoading(true);

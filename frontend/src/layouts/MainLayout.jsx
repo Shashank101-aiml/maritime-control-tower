@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import AlertBanner from '../components/AlertBanner';
 import { EventProvider, useEventContext } from '../context/EventContext';
 import { RiskProvider } from '../context/RiskContext';
+import { CorridorProvider } from '../context/CorridorContext';
 
 import { HEALTH_URL } from '../config';
 
@@ -68,18 +69,20 @@ const MainContentWrapper = ({ activeTab, setActiveTab, onExitToLanding, user, on
 
 export default function MainLayout({ activeTab, setActiveTab, onExitToLanding, user, onSignOut, children }) {
   return (
-    <EventProvider>
-      <RiskProvider>
-        <MainContentWrapper
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          onExitToLanding={onExitToLanding}
-          user={user}
-          onSignOut={onSignOut}
-        >
-          {children}
-        </MainContentWrapper>
-      </RiskProvider>
-    </EventProvider>
+    <CorridorProvider>
+      <EventProvider>
+        <RiskProvider>
+          <MainContentWrapper
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            onExitToLanding={onExitToLanding}
+            user={user}
+            onSignOut={onSignOut}
+          >
+            {children}
+          </MainContentWrapper>
+        </RiskProvider>
+      </EventProvider>
+    </CorridorProvider>
   );
 }

@@ -5,6 +5,7 @@ import RiskCard from '../components/RiskCard';
 import RiskTrendChart from '../components/Charts/RiskTrendChart';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { getRiskCorridors } from '../services/riskService';
+import { useCorridorContext } from '../context/CorridorContext';
 
 const TONES = {
   CRITICAL: { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' },
@@ -55,6 +56,16 @@ export default function RiskAnalysis() {
     const interval = setInterval(loadCorridors, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // A corridor selected on Vessel Tracking scrolls its card into view
+  // and stays highlighted here, instead of the two pages being unaware
+  // of each other.
+  const { selectedCorridor } = useCorridorContext();
+  useEffect(() => {
+    if (!selectedCorridor || corridors.length === 0) return;
+    const el = document.getElementById(`corridor-card-${selectedCorridor.location}`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [selectedCorridor, corridors]);
 
   return (
     <div className="page-wrapper">
@@ -155,13 +166,16 @@ export default function RiskAnalysis() {
                 {corridors.map((c) => {
                   const tone = scoreTone(c.score);
                   const m = c.conditions || {};
+                  const isSelected = selectedCorridor?.location === c.location;
                   return (
-                    <div key={c.location} style={{
-                      background: 'var(--surface-subtle)',
-                      border: '1px solid var(--border)',
+                    <div key={c.location} id={`corridor-card-${c.location}`} style={{
+                      background: isSelected ? 'var(--primary-soft)' : 'var(--surface-subtle)',
+                      border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid var(--border)',
                       borderLeft: `3px solid ${tone.fg}`,
+                      boxShadow: isSelected ? '0 0 0 1px var(--accent-cyan)' : 'none',
                       padding: '16px',
-                      borderRadius: 'var(--radius)'
+                      borderRadius: 'var(--radius)',
+                      transition: 'background 0.3s ease, box-shadow 0.3s ease'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '4px' }}>
                         <h4 style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
