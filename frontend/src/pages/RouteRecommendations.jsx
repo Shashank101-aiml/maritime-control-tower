@@ -1,7 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Navigation, ShieldCheck, RefreshCw, AlertCircle, CheckCircle2, MapPin, Sliders } from 'lucide-react';
+import {
+  Navigation, ShieldCheck, RefreshCw, AlertCircle, CheckCircle2, MapPin, Sliders, X, Waves, Route as RouteIcon,
+} from 'lucide-react';
 import { getTwin, lanesCrossingCorridor } from '../services/twinService';
 import { getCorridorOptionsFor } from '../services/routeService';
+import { getEventHistory } from '../services/eventService';
+import { getSeverityTone, getSeverityLabel } from '../types/Event';
 import { useCorridorContext } from '../context/CorridorContext';
 import RouteCard from '../components/RouteCard';
 import RouteComparisonChart from '../components/Charts/RouteComparisonChart';
@@ -26,7 +30,7 @@ const lanePathToPorts = (twin, laneIds, origin) => {
   return ports;
 };
 
-export default function RouteRecommendations() {
+export default function RouteRecommendations({ setActiveTab }) {
   const { selectedCorridor, clearCorridor } = useCorridorContext();
 
   const [twin, setTwin] = useState(null);
@@ -35,6 +39,17 @@ export default function RouteRecommendations() {
   const [destination, setDestination] = useState('');
   const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
   const [autoNote, setAutoNote] = useState(null);
+
+  // The selected corridor's own live sea-state -- fetched once, lazily,
+  // the first time a corridor is actually selected here, so this page's
+  // "Selected Corridor" panel can show real current conditions (not just
+  // which lanes cross it) without polling /api/conditions on every load.
+  const [corridorReadings, setCorridorReadings] = useState(null);
+  useEffect(() => {
+    if (!selectedCorridor || corridorReadings) return;
+    getEventHistory().then((r) => setCorridorReadings(r.readings)).catch(() => setCorridorReadings([]));
+  }, [selectedCorridor, corridorReadings]);
+  const activeReading = corridorReadings?.find((r) => r.location === selectedCorridor?.location) ?? null;
 
   const [route, setRoute] = useState(null);
   const [corridors, setCorridors] = useState([]);
@@ -68,20 +83,15 @@ export default function RouteRecommendations() {
   // origin/destination itself.
   useEffect(() => {
     if (!twin || !selectedCorridor) return;
+    setAutoNote(null);
     const lanes = lanesCrossingCorridor(twin, selectedCorridor.location);
-    if (lanes.length === 0) {
-      setAutoNote(
-        `No monitored shipping lane crosses ${selectedCorridor.location} directly — showing the route below unchanged.`
-      );
-      return;
-    }
+    if (lanes.length === 0) return;
     const worst = lanes[0];
     setOrigin(worst.port_a);
     setDestination(worst.port_b);
-    setAutoNote(
-      `Auto-selected ${worst.port_a} → ${worst.port_b} — the most exposed real lane crossing ${selectedCorridor.location}, which you selected on Vessel Tracking.`
-    );
-  }, [twin, selectedCorridor]);
+    setAutoNote(`Auto-selected the most exposed lane below — pick a different one any time.`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [twin, selectedCorridor?.location]);
 
   // Guards against a stale response overwriting a fresher one -- the
   // corridor auto-fill effect below can change origin/destination twice
@@ -121,6 +131,17 @@ export default function RouteRecommendations() {
   const pathPorts = route ? lanePathToPorts(twin, route.lane_ids, route.origin) : [];
 
   const setWeight = (key, value) => setWeights((w) => ({ ...w, [key]: value }));
+
+  // Every real lane crossing the selected corridor, not just the worst
+  // one the auto-fill effect above picked by default -- lets the reader
+  // choose which exposed lane to actually route around, instead of only
+  // ever seeing the single option the page picked for them.
+  const crossingLanes = twin && selectedCorridor ? lanesCrossingCorridor(twin, selectedCorridor.location) : [];
+  const selectLane = (lane) => {
+    setOrigin(lane.port_a);
+    setDestination(lane.port_b);
+    setAutoNote(`${lane.port_a} → ${lane.port_b} — selected from the lanes crossing ${selectedCorridor.location}.`);
+  };
 
   return (
     <div className="page-wrapper">
@@ -191,18 +212,101 @@ export default function RouteRecommendations() {
             </p>
           </div>
 
+          {/* Selected Corridor -- live conditions plus every real lane
+              that actually crosses it, picked from directly instead of
+              only ever seeing the one lane the auto-fill effect chose. */}
           {selectedCorridor && (
-            <div className="workflow-box" style={{
-              marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'var(--info-soft)', border: '1px solid var(--accent-cyan)',
+            <div className="glass-panel" style={{
+              padding: '24px', marginBottom: '20px',
+              borderColor: activeReading ? getSeverityTone(activeReading.severity).border : 'var(--accent-cyan)',
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-strong)', fontSize: '0.88rem' }}>
-                <MapPin size={16} color="var(--accent-cyan)" />
-                {autoNote || `Focused on ${selectedCorridor.location}.`}
+              <div className="section-header" style={{ marginBottom: '14px' }}>
+                <h3 className="section-title" style={{ fontSize: '1.1rem' }}>
+                  <MapPin size={18} color="var(--accent-cyan)" />
+                  Selected Corridor — {selectedCorridor.location}
+                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  {activeReading && (
+                    <span className="status-badge" style={{
+                      background: getSeverityTone(activeReading.severity).bg,
+                      borderColor: getSeverityTone(activeReading.severity).border,
+                      color: getSeverityTone(activeReading.severity).fg,
+                    }}>
+                      {getSeverityLabel(activeReading.severity)}
+                    </span>
+                  )}
+                  <button className="btn-secondary" onClick={clearCorridor} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
+                    <X size={14} /> Clear
+                  </button>
+                </div>
               </div>
-              <button className="btn-secondary" onClick={clearCorridor} style={{ padding: '6px 12px', fontSize: '0.8rem' }}>
-                Clear
-              </button>
+
+              {activeReading && (
+                <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', fontSize: '0.82rem', color: 'var(--text-body)', marginBottom: '16px' }}>
+                  <span><Waves size={13} style={{ verticalAlign: '-2px', marginRight: '4px' }} />Wave <strong>{activeReading.conditions?.wave_height_m ?? '—'} m</strong></span>
+                  <span>Swell <strong>{activeReading.conditions?.swell_height_m ?? '—'} m</strong></span>
+                  <span>Gusts <strong>{activeReading.conditions?.wind_gusts_kmh ?? '—'} km/h</strong></span>
+                  {activeReading.event_type && <span style={{ color: 'var(--text-subtle)' }}>{activeReading.event_type}</span>}
+                </div>
+              )}
+
+              {crossingLanes.length === 0 ? (
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-subtle)' }}>
+                  No monitored shipping lane crosses {selectedCorridor.location} directly — the route below is
+                  unchanged. This corridor is tracked for sea state but isn't on a curated lane path.
+                </p>
+              ) : (
+                <>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-subtle)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                    <RouteIcon size={12} style={{ verticalAlign: '-1px', marginRight: '4px' }} />
+                    Real lanes crossing this corridor ({crossingLanes.length}) — pick one to route around
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {crossingLanes.map((lane) => {
+                      const isActive = (origin === lane.port_a && destination === lane.port_b)
+                        || (origin === lane.port_b && destination === lane.port_a);
+                      const laneTone = lane.risk >= 60 ? 'var(--accent-rose)' : lane.risk >= 35 ? 'var(--accent-amber)' : 'var(--accent-emerald)';
+                      return (
+                        <button
+                          key={lane.lane_id}
+                          type="button"
+                          onClick={() => selectLane(lane)}
+                          title={isActive ? 'Currently routing this lane' : `Route via ${lane.port_a} → ${lane.port_b}`}
+                          className={`agent-item corridor-row ${isActive ? 'focused' : ''}`}
+                          style={{ width: '100%' }}
+                        >
+                          <div className="agent-info">
+                            <div className="agent-avatar" style={{ background: 'var(--surface-sunken)', color: laneTone }}>
+                              <RouteIcon size={14} />
+                            </div>
+                            <div style={{ textAlign: 'left' }}>
+                              <div className="agent-name">{lane.port_a} → {lane.port_b}</div>
+                              <div className="agent-role">{Math.round(lane.distance_nm).toLocaleString()} nm</div>
+                            </div>
+                          </div>
+                          <span className="status-badge" style={{ background: 'transparent', borderColor: laneTone, color: laneTone, fontSize: '0.68rem' }}>
+                            RISK {lane.risk}/100
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {autoNote && (
+                <p className="form-note" style={{ marginTop: '12px' }}>{autoNote}</p>
+              )}
+              {setActiveTab && (
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
+                  <button className="btn-secondary" onClick={() => setActiveTab('tracking')} style={{ fontSize: '0.8rem' }}>
+                    <MapPin size={14} /> View on map
+                  </button>
+                  <button className="btn-secondary" onClick={() => setActiveTab('risk')} style={{ fontSize: '0.8rem' }}>
+                    <Waves size={14} /> View risk detail
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

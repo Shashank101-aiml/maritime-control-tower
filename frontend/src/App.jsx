@@ -59,9 +59,9 @@ export default function App() {
       case 'monitor':
         return <EventMonitor />;
       case 'risk':
-        return <RiskAnalysis />;
+        return <RiskAnalysis setActiveTab={setActiveTab} />;
       case 'routes':
-        return <RouteRecommendations />;
+        return <RouteRecommendations setActiveTab={setActiveTab} />;
       case 'congestion':
         return <CongestionPredictor />;
       case 'delay':

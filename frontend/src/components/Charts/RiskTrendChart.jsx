@@ -26,7 +26,7 @@ const formatAxisLabel = (date) =>
  * real comparative signal, not a coincidence of which corridor stayed
  * worst the longest.
  */
-export default function RiskTrendChart({ trendsByCorridor }) {
+export default function RiskTrendChart({ trendsByCorridor, selectedLocation, onSelectLocation }) {
   const corridors = Object.entries(trendsByCorridor || {})
     .filter(([, points]) => points && points.length > 0)
     .sort(([, a], [, b]) => b.length - a.length);
@@ -108,21 +108,30 @@ export default function RiskTrendChart({ trendsByCorridor }) {
           {sortedByTime.map(([location, points], idx) => {
             const color = CORRIDOR_COLORS[idx % CORRIDOR_COLORS.length];
             const linePoints = points.map((p) => `${xFor(p.time)},${yFor(p.score)}`).join(' ');
+            const isSelected = selectedLocation === location;
+            // Dim every other line once one is selected, so picking a
+            // corridor in the legend actually isolates its trend instead
+            // of just adding a highlight on top of an unreadable tangle.
+            const dimmed = selectedLocation && !isSelected;
             return (
-              <g key={location}>
+              <g
+                key={location}
+                opacity={dimmed ? 0.25 : 1}
+                style={{ cursor: onSelectLocation ? 'pointer' : 'default', transition: 'opacity 0.2s ease' }}
+                onClick={() => onSelectLocation?.(location)}
+              >
                 {points.length > 1 && (
                   <polyline
-                    fill="none" stroke={color} strokeWidth="2" opacity="0.85"
+                    fill="none" stroke={color} strokeWidth={isSelected ? 3.5 : 2} opacity="0.9"
                     points={linePoints} strokeLinecap="round" strokeLinejoin="round"
                   />
                 )}
                 {points.map((p, i) => (
                   <circle
-                    key={i} cx={xFor(p.time)} cy={yFor(p.score)} r="3.5"
+                    key={i} cx={xFor(p.time)} cy={yFor(p.score)} r={isSelected ? 4.5 : 3.5}
                     fill={color} stroke="var(--surface)" strokeWidth="1.5"
-                    style={{ cursor: 'pointer' }}
                   >
-                    <title>{`${location} — ${p.time}: ${p.score}/100`}</title>
+                    <title>{`${location} — ${p.time}: ${p.score}/100 (click to ${isSelected ? 'clear' : 'select'})`}</title>
                   </circle>
                 ))}
               </g>
@@ -143,18 +152,31 @@ export default function RiskTrendChart({ trendsByCorridor }) {
       </div>
 
       <div style={{
-        display: 'flex', flexWrap: 'wrap', gap: '8px 18px',
+        display: 'flex', flexWrap: 'wrap', gap: '6px 10px',
         marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--border)'
       }}>
         {sortedByTime.map(([location, points], idx) => {
           const color = CORRIDOR_COLORS[idx % CORRIDOR_COLORS.length];
           const latest = points[points.length - 1];
+          const isSelected = selectedLocation === location;
           return (
-            <div key={location} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: 'var(--text-body)' }}>
+            <button
+              key={location}
+              type="button"
+              onClick={() => onSelectLocation?.(location)}
+              title={onSelectLocation ? `${isSelected ? 'Clear' : 'Select'} ${location}` : undefined}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem',
+                color: 'var(--text-body)', background: isSelected ? 'var(--primary-soft)' : 'transparent',
+                border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid transparent',
+                borderRadius: '999px', padding: '3px 9px 3px 6px',
+                cursor: onSelectLocation ? 'pointer' : 'default',
+              }}
+            >
               <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: color, display: 'inline-block', flexShrink: 0 }} />
               {location}
               <strong style={{ color: 'var(--text-strong)' }}>{latest.score}/100</strong>
-            </div>
+            </button>
           );
         })}
       </div>
