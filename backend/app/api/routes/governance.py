@@ -10,6 +10,7 @@ from app.models.user import User
 from app.governance.registry import get_all_agents
 from app.governance.policy import resolve_approval
 from app.governance.audit import log_audit_event
+from app.governance.trust import compute_trust_score
 from typing import List
 
 router = APIRouter()
@@ -30,7 +31,11 @@ def read_agents(db: Session = Depends(get_db)):
             "risk_level": a.risk_level,
             "criticality": a.criticality,
             "health": h.status if h else "UNKNOWN",
-            "last_active": h.last_heartbeat.isoformat() + "Z" if h and h.last_heartbeat else "Never"
+            "last_active": h.last_heartbeat.isoformat() + "Z" if h and h.last_heartbeat else "Never",
+            # Spec section 18 -- real, computed from this same agent's
+            # recorded execution/denial/violation/override history, not
+            # a static or invented figure. Null when it has never run.
+            "trust_score": compute_trust_score(db, a.id),
         })
     return result
 

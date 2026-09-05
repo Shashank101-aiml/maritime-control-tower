@@ -148,6 +148,7 @@ function AgentRegistryTable({ agents, onStatusChange }) {
           <th style={{ padding: '12px 8px' }}>Risk / Criticality</th>
           <th style={{ padding: '12px 8px' }}>Version</th>
           <th style={{ padding: '12px 8px' }}>Health</th>
+          <th style={{ padding: '12px 8px' }}>Trust</th>
           <th style={{ padding: '12px 8px' }}>Status</th>
           <th style={{ padding: '12px 8px' }}>Actions</th>
         </tr>
@@ -165,6 +166,18 @@ function AgentRegistryTable({ agents, onStatusChange }) {
             <td style={{ padding: '12px 8px', fontSize: '0.85rem' }}>{a.version}</td>
             <td style={{ padding: '12px 8px' }}>
               <Badge color={a.health === 'HEALTHY' ? 'var(--accent-emerald)' : 'var(--accent-red)'}>{a.health}</Badge>
+            </td>
+            <td style={{ padding: '12px 8px', fontSize: '0.85rem' }}>
+              {a.trust_score == null ? (
+                <span style={{ color: 'var(--text-muted)' }} title="No recorded executions yet">—</span>
+              ) : (
+                <span
+                  title="success rate x (1 - denial rate) x (1 - policy-violation rate) x (1 - human-override rate)"
+                  style={{ color: a.trust_score >= 0.8 ? 'var(--accent-emerald)' : a.trust_score >= 0.5 ? 'var(--accent-amber)' : 'var(--accent-red)', fontWeight: 600 }}
+                >
+                  {Math.round(a.trust_score * 100)}%
+                </span>
+              )}
             </td>
             <td style={{ padding: '12px 8px' }}>
               <Badge color={a.status === 'ACTIVE' ? 'var(--accent-cyan)' : 'var(--accent-amber)'}>{a.status}</Badge>
