@@ -30,6 +30,7 @@ from app.api.routes.delay import router as delay_router
 from app.api.routes.fuel import router as fuel_router
 from app.api.routes.twin import router as twin_router
 from app.api.routes.route import router as route_optimization_router
+from app.api.routes.simulation import router as simulation_router
 
 from app.api.routes.auth import router as auth_router
 
@@ -184,3 +185,4 @@ app.include_router(delay_router, prefix="/api", tags=["delay"], dependencies=pro
 app.include_router(fuel_router, prefix="/api", tags=["fuel"], dependencies=protected)
 app.include_router(twin_router, prefix="/api", tags=["twin"], dependencies=protected)
 app.include_router(route_optimization_router, prefix="/api", tags=["route"], dependencies=protected)
+app.include_router(simulation_router, prefix="/api", tags=["simulation"], dependencies=protected)

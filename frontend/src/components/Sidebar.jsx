@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Activity, Ship, Radio, ShieldAlert, Navigation, Anchor, Clock, Fuel,
-  Cpu, ScrollText, Settings as SettingsIcon, Circle
+  Cpu, ScrollText, Settings as SettingsIcon, Circle, FlaskConical
 } from 'lucide-react';
 
 const NAV_GROUPS = [
@@ -18,6 +18,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'risk', label: 'Risk Analysis', icon: ShieldAlert },
       { id: 'routes', label: 'Route Planning', icon: Navigation },
+      { id: 'simulator', label: 'Scenario Simulator', icon: FlaskConical },
     ],
   },
   {

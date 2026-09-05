@@ -87,6 +87,26 @@ export const optimizeRoute = async (origin, destination, weights = null) => {
   return res.json();
 };
 
+/**
+ * Real what-if scenario (Slice 08): what the optimizer would recommend
+ * if the given monitored corridor's conditions worsen (MODERATE) or it
+ * became fully impassable (SEVERE), versus today's real baseline for
+ * the same origin/destination. See SimulationAgent -- runs on a copy of
+ * the digital twin, never the shared live one.
+ */
+export const simulateScenario = async (origin, destination, corridor, scenario, weights = null) => {
+  const params = new URLSearchParams({ origin, destination, corridor, scenario });
+  if (weights) {
+    params.set('weights', Object.entries(weights).map(([k, v]) => `${k}:${v}`).join(','));
+  }
+  const res = await apiFetch(`${BASE_URL}/simulate?${params.toString()}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `Simulation failed (${res.status})`);
+  }
+  return res.json();
+};
+
 /** optimizeRoute()'s response reshaped into the same corridor-card list
  *  getCorridorOptions() produces, for a specific origin/destination
  *  chosen by the user (or derived from a selected corridor) rather than

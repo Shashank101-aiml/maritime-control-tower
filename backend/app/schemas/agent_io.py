@@ -121,3 +121,35 @@ class Decision(BaseModel):
     risk_reduction: int
     confidence: float = Field(..., ge=0, le=1)
     requires_human_approval: bool
+
+
+class ScenarioResult(BaseModel):
+    """Output of SimulationAgent.simulate() -- spec Slice 08/section 11:
+    what the real optimizer would recommend for the same origin/
+    destination if a chosen monitored corridor's conditions worsen
+    (MODERATE) or the corridor becomes fully impassable (SEVERE),
+    compared against today's real baseline recommendation.
+
+    The simulated graph is a copy of the live digital twin with only
+    the chosen corridor's crossing lanes modified -- every other lane's
+    real distance/cost/congestion is untouched, and the same
+    RouteOptimizer that produces real recommendations elsewhere scores
+    the result. `scenario_*` fields are null when no route survives the
+    scenario (SEVERE can genuinely disconnect a port pair) rather than
+    a fabricated fallback path.
+    """
+
+    scenario: str
+    corridor: str
+    origin: str
+    destination: str
+    baseline_lane_ids: List[str]
+    baseline_risk: int
+    baseline_distance_nm: float
+    scenario_lane_ids: Optional[List[str]] = None
+    scenario_risk: Optional[int] = None
+    scenario_distance_nm: Optional[float] = None
+    lanes_affected: int
+    route_changed: bool
+    no_viable_route: bool
+    summary: str
