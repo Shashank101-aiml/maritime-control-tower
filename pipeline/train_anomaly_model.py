@@ -30,6 +30,8 @@ import joblib
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 
+from evaluation_utils import save_metrics
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = REPO_ROOT / "data" / "cleaned" / "port_congestion.csv"
 MODEL_PATH = REPO_ROOT / "models" / "saved_models" / "anomaly_model.joblib"
@@ -77,6 +79,18 @@ def main() -> None:
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, MODEL_PATH)
     print(f"\nSaved -> {MODEL_PATH}")
+
+    metrics = {
+        "n_samples": int(len(df)),
+        "n_ports": int(df["port"].nunique()),
+        "contamination": CONTAMINATION,
+        "flagged_count": int((flags == -1).sum()),
+        "flagged_rate": round(float((flags == -1).mean()), 4),
+        "score_min": round(float(scores.min()), 4),
+        "score_max": round(float(scores.max()), 4),
+    }
+    metrics_path = save_metrics("anomaly", metrics)
+    print(f"Metrics saved -> {metrics_path}")
 
 
 if __name__ == "__main__":

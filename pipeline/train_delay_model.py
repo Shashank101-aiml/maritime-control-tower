@@ -37,6 +37,8 @@ import pandas as pd
 from sklearn.metrics import average_precision_score, classification_report, roc_auc_score
 from sklearn.model_selection import train_test_split
 
+from evaluation_utils import save_metrics
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FEATURES_DIR = REPO_ROOT / "data" / "features"
 MODEL_PATH = REPO_ROOT / "models" / "saved_models" / "delay_model.joblib"
@@ -59,7 +61,7 @@ def load_data() -> pd.DataFrame:
     return df
 
 
-def train_and_evaluate(df: pd.DataFrame) -> lgb.LGBMClassifier:
+def train_and_evaluate(df: pd.DataFrame) -> "tuple[lgb.LGBMClassifier, dict]":
     X, y = df[FEATURE_COLUMNS], df[TARGET_COLUMN]
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.25, random_state=42, stratify=y
@@ -80,9 +82,12 @@ def train_and_evaluate(df: pd.DataFrame) -> lgb.LGBMClassifier:
     proba = model.predict_proba(X_test)[:, 1]
     preds = (proba >= 0.5).astype(int)
 
-    print(f"\nROC-AUC: {roc_auc_score(y_test, proba):.3f}")
-    print(f"PR-AUC:  {average_precision_score(y_test, proba):.3f}  "
-          f"(baseline/no-skill PR-AUC = positive rate = {y_test.mean():.3f})")
+    roc_auc = roc_auc_score(y_test, proba)
+    pr_auc = average_precision_score(y_test, proba)
+    no_skill_pr_auc = float(y_test.mean())  # spec section 30's baseline: always predict the positive rate
+
+    print(f"\nROC-AUC: {roc_auc:.3f}")
+    print(f"PR-AUC:  {pr_auc:.3f}  (baseline/no-skill PR-AUC = positive rate = {no_skill_pr_auc:.3f})")
     print("\nClassification report:")
     print(classification_report(y_test, preds, digits=3))
 
@@ -90,16 +95,26 @@ def train_and_evaluate(df: pd.DataFrame) -> lgb.LGBMClassifier:
     importances = pd.Series(model.feature_importances_, index=FEATURE_COLUMNS).sort_values(ascending=False)
     print(importances)
 
-    return model
+    metrics = {
+        "n_train": int(len(X_train)),
+        "n_test": int(len(X_test)),
+        "roc_auc": round(float(roc_auc), 4),
+        "pr_auc": round(float(pr_auc), 4),
+        "no_skill_pr_auc": round(no_skill_pr_auc, 4),
+    }
+    return model, metrics
 
 
 def main() -> None:
     df = load_data()
-    model = train_and_evaluate(df)
+    model, metrics = train_and_evaluate(df)
 
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, MODEL_PATH)
     print(f"\nSaved -> {MODEL_PATH}")
+
+    metrics_path = save_metrics("delay", metrics)
+    print(f"Metrics saved -> {metrics_path}")
 
 
 if __name__ == "__main__":

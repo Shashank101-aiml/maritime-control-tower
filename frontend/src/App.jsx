@@ -8,6 +8,7 @@ import EventMonitor from './pages/EventMonitor';
 import RiskAnalysis from './pages/RiskAnalysis';
 import RouteRecommendations from './pages/RouteRecommendations';
 import ScenarioSimulator from './pages/ScenarioSimulator';
+import EvaluationHarness from './pages/EvaluationHarness';
 import Settings from './pages/Settings';
 import GovernanceDashboard from './pages/GovernanceDashboard';
 import CongestionPredictor from './pages/CongestionPredictor';
@@ -65,6 +66,8 @@ export default function App() {
         return <RouteRecommendations setActiveTab={setActiveTab} />;
       case 'simulator':
         return <ScenarioSimulator />;
+      case 'evaluation':
+        return <EvaluationHarness />;
       case 'congestion':
         return <CongestionPredictor />;
       case 'delay':
