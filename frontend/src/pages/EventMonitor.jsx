@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Radio, Filter, RefreshCw, AlertTriangle, MapPin, X, Waves, Info, Navigation, Clock,
+  Radio, Filter, RefreshCw, AlertTriangle, MapPin, X, Waves, Info, Navigation, Clock, Newspaper, Tag,
 } from 'lucide-react';
 import { useEvents } from '../hooks/useEvents';
 import EventCard from '../components/EventCard';
@@ -38,6 +38,7 @@ const Metric = ({ label, value, unit }) =>
 
 export default function EventMonitor() {
   const {
+    events,
     eventHistory,
     rawHistory,
     highSeverityCount,
@@ -48,6 +49,13 @@ export default function EventMonitor() {
     refreshEvents,
     freshness
   } = useEvents();
+
+  // Real news articles (NewsAPI) already fetched by the backend
+  // alongside the latest ingested event, each carrying real structured
+  // understanding (category + matched real locations) from the Event
+  // Understanding Agent -- reusing data already in context, no new
+  // network call.
+  const relatedNews = events?.[0]?.related_news ?? [];
 
   // Shared across tabs (see CorridorContext.jsx). This page both reads a
   // selection made elsewhere (to drive the dedicated status panel below)
@@ -265,6 +273,58 @@ export default function EventMonitor() {
               </div>
             )}
           </div>
+
+          {/* Related news -- real NewsAPI articles the backend already
+              fetched alongside the latest ingested event, each
+              classified by the real Event Understanding Agent (TF-IDF
+              similarity against explicit reference terms, not an
+              invented label) and checked against this system's own
+              real port/corridor names, not generic NER that would
+              recognize places this system can't act on. */}
+          {relatedNews.length > 0 && (
+            <div className="panel" style={{ marginTop: '20px' }}>
+              <div className="section-header">
+                <h3 className="section-title">
+                  <Newspaper size={17} color="var(--accent-amber)" />
+                  Related news ({relatedNews.length})
+                </h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {relatedNews.map((article, i) => {
+                  const u = article.understanding;
+                  return (
+                    <a
+                      key={article.url || i}
+                      href={article.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="agent-item"
+                      style={{ flexDirection: 'column', alignItems: 'stretch', textDecoration: 'none' }}
+                    >
+                      <div style={{ fontSize: '0.85rem', color: 'var(--text-strong)', fontWeight: 600, marginBottom: '4px' }}>
+                        {article.title}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-subtle)', marginBottom: u ? '6px' : 0 }}>
+                        {article.source}
+                      </div>
+                      {u && (
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                          <span className="status-badge" style={{ fontSize: '0.66rem', background: 'var(--surface-subtle)', borderColor: 'var(--border)', color: 'var(--text-body)' }}>
+                            <Tag size={10} /> {u.category} · {Math.round(u.category_confidence * 100)}%
+                          </span>
+                          {u.matched_locations.map((loc) => (
+                            <span key={loc} className="status-badge" style={{ fontSize: '0.66rem', background: 'var(--info-soft)', borderColor: 'var(--accent-cyan)', color: 'var(--accent-cyan)' }}>
+                              <MapPin size={10} /> {loc}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Corridor Status -- a standalone monitoring surface for this

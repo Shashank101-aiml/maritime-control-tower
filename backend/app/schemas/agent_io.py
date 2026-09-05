@@ -155,6 +155,24 @@ class ScenarioResult(BaseModel):
     summary: str
 
 
+class NewsUnderstanding(BaseModel):
+    """Output of EventUnderstandingAgent.analyze() -- spec section 7:
+    structured extraction over free text (a news article's title +
+    description + content), not "hand the whole article to an LLM" for
+    what's fundamentally text classification + entity matching. See
+    event_understanding_agent.py for exactly how category and location
+    matching are computed -- both are transparent, reproducible
+    techniques (TF-IDF cosine similarity against hand-written reference
+    terms; substring matching against this system's own real port/
+    corridor names), not a black-box model reporting invented metrics.
+    """
+
+    category: str
+    category_confidence: float = Field(..., ge=0, le=1)
+    matched_locations: List[str]
+    reasoning: str
+
+
 class AnomalyReport(BaseModel):
     """Output of AnomalyAgent.detect() -- spec section 8. Unsupervised
     (Isolation Forest, pipeline/train_anomaly_model.py) over the same

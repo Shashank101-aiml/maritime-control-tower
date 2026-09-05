@@ -32,6 +32,7 @@ from app.api.routes.twin import router as twin_router
 from app.api.routes.route import router as route_optimization_router
 from app.api.routes.simulation import router as simulation_router
 from app.api.routes.anomaly import router as anomaly_router
+from app.api.routes.understanding import router as understanding_router
 
 from app.api.routes.auth import router as auth_router
 
@@ -188,3 +189,4 @@ app.include_router(twin_router, prefix="/api", tags=["twin"], dependencies=prote
 app.include_router(route_optimization_router, prefix="/api", tags=["route"], dependencies=protected)
 app.include_router(simulation_router, prefix="/api", tags=["simulation"], dependencies=protected)
 app.include_router(anomaly_router, prefix="/api", tags=["anomaly"], dependencies=protected)
+app.include_router(understanding_router, prefix="/api", tags=["understanding"], dependencies=protected)

@@ -4,6 +4,7 @@ from app.agents.ingestion.live_conditions_client import LiveConditionsClient
 from app.agents.ingestion.maritime_client import MaritimeClient
 from app.agents.ingestion.news_client import NewsClient
 from app.agents.ingestion.weather_client import WeatherClient
+from app.agents.understanding.event_understanding_agent import EventUnderstandingAgent
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.schemas.agent_io import IngestedEvent
@@ -29,6 +30,7 @@ class IngestionAgent:
         self.weather_client = weather_client or WeatherClient(api_key=settings.WEATHER_API_KEY)
         self.news_client = news_client or NewsClient(api_key=settings.NEWS_API_KEY)
         self.live_client = live_client or LiveConditionsClient()
+        self.understanding_agent = EventUnderstandingAgent()
 
     def collect_data(self, source_payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Dict form, for the HTTP routes (dashboard/events/risks) that
@@ -109,10 +111,19 @@ class IngestionAgent:
             # news (Suez, Hormuz, Gulf of Aden...); pair it with generic
             # maritime terms rather than searching for the description.
             query = f'"{location}" AND (shipping OR maritime OR vessel)' if location else None
-            return self.news_client.fetch_news(query=query, limit=5)
+            articles = self.news_client.fetch_news(query=query, limit=5)
         except Exception as exc:  # network/API failures shouldn't break ingestion
             logger.warning("News enrichment failed: %s", exc)
             return []
+
+        # Slice 07 (Event Understanding, spec section 7): structured
+        # category + real-location extraction over each article's own
+        # text, not the whole article handed to an LLM for what's
+        # fundamentally text classification.
+        for article in articles:
+            text = " ".join(filter(None, [article.get("title"), article.get("description"), article.get("content")]))
+            article["understanding"] = self.understanding_agent.analyze(text).model_dump()
+        return articles
 
     def _normalize_event(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         return {
