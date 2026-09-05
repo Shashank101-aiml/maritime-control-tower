@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Navigation, ShieldCheck, RefreshCw, AlertCircle, CheckCircle2, MapPin, Sliders, X, Waves, Route as RouteIcon,
+  Navigation, ShieldCheck, RefreshCw, AlertCircle, CheckCircle2, MapPin, Sliders, X, Waves,
+  Route as RouteIcon, ArrowLeftRight, ShieldAlert, Gauge, DollarSign, Scale, Leaf, Link2,
 } from 'lucide-react';
 import { getTwin, lanesCrossingCorridor } from '../services/twinService';
 import { getCorridorOptionsFor } from '../services/routeService';
@@ -8,11 +9,25 @@ import { getEventHistory } from '../services/eventService';
 import { getSeverityTone, getSeverityLabel } from '../types/Event';
 import { useCorridorContext } from '../context/CorridorContext';
 import RouteCard from '../components/RouteCard';
+import RouteMap from '../components/RouteMap';
 import RouteComparisonChart from '../components/Charts/RouteComparisonChart';
 import DelayChart from '../components/Charts/DelayChart';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const DEFAULT_WEIGHTS = { risk: 0.4, cost: 0.25, delay: 0.25, emissions: 0.1 };
+
+// One-click starting points for the weight sliders -- each is a real,
+// usable combination (they still run through the same normalized
+// weighted-sum optimizer), not just the default rebalanced. Lets a
+// reader see how the ranking actually shifts without dragging four
+// sliders by hand first.
+const WEIGHT_PRESETS = [
+  { id: 'balanced', label: 'Balanced', icon: Scale, weights: DEFAULT_WEIGHTS },
+  { id: 'safety', label: 'Safety first', icon: ShieldAlert, weights: { risk: 0.7, cost: 0.1, delay: 0.1, emissions: 0.1 } },
+  { id: 'speed', label: 'Fastest', icon: Gauge, weights: { risk: 0.15, cost: 0.1, delay: 0.65, emissions: 0.1 } },
+  { id: 'cost', label: 'Cheapest', icon: DollarSign, weights: { risk: 0.15, cost: 0.65, delay: 0.1, emissions: 0.1 } },
+  { id: 'green', label: 'Lowest emissions', icon: Leaf, weights: { risk: 0.15, cost: 0.1, delay: 0.1, emissions: 0.65 } },
+];
 
 /** Reconstructs the ordered port sequence a route actually passes
  *  through from its lane_ids -- e.g. ["Hong Kong", "Singapore",
@@ -30,6 +45,43 @@ const lanePathToPorts = (twin, laneIds, origin) => {
   return ports;
 };
 
+/** Real coordinates for every point a route might pass through: ports
+ *  from the digital twin's own nodes, monitored corridors from the
+ *  live conditions feed (the same data the Selected Corridor panel and
+ *  Event Monitor use) -- nothing interpolated or invented. */
+const buildCoordLookup = (twin, corridorReadings) => {
+  const map = {};
+  (twin?.nodes || []).forEach((n) => {
+    if (n.lat != null && n.lon != null) map[n.id] = { lat: n.lat, lon: n.lon, type: 'port' };
+  });
+  (corridorReadings || []).forEach((r) => {
+    if (r.coordinates) map[r.location] = { lat: r.coordinates.lat, lon: r.coordinates.lng, type: 'corridor', severity: r.severity };
+  });
+  return map;
+};
+
+/** Full ordered geometry for one candidate -- ports AND the real
+ *  monitored corridors each hop's lane actually crosses, in travel
+ *  order (a lane's stored waypoints run port_a -> port_b, so they're
+ *  reversed when a candidate traverses it the other way). This is what
+ *  RouteMap plots; lanePathToPorts above stays port-only for DelayChart. */
+const lanePathToPoints = (twin, laneIds, origin, coordLookup) => {
+  const points = [];
+  let current = origin;
+  if (coordLookup[current]) points.push({ name: current, ...coordLookup[current] });
+  for (const laneId of laneIds || []) {
+    const edge = twin?.edges?.find((e) => e.lane_id === laneId);
+    if (!edge) break;
+    const forward = edge.port_a === current;
+    const next = forward ? edge.port_b : edge.port_a;
+    const wps = forward ? (edge.waypoints || []) : [...(edge.waypoints || [])].reverse();
+    wps.forEach((name) => { if (coordLookup[name]) points.push({ name, ...coordLookup[name] }); });
+    if (coordLookup[next]) points.push({ name: next, ...coordLookup[next] });
+    current = next;
+  }
+  return points;
+};
+
 export default function RouteRecommendations({ setActiveTab }) {
   const { selectedCorridor, clearCorridor } = useCorridorContext();
 
@@ -40,15 +92,15 @@ export default function RouteRecommendations({ setActiveTab }) {
   const [weights, setWeights] = useState(DEFAULT_WEIGHTS);
   const [autoNote, setAutoNote] = useState(null);
 
-  // The selected corridor's own live sea-state -- fetched once, lazily,
-  // the first time a corridor is actually selected here, so this page's
-  // "Selected Corridor" panel can show real current conditions (not just
-  // which lanes cross it) without polling /api/conditions on every load.
+  // Live sea-state for every monitored corridor -- fetched once. Powers
+  // the Selected Corridor panel's current-conditions readout AND gives
+  // RouteMap real coordinates for the corridors a lane's waypoints cross
+  // (not just the ports), so the map isn't limited to whichever corridor
+  // happens to be selected.
   const [corridorReadings, setCorridorReadings] = useState(null);
   useEffect(() => {
-    if (!selectedCorridor || corridorReadings) return;
     getEventHistory().then((r) => setCorridorReadings(r.readings)).catch(() => setCorridorReadings([]));
-  }, [selectedCorridor, corridorReadings]);
+  }, []);
   const activeReading = corridorReadings?.find((r) => r.location === selectedCorridor?.location) ?? null;
 
   const [route, setRoute] = useState(null);
@@ -101,13 +153,17 @@ export default function RouteRecommendations({ setActiveTab }) {
   // last wins, even if it was requested first.
   const requestIdRef = useRef(0);
 
-  const runOptimize = useCallback(async () => {
+  // Takes weights explicitly rather than closing over the `weights`
+  // state, so preset buttons can set new weights and run the query in
+  // the same click without hitting a stale-closure value from before
+  // the state update lands.
+  const runOptimize = useCallback(async (weightsArg) => {
     if (!origin || !destination) return;
     const requestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
     try {
-      const result = await getCorridorOptionsFor(origin, destination, weights);
+      const result = await getCorridorOptionsFor(origin, destination, weightsArg);
       if (requestId !== requestIdRef.current) return;
       setRoute(result.route);
       setCorridors(result.corridors);
@@ -120,15 +176,65 @@ export default function RouteRecommendations({ setActiveTab }) {
     } finally {
       if (requestId === requestIdRef.current) setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [origin, destination]);
 
   useEffect(() => {
-    if (origin && destination) runOptimize();
+    if (origin && destination) runOptimize(weights);
+    // Only origin/destination changing should auto-run; a weight-slider
+    // drag alone waits for "Apply weights" so it isn't a request per tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [origin, destination, runOptimize]);
+
+  const applyPreset = (presetWeights) => {
+    setWeights(presetWeights);
+    runOptimize(presetWeights);
+  };
+
+  const swapOriginDestination = () => {
+    setOrigin(destination);
+    setDestination(origin);
+  };
 
   const ports = (twin?.nodes || []).map((n) => n.id).sort();
   const pathPorts = route ? lanePathToPorts(twin, route.lane_ids, route.origin) : [];
+
+  const coordLookup = useMemo(() => buildCoordLookup(twin, corridorReadings), [twin, corridorReadings]);
+  const mapCandidates = useMemo(() => {
+    if (!route) return [];
+    // Every candidate -- recommended and alternatives alike -- is a
+    // path between the same query's origin/destination; only `route`
+    // itself (not RouteAlternative) carries those fields, per
+    // backend/app/schemas/agent_io.py.
+    return [route, ...(route.alternatives || [])].map((c, i) => ({
+      id: (c.lane_ids || []).join('+') || `alt-${i}`,
+      label: (c.lane_ids || []).join(' + '),
+      origin: route.origin,
+      destination: route.destination,
+      distance_nm: c.distance_nm,
+      risk: c.risk,
+      points: lanePathToPoints(twin, c.lane_ids, route.origin, coordLookup),
+    }));
+  }, [route, twin, coordLookup]);
+
+  // Per-hop breakdown for a multi-hop route -- the banner's headline
+  // risk is the worst single hop (RouteOptimizer's own aggregation), so
+  // for a 2+ hop path it's otherwise invisible which specific leg is
+  // driving that number.
+  const hops = route && route.lane_ids?.length > 1
+    ? (() => {
+        const pts = lanePathToPorts(twin, route.lane_ids, route.origin);
+        return route.lane_ids.map((laneId, i) => {
+          const edge = twin?.edges?.find((e) => e.lane_id === laneId);
+          return {
+            laneId,
+            from: pts[i],
+            to: pts[i + 1],
+            distance_nm: edge?.distance_nm,
+            risk: edge?.risk,
+          };
+        });
+      })()
+    : [];
 
   const setWeight = (key, value) => setWeights((w) => ({ ...w, [key]: value }));
 
@@ -157,7 +263,7 @@ export default function RouteRecommendations({ setActiveTab }) {
           </p>
         </div>
 
-        <button className="btn-action" onClick={runOptimize} disabled={!origin || !destination}>
+        <button className="btn-action" onClick={() => runOptimize(weights)} disabled={!origin || !destination}>
           <RefreshCw size={16} className={loading ? 'spin' : ''} />
           Recalculate
         </button>
@@ -172,13 +278,21 @@ export default function RouteRecommendations({ setActiveTab }) {
         <>
           {/* Origin / destination / weights controls */}
           <div className="glass-panel" style={{ padding: '20px', marginBottom: '20px' }}>
-            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-subtle)', marginBottom: '6px' }}>Origin</label>
                 <select className="form-input" value={origin} onChange={(e) => setOrigin(e.target.value)} style={{ minWidth: '180px' }}>
                   {ports.map((p) => <option key={p} value={p}>{p}</option>)}
                 </select>
               </div>
+
+              <button
+                type="button" onClick={swapOriginDestination} title="Swap origin and destination"
+                className="btn-secondary" style={{ padding: '9px', marginBottom: '1px' }}
+              >
+                <ArrowLeftRight size={15} />
+              </button>
+
               <div>
                 <label style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-subtle)', marginBottom: '6px' }}>Destination</label>
                 <select className="form-input" value={destination} onChange={(e) => setDestination(e.target.value)} style={{ minWidth: '180px' }}>
@@ -202,10 +316,30 @@ export default function RouteRecommendations({ setActiveTab }) {
                 ))}
               </div>
 
-              <button className="btn-secondary" onClick={runOptimize} disabled={loading} style={{ whiteSpace: 'nowrap' }}>
+              <button className="btn-secondary" onClick={() => runOptimize(weights)} disabled={loading} style={{ whiteSpace: 'nowrap' }}>
                 Apply weights
               </button>
             </div>
+
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-subtle)', alignSelf: 'center', marginRight: '4px' }}>Quick presets:</span>
+              {WEIGHT_PRESETS.map((preset) => {
+                const Icon = preset.icon;
+                const isActive = Object.entries(preset.weights).every(([k, v]) => weights[k] === v);
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => applyPreset(preset.weights)}
+                    className={isActive ? 'btn-action' : 'btn-secondary'}
+                    style={{ fontSize: '0.76rem', padding: '6px 12px' }}
+                  >
+                    <Icon size={13} /> {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+
             <p className="form-note" style={{ marginTop: '10px' }}>
               Weights don't need to add up to 100% — they're normalized automatically. Default
               matches the server's own ROUTE_OPTIMIZATION_WEIGHTS config.
@@ -334,6 +468,39 @@ export default function RouteRecommendations({ setActiveTab }) {
                   <span>Risk: <strong style={{ color: route.risk > 50 ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>{route.risk}/100</strong></span>
                   <span>Alternatives considered: <strong style={{ color: 'var(--text-strong)' }}>{route.alternatives.length}</strong></span>
                 </div>
+
+                {/* The banner's risk is the worst single hop -- for a
+                    multi-hop path that number alone doesn't say which
+                    leg is actually driving it. */}
+                {hops.length > 0 && (
+                  <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-strong)' }}>
+                    <p style={{ fontSize: '0.72rem', color: 'var(--text-subtle)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                      <Link2 size={12} style={{ verticalAlign: '-1px', marginRight: '4px' }} />
+                      Hop-by-hop breakdown ({hops.length} legs)
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {hops.map((h, i) => (
+                        <div key={h.laneId} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '0.82rem', color: 'var(--text-body)' }}>
+                          <span style={{ color: 'var(--text-subtle)', minWidth: '16px' }}>{i + 1}.</span>
+                          <span style={{ flex: 1 }}>{h.from} → {h.to}</span>
+                          <span style={{ color: 'var(--text-subtle)' }}>{h.distance_nm != null ? `${Math.round(h.distance_nm).toLocaleString()} nm` : '—'}</span>
+                          <span style={{
+                            fontWeight: 600,
+                            color: h.risk >= 60 ? 'var(--accent-rose)' : h.risk >= 35 ? 'var(--accent-amber)' : 'var(--accent-emerald)',
+                          }}>
+                            {h.risk != null ? `${h.risk}/100` : '—'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Real geography for the selected candidate, clickable
+                  alternatives drawn alongside it. */}
+              <div style={{ marginBottom: '28px' }}>
+                <RouteMap candidates={mapCandidates} selectedId={adoptedId} onSelect={setAdoptedId} height={420} />
               </div>
 
               {/* Charts Row: Route Comparison + Delays */}
