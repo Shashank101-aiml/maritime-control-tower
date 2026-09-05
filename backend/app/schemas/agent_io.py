@@ -96,3 +96,28 @@ class RouteRecommendation(BaseModel):
     risk: int = Field(..., ge=0, le=100)
     score: float
     alternatives: List[RouteAlternative] = Field(default_factory=list)
+
+
+class Decision(BaseModel):
+    """Output of DecisionAgent.decide() -- spec Slice 07/section 13's
+    structured recommendation: a real trade-off comparison, not just
+    the route on its own.
+
+    `baseline` is the shortest-distance candidate among the
+    RouteRecommendation's own ranked set (what a naive "just minimize
+    distance" chooser would pick) -- not an invented "current voyage",
+    since this pipeline has never had one. `recommended` is the actual
+    risk-weighted top pick. Every delta below is real arithmetic
+    between two candidates RouteOptimizer already scored; when they're
+    the same candidate every delta is honestly zero rather than a
+    forced trade-off narrative.
+    """
+
+    recommendation: str
+    baseline_lane_ids: List[str]
+    recommended_lane_ids: List[str]
+    expected_delay_days: float
+    estimated_cost_change_usd: float
+    risk_reduction: int
+    confidence: float = Field(..., ge=0, le=1)
+    requires_human_approval: bool

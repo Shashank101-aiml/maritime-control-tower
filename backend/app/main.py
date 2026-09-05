@@ -128,6 +128,7 @@ def seed_governance_agents():
         {"id": "ingestion-agent", "agent_name": "Ingestion Agent", "agent_type": "COLLECTOR", "version": "v1.2", "risk_level": "LOW", "criticality": "MEDIUM", "confidence_threshold": 0.5},
         {"id": "risk-agent", "agent_name": "Risk Agent", "agent_type": "ANALYZER", "version": "v2.1", "risk_level": "HIGH", "criticality": "CRITICAL", "confidence_threshold": 0.75},
         {"id": "route-agent", "agent_name": "Route Agent", "agent_type": "PLANNER", "version": "v1.5", "risk_level": "HIGH", "criticality": "CRITICAL", "confidence_threshold": 0.85, "human_approval_required": True},
+        {"id": "decision-agent", "agent_name": "Decision Agent", "agent_type": "PLANNER", "version": "v1.0", "risk_level": "HIGH", "criticality": "HIGH", "confidence_threshold": 0.7},
         {"id": "explanation-agent", "agent_name": "Explanation Agent", "agent_type": "COMMUNICATOR", "version": "v1.0", "risk_level": "LOW", "criticality": "LOW", "confidence_threshold": 0.6},
         {"id": "congestion-agent", "agent_name": "Congestion Prediction Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "MEDIUM", "criticality": "HIGH", "confidence_threshold": 0.7},
         {"id": "delay-agent", "agent_name": "Delay Prediction Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "MEDIUM", "criticality": "HIGH", "confidence_threshold": 0.7},

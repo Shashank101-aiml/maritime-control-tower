@@ -9,8 +9,11 @@ import { API_BASE_URL as BASE_URL } from '../config';
  * governance gate stopped the run — the caller shows that honestly
  * rather than substituting an invented recommendation.
  */
-export const getRecommendations = async () => {
-  const res = await apiFetch(`${BASE_URL}/recommendations`);
+export const getRecommendations = async (sessionId = null) => {
+  const url = sessionId
+    ? `${BASE_URL}/recommendations?session_id=${encodeURIComponent(sessionId)}`
+    : `${BASE_URL}/recommendations`;
+  const res = await apiFetch(url);
   if (!res.ok) throw new Error(`Recommendation request failed (${res.status})`);
   return createRecommendation(await res.json());
 };

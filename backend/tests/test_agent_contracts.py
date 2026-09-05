@@ -186,3 +186,12 @@ class TestCoordinatorPipeline:
         assert isinstance(route["alternatives"], list)
 
         assert isinstance(result["event"]["event_type"], str)
+
+        # Slice 07: a real structured decision, not a route with no
+        # trade-off framing -- confidence is derived from the
+        # recommended lane's own live risk (see decision_agent.py).
+        decision = result["decision"]
+        assert decision["confidence"] == round(1 - route["risk"] / 100, 2)
+        assert isinstance(decision["requires_human_approval"], bool)
+        assert decision["recommended_lane_ids"] == route["lane_ids"]
+        assert isinstance(decision["baseline_lane_ids"], list) and len(decision["baseline_lane_ids"]) >= 1

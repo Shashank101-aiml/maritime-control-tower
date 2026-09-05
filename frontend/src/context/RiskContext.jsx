@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { getFleetRiskAssessment } from '../services/riskService';
+import { getRecommendations } from '../services/routeService';
 
 const RiskContext = createContext(null);
 
@@ -12,7 +13,19 @@ export const RiskProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [mitigationActive, setMitigationActive] = useState(false);
+
+  // Real Decision Agent output (Slice 07), fetched on demand rather than
+  // polled -- running the full coordinator pipeline on every 20s tick
+  // would be wasteful for something the reader only needs when they ask.
+  const [decision, setDecision] = useState(null);
+  const [decisionStatus, setDecisionStatus] = useState('idle'); // idle | loading | success | pending_approval | rejected | error
+  const [decisionMessage, setDecisionMessage] = useState(null);
+
+  // Persists the coordinator session across requestDecision() calls --
+  // without this, every click started a brand new session, so a human
+  // approving a gated step in Governance had nothing to actually resume:
+  // the next click just hit a fresh pending approval on a fresh session.
+  const sessionIdRef = useRef(null);
 
   const fetchRiskAssessment = useCallback(async () => {
     setLoading(true);
@@ -33,18 +46,45 @@ export const RiskProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [fetchRiskAssessment]);
 
-  const activateMitigation = () => {
-    setMitigationActive(true);
-    // Simulate immediate risk score reduction when mitigation protocol is executed
-    setRiskData(prev => ({
-      ...prev,
-      currentRisk: prev.currentRisk ? {
-        ...prev.currentRisk,
-        risk_score: Math.max(15, prev.currentRisk.risk_score - 35),
-        status: 'MITIGATING VIA SOUTHERN CORRIDOR'
-      } : null
-    }));
-  };
+  // Calls the real coordinator pipeline (GET /api/recommendations, which
+  // now runs ingestion -> risk -> route -> Decision Agent -> explanation)
+  // and surfaces whatever it honestly reports -- a completed decision, a
+  // pending governance approval, or a rejection -- rather than faking an
+  // immediate risk-score drop the way the old local-only version did.
+  const requestDecision = useCallback(async () => {
+    setDecisionStatus('loading');
+    setDecisionMessage(null);
+    try {
+      const rec = await getRecommendations(sessionIdRef.current);
+      sessionIdRef.current = rec.session_id || null;
+      if (rec.status === 'PENDING_APPROVAL') {
+        setDecision(null);
+        setDecisionStatus('pending_approval');
+        setDecisionMessage(
+          (rec.pending_step ? `${rec.pending_step}: ` : '')
+          + (rec.primary_recommendation || 'Awaiting human approval in Governance.')
+          + ' Approve it there, then try again to resume this same session.'
+        );
+      } else if (rec.status === 'REJECTED') {
+        setDecision(null);
+        setDecisionStatus('rejected');
+        setDecisionMessage(rec.primary_recommendation || 'The recommendation was rejected at a governance gate.');
+        sessionIdRef.current = null; // a rejected session has nothing left to resume
+      } else if (rec.decision) {
+        setDecision(rec.decision);
+        setDecisionStatus('success');
+        sessionIdRef.current = null; // completed -- a fresh click should start a fresh assessment
+      } else {
+        setDecision(null);
+        setDecisionStatus('error');
+        setDecisionMessage('The pipeline completed but returned no decision.');
+      }
+    } catch (err) {
+      setDecision(null);
+      setDecisionStatus('error');
+      setDecisionMessage(err.message);
+    }
+  }, []);
 
   return (
     <RiskContext.Provider
@@ -55,8 +95,10 @@ export const RiskProvider = ({ children }) => {
         fleetSummary: riskData.fleetSummary,
         loading,
         error,
-        mitigationActive,
-        activateMitigation,
+        decision,
+        decisionStatus,
+        decisionMessage,
+        requestDecision,
         refreshRisk: fetchRiskAssessment
       }}
     >

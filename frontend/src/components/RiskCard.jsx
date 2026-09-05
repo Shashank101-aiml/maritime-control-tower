@@ -1,5 +1,8 @@
 import React from 'react';
-import { ShieldCheck, ShieldAlert, AlertTriangle, ArrowUpRight, CheckCircle2, MapPin, Ship } from 'lucide-react';
+import {
+  ShieldCheck, ShieldAlert, MapPin, Ship,
+  Sparkles, Clock, DollarSign, TrendingDown, TrendingUp, Hourglass, XCircle,
+} from 'lucide-react';
 import { getRiskLevel } from '../types/Risk';
 
 const TONES = {
@@ -8,7 +11,93 @@ const TONES = {
   NORMAL: { fg: 'var(--success)', bg: 'var(--success-soft)', border: 'var(--success-border)' },
 };
 
-export default function RiskCard({ risk, onMitigate, mitigationActive }) {
+/**
+ * Real Decision Agent output (Slice 07) or an honest in-progress /
+ * gated / failed state -- replaces what used to be a permanent
+ * fabricated "mitigation_plan" string the backend never actually sent.
+ */
+function DecisionPanel({ decisionStatus, decision, decisionMessage, onRequestDecision }) {
+  if (decisionStatus === 'idle') {
+    return (
+      <button className="btn-action" style={{ width: '100%', justifyContent: 'center' }} onClick={onRequestDecision}>
+        <Sparkles size={15} /> Get AI recommendation
+      </button>
+    );
+  }
+
+  if (decisionStatus === 'loading') {
+    return (
+      <button className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }} disabled>
+        <Hourglass size={15} className="spin" /> Running Decision Agent…
+      </button>
+    );
+  }
+
+  if (decisionStatus === 'pending_approval' || decisionStatus === 'rejected' || decisionStatus === 'error') {
+    const tone = decisionStatus === 'error' ? 'var(--accent-rose)' : 'var(--warning)';
+    return (
+      <div>
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.85rem', color: 'var(--text-body)',
+          background: 'var(--surface-subtle)', border: `1px solid ${tone}`, borderRadius: 'var(--radius)',
+          padding: '12px 14px', marginBottom: '10px',
+        }}>
+          {decisionStatus === 'pending_approval' ? <Hourglass size={16} color={tone} style={{ flexShrink: 0, marginTop: 1 }} />
+            : <XCircle size={16} color={tone} style={{ flexShrink: 0, marginTop: 1 }} />}
+          <span>{decisionMessage}</span>
+        </div>
+        <button className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={onRequestDecision}>
+          <Sparkles size={15} /> Try again
+        </button>
+      </div>
+    );
+  }
+
+  // success
+  const d = decision;
+  const safer = d.risk_reduction > 0;
+  const riskier = d.risk_reduction < 0;
+  return (
+    <div>
+      <div style={{
+        background: 'var(--surface-subtle)', border: '1px solid var(--border)',
+        padding: '14px', borderRadius: 'var(--radius)', marginBottom: '12px',
+      }}>
+        <div style={{
+          fontSize: '0.72rem', color: 'var(--text-subtle)', fontWeight: 600, marginBottom: '6px',
+          display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase', letterSpacing: '0.05em',
+        }}>
+          <Sparkles size={13} /> Decision Agent recommendation
+        </div>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-body)', lineHeight: 1.5, marginBottom: '12px' }}>
+          {d.recommendation}
+        </p>
+        <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap', fontSize: '0.78rem' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: safer ? 'var(--accent-emerald)' : riskier ? 'var(--accent-rose)' : 'var(--text-subtle)' }}>
+            {riskier ? <TrendingUp size={13} /> : <TrendingDown size={13} />} Risk {d.risk_reduction > 0 ? '-' : d.risk_reduction < 0 ? '+' : '±'}{Math.abs(d.risk_reduction)}
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-subtle)' }}>
+            <Clock size={13} /> {d.expected_delay_days > 0 ? '+' : ''}{d.expected_delay_days}d
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-subtle)' }}>
+            <DollarSign size={13} /> {d.estimated_cost_change_usd > 0 ? '+' : ''}${Math.abs(d.estimated_cost_change_usd).toLocaleString()}
+          </span>
+          <span style={{ color: 'var(--text-subtle)' }}>Confidence {Math.round(d.confidence * 100)}%</span>
+        </div>
+        {d.requires_human_approval && (
+          <p style={{ fontSize: '0.76rem', color: 'var(--warning)', marginTop: '10px' }}>
+            Flagged for human approval -- confidence or risk is outside this agent's auto-clear threshold.
+          </p>
+        )}
+      </div>
+      <button className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={onRequestDecision}>
+        <Sparkles size={15} /> Recalculate
+      </button>
+    </div>
+  );
+}
+
+export default function RiskCard({ risk, decisionStatus, decision, decisionMessage, onRequestDecision }) {
   if (!risk) return null;
 
   const level = getRiskLevel(risk.risk_score);
@@ -80,48 +169,13 @@ export default function RiskCard({ risk, onMitigate, mitigationActive }) {
         </div>
       </div>
 
-      <div style={{
-        background: 'var(--surface-subtle)',
-        border: '1px solid var(--border)',
-        padding: '14px',
-        borderRadius: 'var(--radius)',
-        marginBottom: '16px'
-      }}>
-        <div style={{
-          fontSize: '0.72rem',
-          color: 'var(--text-subtle)',
-          fontWeight: 600,
-          marginBottom: '6px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          textTransform: 'uppercase',
-          letterSpacing: '0.05em'
-        }}>
-          <AlertTriangle size={13} /> Recommended mitigation
-        </div>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-body)', lineHeight: 1.5 }}>
-          {risk.mitigation_plan}
-        </p>
-      </div>
-
-      {onMitigate && (
-        <button
-          className={mitigationActive ? 'btn-secondary' : 'btn-action'}
-          style={{ width: '100%', justifyContent: 'center' }}
-          onClick={onMitigate}
-          disabled={mitigationActive}
-        >
-          {mitigationActive ? (
-            <>
-              <CheckCircle2 size={15} color="var(--success)" /> Mitigation executed
-            </>
-          ) : (
-            <>
-              Execute reroute &amp; mitigation <ArrowUpRight size={15} />
-            </>
-          )}
-        </button>
+      {onRequestDecision && (
+        <DecisionPanel
+          decisionStatus={decisionStatus}
+          decision={decision}
+          decisionMessage={decisionMessage}
+          onRequestDecision={onRequestDecision}
+        />
       )}
     </div>
   );

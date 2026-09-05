@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from app.agents.coordinator.coordinator_agent import CoordinatorAgent
 
@@ -5,7 +7,7 @@ router = APIRouter()
 
 
 @router.get("/recommendations")
-def get_recommendations():
+def get_recommendations(session_id: Optional[str] = None):
     """Returns the coordinator's routing recommendation.
 
     The workflow does not always reach COMPLETED -- a governance policy can
@@ -14,8 +16,16 @@ def get_recommendations():
     explanation keys, so the status is checked before reading them; the
     endpoint previously assumed completion and raised KeyError
     ('risk_score'), returning a 500 whenever a gate was open.
+
+    `session_id`: without one, every call starts a fresh coordinator
+    session, which can never resume past its own approval gates through
+    normal browsing -- a human approving in Governance had no way to
+    actually unblock anything, since the *next* call was always a brand
+    new session with a brand new pending approval. Passing the
+    `session_id` this endpoint returns back in on the next call lets an
+    approved session actually resume and complete.
     """
-    result = CoordinatorAgent().run()
+    result = CoordinatorAgent().run(session_id=session_id)
     status = result.get("status")
 
     if status != "COMPLETED":
@@ -33,11 +43,14 @@ def get_recommendations():
         }
 
     risk_score = result.get("risk_score")
+    decision = result.get("decision")
     return {
         "status": "SUCCESS",
         "timestamp": "Real-time AI Analysis",
-        "action_required": risk_score is not None and risk_score > 50,
+        "action_required": (decision or {}).get("requires_human_approval", risk_score is not None and risk_score > 50),
         "primary_recommendation": result.get("explanation"),
         "suggested_route": result.get("route"),
         "assessed_risk": risk_score,
+        "decision": decision,
+        "session_id": result.get("session_id"),
     }

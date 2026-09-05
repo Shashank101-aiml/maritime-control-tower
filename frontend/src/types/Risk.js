@@ -4,7 +4,9 @@
  * @property {string} category - Risk category (e.g., Weather Hazard, Security, Operational)
  * @property {string} impact - Impact severity: "HIGH" | "MEDIUM" | "LOW"
  * @property {string} likelihood - Probability: "HIGH" | "MEDIUM" | "LOW"
- * @property {string} mitigation_plan - Recommended action or mitigation protocol
+ * @property {string|null} mitigation_plan - No longer sourced here; the real
+ *   recommendation comes from the Decision Agent (see RiskContext's
+ *   requestDecision()) and is rendered separately from this object.
  * @property {string} status - Assessment status (e.g., "OPEN", "MITIGATED")
  * @property {string|null} location - Which monitored corridor this score is about
  * @property {number|null} vessel_count - Vessels currently positioned in that corridor
@@ -25,7 +27,12 @@ export const createRiskAssessment = (rawRisk = {}) => {
     category: rawRisk.category || (score > 60 ? 'Severe Weather Hazard' : 'Navigational Advisory'),
     impact: rawRisk.impact || (score > 60 ? 'HIGH' : score > 30 ? 'MEDIUM' : 'LOW'),
     likelihood: rawRisk.likelihood || (score > 50 ? 'HIGH' : 'MEDIUM'),
-    mitigation_plan: rawRisk.mitigation_plan || (score > 50 ? 'Reroute via Southern Maritime Corridor to avoid storm cells.' : 'Maintain standard cruise speed and monitor telemetry.'),
+    // No fallback text -- RiskAssessment (backend/app/schemas/agent_io.py)
+    // has never had a mitigation_plan field, so this was always a
+    // fabricated string standing in for data the API never sent. The
+    // real recommendation is the Decision Agent's output, fetched
+    // on-demand and rendered separately (see RiskCard's decision prop).
+    mitigation_plan: rawRisk.mitigation_plan ?? null,
     status: rawRisk.status || (score > 50 ? 'ACTION REQUIRED' : 'NORMAL'),
     // Passed through as-is, no fallback -- there's no honest default for
     // "which corridor" or "which ships" when the backend didn't say.
