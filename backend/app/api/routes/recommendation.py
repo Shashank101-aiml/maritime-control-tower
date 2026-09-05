@@ -52,5 +52,6 @@ def get_recommendations(session_id: Optional[str] = None):
         "suggested_route": result.get("route"),
         "assessed_risk": risk_score,
         "decision": decision,
+        "decision_execution_id": result.get("decision_execution_id"),
         "session_id": result.get("session_id"),
     }

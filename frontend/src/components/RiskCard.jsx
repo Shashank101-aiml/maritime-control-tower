@@ -1,9 +1,76 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShieldCheck, ShieldAlert, MapPin, Ship,
   Sparkles, Clock, DollarSign, TrendingDown, TrendingUp, Hourglass, XCircle,
+  ThumbsUp, ThumbsDown, PenLine, CheckCircle2,
 } from 'lucide-react';
 import { getRiskLevel } from '../types/Risk';
+
+/**
+ * Real human feedback on a completed decision (Slice 11) -- distinct
+ * from the governance gate above: that's about whether the *pipeline*
+ * could proceed, this is what a reviewer actually thought of the
+ * result once it did. Approve/Reject record as-is; Modify requires a
+ * real reason, matching what the backend enforces.
+ */
+function FeedbackButtons({ feedbackStatus, feedbackError, onSubmit }) {
+  const [modifying, setModifying] = useState(false);
+  const [reason, setReason] = useState('');
+
+  if (feedbackStatus === 'submitted') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--accent-emerald)', marginTop: '10px' }}>
+        <CheckCircle2 size={14} /> Feedback recorded.
+      </div>
+    );
+  }
+
+  const submitting = feedbackStatus === 'submitting';
+
+  return (
+    <div style={{ marginTop: '10px' }}>
+      {feedbackStatus === 'error' && (
+        <p style={{ fontSize: '0.76rem', color: 'var(--accent-rose)', marginBottom: '6px' }}>{feedbackError}</p>
+      )}
+      {!modifying ? (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <button className="btn-secondary" disabled={submitting} onClick={() => onSubmit('APPROVED')} style={{ fontSize: '0.78rem' }}>
+            <ThumbsUp size={13} /> Approve
+          </button>
+          <button className="btn-secondary" disabled={submitting} onClick={() => onSubmit('REJECTED')} style={{ fontSize: '0.78rem' }}>
+            <ThumbsDown size={13} /> Reject
+          </button>
+          <button className="btn-secondary" disabled={submitting} onClick={() => setModifying(true)} style={{ fontSize: '0.78rem' }}>
+            <PenLine size={13} /> Modify
+          </button>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <input
+            className="form-input"
+            style={{ fontSize: '0.8rem' }}
+            placeholder="What did you change, and why?"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className="btn-secondary"
+              disabled={submitting || !reason.trim()}
+              onClick={() => onSubmit('MODIFIED', reason.trim())}
+              style={{ fontSize: '0.78rem' }}
+            >
+              Submit
+            </button>
+            <button className="btn-secondary" disabled={submitting} onClick={() => setModifying(false)} style={{ fontSize: '0.78rem' }}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const TONES = {
   CRITICAL: { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' },
@@ -16,7 +83,10 @@ const TONES = {
  * gated / failed state -- replaces what used to be a permanent
  * fabricated "mitigation_plan" string the backend never actually sent.
  */
-function DecisionPanel({ decisionStatus, decision, decisionMessage, onRequestDecision }) {
+function DecisionPanel({
+  decisionStatus, decision, decisionMessage, onRequestDecision,
+  feedbackStatus, feedbackError, onSubmitFeedback,
+}) {
   if (decisionStatus === 'idle') {
     return (
       <button className="btn-action" style={{ width: '100%', justifyContent: 'center' }} onClick={onRequestDecision}>
@@ -89,6 +159,9 @@ function DecisionPanel({ decisionStatus, decision, decisionMessage, onRequestDec
             Flagged for human approval -- confidence or risk is outside this agent's auto-clear threshold.
           </p>
         )}
+        {onSubmitFeedback && (
+          <FeedbackButtons feedbackStatus={feedbackStatus} feedbackError={feedbackError} onSubmit={onSubmitFeedback} />
+        )}
       </div>
       <button className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={onRequestDecision}>
         <Sparkles size={15} /> Recalculate
@@ -97,7 +170,10 @@ function DecisionPanel({ decisionStatus, decision, decisionMessage, onRequestDec
   );
 }
 
-export default function RiskCard({ risk, decisionStatus, decision, decisionMessage, onRequestDecision }) {
+export default function RiskCard({
+  risk, decisionStatus, decision, decisionMessage, onRequestDecision,
+  feedbackStatus, feedbackError, onSubmitFeedback,
+}) {
   if (!risk) return null;
 
   const level = getRiskLevel(risk.risk_score);
@@ -175,6 +251,9 @@ export default function RiskCard({ risk, decisionStatus, decision, decisionMessa
           decision={decision}
           decisionMessage={decisionMessage}
           onRequestDecision={onRequestDecision}
+          feedbackStatus={feedbackStatus}
+          feedbackError={feedbackError}
+          onSubmitFeedback={onSubmitFeedback}
         />
       )}
     </div>

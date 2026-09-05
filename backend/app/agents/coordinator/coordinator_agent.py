@@ -287,5 +287,8 @@ class CoordinatorAgent:
             "risk_score": risk_score,
             "route": route.model_dump(),
             "decision": decision.model_dump(),
+            # Lets a caller record real feedback (Slice 11) against the
+            # exact execution that produced this decision.
+            "decision_execution_id": trace4.id,
             "explanation": explanation
         }

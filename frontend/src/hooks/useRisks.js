@@ -1,8 +1,9 @@
 import { useRiskContext } from '../context/RiskContext';
 
 /**
- * Custom hook to access fleet hazard risk scores, trends, and the
- * real Decision Agent recommendation (Slice 07).
+ * Custom hook to access fleet hazard risk scores, trends, the real
+ * Decision Agent recommendation (Slice 07), and real human feedback on
+ * it (Slice 11).
  */
 export const useRisks = () => {
   const {
@@ -13,9 +14,13 @@ export const useRisks = () => {
     loading,
     error,
     decision,
+    decisionExecutionId,
     decisionStatus,
     decisionMessage,
     requestDecision,
+    feedbackStatus,
+    feedbackError,
+    submitDecisionFeedback,
     refreshRisk
   } = useRiskContext();
 
@@ -30,9 +35,13 @@ export const useRisks = () => {
     loading,
     error,
     decision,
+    decisionExecutionId,
     decisionStatus,
     decisionMessage,
     requestDecision,
+    feedbackStatus,
+    feedbackError,
+    submitDecisionFeedback,
     refreshRisk
   };
 };
