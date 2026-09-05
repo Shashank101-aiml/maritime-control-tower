@@ -1,7 +1,93 @@
-import React, { useState } from 'react';
-import { Anchor, AlertTriangle, Send, Gauge } from 'lucide-react';
-import { predictCongestion } from '../services/congestionService';
+import React, { useEffect, useState } from 'react';
+import { Anchor, AlertTriangle, Send, Gauge, ScanSearch, RefreshCw } from 'lucide-react';
+import { predictCongestion, getAnomalies } from '../services/congestionService';
 import LoadingSpinner from '../components/LoadingSpinner';
+
+/**
+ * Real anomaly scan across every port with congestion history (Slice
+ * 09) -- an Isolation Forest trained on the same real weekly data this
+ * page's own model uses, scored against each port's own history. Not
+ * the same thing as the manual prediction form below: this is "is
+ * today's real snapshot unusual for this specific port," not "what's
+ * the congestion probability for a hypothetical input."
+ */
+function AnomalyScanPanel() {
+  const [anomalies, setAnomalies] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setAnomalies(await getAnomalies());
+    } catch (err) {
+      setError(err.message);
+      setAnomalies(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const flagged = (anomalies || []).filter((a) => a.anomaly_detected);
+
+  return (
+    <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
+      <div className="section-header" style={{ marginBottom: '12px' }}>
+        <h3 className="section-title" style={{ fontSize: '1.15rem' }}>
+          <ScanSearch size={20} color="var(--accent-rose)" />
+          Real-time anomaly scan
+        </h3>
+        <button className="btn-secondary" onClick={load} style={{ padding: '8px 14px' }}>
+          <RefreshCw size={14} className={loading ? 'spin' : ''} />
+        </button>
+      </div>
+      <p style={{ fontSize: '0.82rem', color: 'var(--text-subtle)', marginBottom: '14px' }}>
+        Each port's latest real weekly congestion snapshot, scored by an Isolation Forest against that
+        port's own history (pipeline/train_anomaly_model.py) -- unsupervised, since there's no labeled
+        "anomaly" ground truth to train against.
+      </p>
+
+      {loading ? (
+        <LoadingSpinner message="Scoring live snapshots against historical distributions…" />
+      ) : error ? (
+        <p style={{ color: 'var(--accent-rose)', fontSize: '0.85rem' }}>{error}</p>
+      ) : (
+        <>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-body)', marginBottom: '12px' }}>
+            {flagged.length === 0
+              ? `No anomalies flagged across ${anomalies.length} monitored ports.`
+              : `${flagged.length} of ${anomalies.length} ports flagged as anomalous right now.`}
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '10px' }}>
+            {anomalies.map((a) => (
+              <div key={a.affected_region} style={{
+                padding: '12px 14px', borderRadius: 'var(--radius)',
+                background: a.anomaly_detected ? 'var(--danger-soft)' : 'var(--surface-subtle)',
+                border: `1px solid ${a.anomaly_detected ? 'var(--accent-rose)' : 'var(--border)'}`,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <strong style={{ fontSize: '0.88rem', color: 'var(--text-strong)' }}>{a.affected_region}</strong>
+                  <span className="status-badge" style={{
+                    fontSize: '0.68rem',
+                    background: 'transparent',
+                    borderColor: a.anomaly_detected ? 'var(--accent-rose)' : 'var(--text-subtle)',
+                    color: a.anomaly_detected ? 'var(--accent-rose)' : 'var(--text-subtle)',
+                  }}>
+                    {a.anomaly_detected ? 'ANOMALY' : 'NORMAL'} · {a.anomaly_score.toFixed(3)}
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.76rem', color: 'var(--text-subtle)', lineHeight: 1.4 }}>{a.reason}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 const SOURCE_BY_ENTITY = {
   vessel: [
@@ -120,6 +206,8 @@ export default function CongestionPredictor() {
           </p>
         </div>
       </div>
+
+      <AnomalyScanPanel />
 
       <div className="glass-panel">
         <form className="predict-form" onSubmit={handleSubmit}>
