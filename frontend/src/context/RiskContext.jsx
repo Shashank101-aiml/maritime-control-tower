@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { getFleetRiskAssessment } from '../services/riskService';
 import { getRecommendations } from '../services/routeService';
+import { submitFeedback } from '../services/feedbackService';
 
 const RiskContext = createContext(null);
 
@@ -18,8 +19,15 @@ export const RiskProvider = ({ children }) => {
   // polled -- running the full coordinator pipeline on every 20s tick
   // would be wasteful for something the reader only needs when they ask.
   const [decision, setDecision] = useState(null);
+  const [decisionExecutionId, setDecisionExecutionId] = useState(null);
   const [decisionStatus, setDecisionStatus] = useState('idle'); // idle | loading | success | pending_approval | rejected | error
   const [decisionMessage, setDecisionMessage] = useState(null);
+
+  // Real human feedback (Slice 11) on the current decision -- whether it
+  // was approved/rejected/modified as-is, recorded against the decision
+  // execution above so it's genuinely tied to what was shown.
+  const [feedbackStatus, setFeedbackStatus] = useState('idle'); // idle | submitting | submitted | error
+  const [feedbackError, setFeedbackError] = useState(null);
 
   // Persists the coordinator session across requestDecision() calls --
   // without this, every click started a brand new session, so a human
@@ -54,11 +62,14 @@ export const RiskProvider = ({ children }) => {
   const requestDecision = useCallback(async () => {
     setDecisionStatus('loading');
     setDecisionMessage(null);
+    setFeedbackStatus('idle');
+    setFeedbackError(null);
     try {
       const rec = await getRecommendations(sessionIdRef.current);
       sessionIdRef.current = rec.session_id || null;
       if (rec.status === 'PENDING_APPROVAL') {
         setDecision(null);
+        setDecisionExecutionId(null);
         setDecisionStatus('pending_approval');
         setDecisionMessage(
           (rec.pending_step ? `${rec.pending_step}: ` : '')
@@ -67,24 +78,45 @@ export const RiskProvider = ({ children }) => {
         );
       } else if (rec.status === 'REJECTED') {
         setDecision(null);
+        setDecisionExecutionId(null);
         setDecisionStatus('rejected');
         setDecisionMessage(rec.primary_recommendation || 'The recommendation was rejected at a governance gate.');
         sessionIdRef.current = null; // a rejected session has nothing left to resume
       } else if (rec.decision) {
         setDecision(rec.decision);
+        setDecisionExecutionId(rec.decision_execution_id ?? null);
         setDecisionStatus('success');
         sessionIdRef.current = null; // completed -- a fresh click should start a fresh assessment
       } else {
         setDecision(null);
+        setDecisionExecutionId(null);
         setDecisionStatus('error');
         setDecisionMessage('The pipeline completed but returned no decision.');
       }
     } catch (err) {
       setDecision(null);
+      setDecisionExecutionId(null);
       setDecisionStatus('error');
       setDecisionMessage(err.message);
     }
   }, []);
+
+  // Records what a human actually did with the current decision (Slice
+  // 11) -- separate from the governance gate above, which is about
+  // whether the *pipeline* could proceed, not what a reviewer thought
+  // of the result once it did.
+  const submitDecisionFeedback = useCallback(async (action, modificationReason = null) => {
+    if (!decisionExecutionId) return;
+    setFeedbackStatus('submitting');
+    setFeedbackError(null);
+    try {
+      await submitFeedback(decisionExecutionId, action, modificationReason);
+      setFeedbackStatus('submitted');
+    } catch (err) {
+      setFeedbackStatus('error');
+      setFeedbackError(err.message);
+    }
+  }, [decisionExecutionId]);
 
   return (
     <RiskContext.Provider
@@ -96,9 +128,13 @@ export const RiskProvider = ({ children }) => {
         loading,
         error,
         decision,
+        decisionExecutionId,
         decisionStatus,
         decisionMessage,
         requestDecision,
+        feedbackStatus,
+        feedbackError,
+        submitDecisionFeedback,
         refreshRisk: fetchRiskAssessment
       }}
     >

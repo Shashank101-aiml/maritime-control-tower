@@ -79,6 +79,30 @@ class ApprovalRequest(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     resolved_at = Column(DateTime, nullable=True)
 
+
+class Feedback(Base):
+    """Spec section 16: closes the loop that ApprovalRequest alone
+    doesn't -- ApprovalRequest already records the AI recommendation and
+    whether a human approved/rejected it, but not (a) what a human
+    changed when they didn't just accept it as-is, or (b) what actually
+    happened afterward versus what was predicted. Both are recorded
+    here, referencing the same execution rather than duplicating the
+    recommendation snapshot ApprovalRequest/AgentExecutionTrace already
+    store.
+    """
+    __tablename__ = "feedback"
+
+    id = Column(Integer, primary_key=True, index=True)
+    execution_id = Column(String(50), ForeignKey("agent_executions.id"), nullable=False)
+    agent_id = Column(String(50), ForeignKey("agents.id"), nullable=False)
+    human_action = Column(String(20), nullable=False)  # APPROVED, REJECTED, MODIFIED
+    modification_reason = Column(Text, nullable=True)  # required in practice when human_action == MODIFIED
+    predicted_outcome = Column(Text, nullable=True)
+    actual_outcome = Column(Text, nullable=True)
+    reviewer_id = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    outcome_recorded_at = Column(DateTime, nullable=True)
+
 class AgentHealth(Base):
     __tablename__ = "agent_health"
 

@@ -49,7 +49,8 @@ const Sparkline = ({ points, color }) => {
 export default function RiskAnalysis({ setActiveTab }) {
   const {
     currentRisk, trends, trendsByCorridor, fleetSummary, isHighRisk,
-    loading, error, decision, decisionStatus, decisionMessage, requestDecision, refreshRisk
+    loading, error, decision, decisionStatus, decisionMessage, requestDecision,
+    feedbackStatus, feedbackError, submitDecisionFeedback, refreshRisk
   } = useRisks();
 
   // One risk-scored card per monitored corridor -- this is what makes the
@@ -284,6 +285,9 @@ export default function RiskAnalysis({ setActiveTab }) {
               decisionStatus={decisionStatus}
               decisionMessage={decisionMessage}
               onRequestDecision={requestDecision}
+              feedbackStatus={feedbackStatus}
+              feedbackError={feedbackError}
+              onSubmitFeedback={submitDecisionFeedback}
             />
 
             <div className="panel" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>

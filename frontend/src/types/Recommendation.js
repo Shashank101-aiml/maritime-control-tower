@@ -33,6 +33,9 @@ export const createRecommendation = (rawRec = {}) => {
     // null when the pipeline hasn't reached that step (e.g. gated
     // earlier), never a fabricated stand-in.
     decision: rawRec.decision ?? null,
+    // Lets the UI record real feedback (Slice 11) against the exact
+    // execution that produced this decision.
+    decision_execution_id: rawRec.decision_execution_id ?? null,
     // Carries the coordinator session forward so a caller can pass it
     // back on the next request and resume past an approved gate instead
     // of starting a brand new (and therefore freshly-gated) session.

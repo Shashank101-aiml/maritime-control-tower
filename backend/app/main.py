@@ -33,6 +33,7 @@ from app.api.routes.route import router as route_optimization_router
 from app.api.routes.simulation import router as simulation_router
 from app.api.routes.anomaly import router as anomaly_router
 from app.api.routes.understanding import router as understanding_router
+from app.api.routes.feedback import router as feedback_router
 
 from app.api.routes.auth import router as auth_router
 
@@ -42,7 +43,7 @@ from app.core.constants import UserRole
 from app.core.logging import get_logger
 from app.core.security import hash_password
 from app.database.base import Base
-from app.api.dependencies.database import engine, get_db
+from app.api.dependencies.database import SessionLocal, engine
 from app.models.governance import AgentIdentity, AgentHealth
 from app.models.user import User
 
@@ -93,30 +94,39 @@ def seed_first_superuser():
     Without this there is no way to obtain a token on a fresh database,
     so every protected route would be permanently unreachable.
     """
-    db = next(get_db())
-    if db.query(User).count() > 0:
-        return
+    # A plain session, not FastAPI's get_db() dependency generator --
+    # calling next() on that directly (as this used to) never reaches
+    # its own `finally: db.close()`, leaking a pooled connection on
+    # every app startup. Harmless for a single run, but the test suite
+    # triggers this lifespan once per test file (each constructs its
+    # own TestClient(app)), which was quietly exhausting the pool.
+    db = SessionLocal()
+    try:
+        if db.query(User).count() > 0:
+            return
 
-    admin = User(
-        email=settings.FIRST_SUPERUSER_EMAIL,
-        username=settings.FIRST_SUPERUSER_USERNAME,
-        full_name="Initial Administrator",
-        hashed_password=hash_password(settings.FIRST_SUPERUSER_PASSWORD),
-        role=UserRole.ADMIN,
-        is_active=True,
-        is_superuser=True,
-    )
-    db.add(admin)
-    db.commit()
-
-    if settings.FIRST_SUPERUSER_PASSWORD == "admin":
-        logger.warning(
-            "Seeded superuser '%s' with the default password. Change "
-            "FIRST_SUPERUSER_PASSWORD before exposing this service.",
-            settings.FIRST_SUPERUSER_USERNAME,
+        admin = User(
+            email=settings.FIRST_SUPERUSER_EMAIL,
+            username=settings.FIRST_SUPERUSER_USERNAME,
+            full_name="Initial Administrator",
+            hashed_password=hash_password(settings.FIRST_SUPERUSER_PASSWORD),
+            role=UserRole.ADMIN,
+            is_active=True,
+            is_superuser=True,
         )
-    else:
-        logger.info("Seeded initial superuser '%s'.", settings.FIRST_SUPERUSER_USERNAME)
+        db.add(admin)
+        db.commit()
+
+        if settings.FIRST_SUPERUSER_PASSWORD == "admin":
+            logger.warning(
+                "Seeded superuser '%s' with the default password. Change "
+                "FIRST_SUPERUSER_PASSWORD before exposing this service.",
+                settings.FIRST_SUPERUSER_USERNAME,
+            )
+        else:
+            logger.info("Seeded initial superuser '%s'.", settings.FIRST_SUPERUSER_USERNAME)
+    finally:
+        db.close()
 
 
 def seed_governance_agents():
@@ -124,8 +134,12 @@ def seed_governance_agents():
     # missing tables — it never alters an existing one — so any model
     # change after the first run was silently ignored.
     # Run `alembic upgrade head` before starting the app.
-    db = next(get_db())
-    
+    #
+    # A plain session, not get_db() -- see seed_first_superuser()'s
+    # comment above for why calling next() on that generator directly
+    # leaks a pooled connection.
+    db = SessionLocal()
+
     agents = [
         {"id": "coordinator-agent", "agent_name": "Coordinator Agent", "agent_type": "ORCHESTRATOR", "version": "v1.0", "risk_level": "MEDIUM", "criticality": "HIGH", "confidence_threshold": 0.8},
         {"id": "ingestion-agent", "agent_name": "Ingestion Agent", "agent_type": "COLLECTOR", "version": "v1.2", "risk_level": "LOW", "criticality": "MEDIUM", "confidence_threshold": 0.5},
@@ -138,16 +152,19 @@ def seed_governance_agents():
         {"id": "fuel-agent", "agent_name": "Fuel Efficiency Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "LOW", "criticality": "MEDIUM", "confidence_threshold": 0.5},
     ]
     
-    for a in agents:
-        existing = db.query(AgentIdentity).filter(AgentIdentity.id == a["id"]).first()
-        if not existing:
-            agent = AgentIdentity(**a)
-            db.add(agent)
-            db.commit()
-            
-            health = AgentHealth(agent_id=a["id"], status="HEALTHY")
-            db.add(health)
-            db.commit()
+    try:
+        for a in agents:
+            existing = db.query(AgentIdentity).filter(AgentIdentity.id == a["id"]).first()
+            if not existing:
+                agent = AgentIdentity(**a)
+                db.add(agent)
+                db.commit()
+
+                health = AgentHealth(agent_id=a["id"], status="HEALTHY")
+                db.add(health)
+                db.commit()
+    finally:
+        db.close()
 
 ais_collector = AISStreamCollector(settings.AISSTREAM_API_KEY)
 
@@ -190,3 +207,4 @@ app.include_router(route_optimization_router, prefix="/api", tags=["route"], dep
 app.include_router(simulation_router, prefix="/api", tags=["simulation"], dependencies=protected)
 app.include_router(anomaly_router, prefix="/api", tags=["anomaly"], dependencies=protected)
 app.include_router(understanding_router, prefix="/api", tags=["understanding"], dependencies=protected)
+app.include_router(feedback_router, prefix="/api", tags=["feedback"], dependencies=protected)
