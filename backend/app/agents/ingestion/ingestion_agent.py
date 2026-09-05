@@ -49,7 +49,7 @@ class IngestionAgent:
             return IngestedEvent(**self._normalize_event(source_payload)), 0.7
 
         event, confidence = self._collect_maritime_event()
-        event["weather"] = self._collect_weather(event.get("location"))
+        event["weather"] = self._collect_weather(event.get("latitude"), event.get("longitude"))
         event["related_news"] = self._collect_news(event.get("event_type"))
         return IngestedEvent(**event), confidence
 
@@ -86,13 +86,15 @@ class IngestionAgent:
 
         return self._normalize_event(raw_event), 0.80
 
-    def _collect_weather(self, location: Optional[str]) -> Optional[Dict[str, Any]]:
-        if not location or not settings.WEATHER_API_KEY:
+    def _collect_weather(
+        self, latitude: Optional[float], longitude: Optional[float]
+    ) -> Optional[Dict[str, Any]]:
+        if latitude is None or longitude is None or not settings.WEATHER_API_KEY:
             return None
         try:
-            return self.weather_client.fetch_current_weather(location)
+            return self.weather_client.fetch_current_weather(latitude, longitude)
         except Exception as exc:  # network/API failures shouldn't break ingestion
-            logger.warning("Weather enrichment failed for %s: %s", location, exc)
+            logger.warning("Weather enrichment failed for (%s, %s): %s", latitude, longitude, exc)
             return None
 
     def _collect_news(self, event_type: Optional[str]) -> list:
