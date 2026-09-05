@@ -153,3 +153,18 @@ class ScenarioResult(BaseModel):
     route_changed: bool
     no_viable_route: bool
     summary: str
+
+
+class AnomalyReport(BaseModel):
+    """Output of AnomalyAgent.detect() -- spec section 8. Unsupervised
+    (Isolation Forest, pipeline/train_anomaly_model.py) over the same
+    real per-port weekly congestion columns the digital twin and
+    congestion classifier already use -- there is no labeled "anomaly"
+    ground truth in this data to train a supervised model against, and
+    inventing one would defeat the point.
+    """
+
+    anomaly_detected: bool
+    anomaly_score: float
+    affected_region: str
+    reason: str
