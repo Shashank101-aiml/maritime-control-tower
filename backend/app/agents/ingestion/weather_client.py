@@ -16,14 +16,21 @@ class WeatherClient:
 
     def fetch_current_weather(
         self,
-        location: str,
+        latitude: float,
+        longitude: float,
         units: Optional[str] = None,
     ) -> Dict[str, Any]:
+        """By coordinates, not city name (`q=`) -- the corridors this
+        app tracks (e.g. "Arabian Sea", "Strait of Malacca") are open-
+        water monitoring zones, not cities OpenWeatherMap's geocoder can
+        resolve. Every ingested event already carries real lat/lon, so
+        there's no need to guess a place name."""
         if units is None:
             units = self.default_units
 
         params = {
-            "q": location,
+            "lat": latitude,
+            "lon": longitude,
             "units": units,
         }
         if self.api_key:
