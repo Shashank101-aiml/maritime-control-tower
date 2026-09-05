@@ -48,7 +48,7 @@ const Sparkline = ({ points, color }) => {
 
 export default function RiskAnalysis({ setActiveTab }) {
   const {
-    currentRisk, trends, trendsByCorridor, fleetSummary, isHighRisk,
+    currentRisk, trends, trendsByCorridor, weakSignalsByCorridor, fleetSummary, isHighRisk,
     loading, error, decision, decisionStatus, decisionMessage, requestDecision,
     feedbackStatus, feedbackError, submitDecisionFeedback, refreshRisk
   } = useRisks();
@@ -360,6 +360,10 @@ export default function RiskAnalysis({ setActiveTab }) {
                   const tone = scoreTone(c.score);
                   const m = c.conditions || {};
                   const isSelected = selectedCorridor?.location === c.location;
+                  // Real least-squares trend (Slice 15) over this
+                  // corridor's own recorded score history -- "risk is
+                  // increasing/decreasing/stable", not a re-derived guess.
+                  const signal = weakSignalsByCorridor?.[c.location];
                   return (
                     <button
                       key={c.location}
@@ -390,6 +394,20 @@ export default function RiskAnalysis({ setActiveTab }) {
                       <p style={{ fontSize: '0.82rem', color: 'var(--text-subtle)', marginBottom: '10px' }}>
                         {c.category}
                       </p>
+                      {signal && signal.direction !== 'insufficient_data' && (
+                        <div
+                          title={`Least-squares fit over its own recorded history: ${signal.slope_per_hour > 0 ? '+' : ''}${signal.slope_per_hour} pts/hr, r²=${signal.r_squared} (${signal.n_points} readings)`}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.74rem', marginBottom: '10px',
+                            color: signal.direction === 'increasing' ? 'var(--accent-rose)'
+                              : signal.direction === 'decreasing' ? 'var(--accent-emerald)' : 'var(--text-subtle)',
+                          }}
+                        >
+                          {signal.direction === 'increasing' ? <TrendingUp size={13} />
+                            : signal.direction === 'decreasing' ? <TrendingDown size={13} /> : <Minus size={13} />}
+                          Risk {signal.direction} over recorded history
+                        </div>
+                      )}
                       <div style={{ display: 'flex', gap: '16px', fontSize: '0.78rem', color: 'var(--text-body)', marginBottom: '10px' }}>
                         <span>Wave <strong>{m.wave_height_m ?? '—'} m</strong></span>
                         <span>Swell <strong>{m.swell_height_m ?? '—'} m</strong></span>

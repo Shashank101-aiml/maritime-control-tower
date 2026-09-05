@@ -189,8 +189,14 @@ def risk_history_by_corridor(db: Session, hours: int = 72) -> Dict[str, Any]:
             {"time": r.observed_at, "score": assessment.score}
         )
 
+    from app.services.weak_signal_service import compute_trends_by_corridor
+
     return {
         "hours": hours,
         "corridors": by_corridor,
+        # Spec section 10: a real least-squares direction over each
+        # corridor's own history above, not a point-in-time score with
+        # no sense of where it's headed.
+        "trends": compute_trends_by_corridor(by_corridor),
         "total_points": sum(len(v) for v in by_corridor.values()),
     }

@@ -74,6 +74,9 @@ export const getFleetRiskAssessment = async () => {
     }),
     trends: history?.series?.filter((p) => p.score !== null) || [],
     trendsByCorridor: byCorridor?.corridors || {},
+    // Real least-squares direction per corridor (Slice 15) -- "risk is
+    // increasing at X", not just a point-in-time score.
+    weakSignalsByCorridor: byCorridor?.trends || {},
     history,
     fleetSummary: {
       totalVessels: dashboardData?.active_vessels ?? null,
