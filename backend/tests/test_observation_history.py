@@ -143,6 +143,12 @@ class TestRiskHistoryByCorridor:
         assert len(result["corridors"]["Gulf of Aden"]) == 1
         assert result["total_points"] == 3
 
+        # Slice 15: a real trend per corridor rides alongside the raw
+        # series -- Gulf of Aden has only one point, so its own trend
+        # is honestly "insufficient_data", not a guess.
+        assert set(result["trends"].keys()) == {"Arabian Sea", "Gulf of Aden"}
+        assert result["trends"]["Gulf of Aden"]["direction"] == "insufficient_data"
+
     def test_score_matches_a_direct_risk_agent_call(self, db):
         """Not a fabricated number -- re-scoring the same event
         attributes through RiskAgent directly must give the same score

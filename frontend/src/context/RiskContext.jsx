@@ -10,6 +10,7 @@ export const RiskProvider = ({ children }) => {
     currentRisk: null,
     trends: [],
     trendsByCorridor: {},
+    weakSignalsByCorridor: {},
     fleetSummary: { totalVessels: '--', vesselsAtRisk: '--', activeAlerts: '--' }
   });
   const [loading, setLoading] = useState(true);
@@ -133,6 +134,7 @@ export const RiskProvider = ({ children }) => {
         currentRisk: riskData.currentRisk,
         trends: riskData.trends,
         trendsByCorridor: riskData.trendsByCorridor,
+        weakSignalsByCorridor: riskData.weakSignalsByCorridor,
         fleetSummary: riskData.fleetSummary,
         loading,
         error,
