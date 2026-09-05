@@ -39,6 +39,8 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score, classification_report, roc_auc_score
 
+from evaluation_utils import save_metrics
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FEATURES_DIR = REPO_ROOT / "data" / "features"
 MODEL_PATH = REPO_ROOT / "models" / "saved_models" / "congestion_model.joblib"
@@ -83,7 +85,7 @@ def time_based_split(df: pd.DataFrame, test_fraction: float = 0.2) -> tuple:
     return pd.concat(train_parts), pd.concat(test_parts)
 
 
-def train_and_evaluate(train: pd.DataFrame, test: pd.DataFrame) -> lgb.LGBMClassifier:
+def train_and_evaluate(train: pd.DataFrame, test: pd.DataFrame) -> "tuple[lgb.LGBMClassifier, dict]":
     X_train, y_train = train[FEATURE_COLUMNS], train[TARGET_COLUMN]
     X_test, y_test = test[FEATURE_COLUMNS], test[TARGET_COLUMN]
 
@@ -100,12 +102,17 @@ def train_and_evaluate(train: pd.DataFrame, test: pd.DataFrame) -> lgb.LGBMClass
     proba = model.predict_proba(X_test)[:, 1]
     preds = (proba >= 0.5).astype(int)
 
-    print(f"Overall ROC-AUC: {roc_auc_score(y_test, proba):.3f}")
-    print(f"Overall PR-AUC:  {average_precision_score(y_test, proba):.3f}")
+    roc_auc = roc_auc_score(y_test, proba)
+    pr_auc = average_precision_score(y_test, proba)
+    no_skill_pr_auc = float(y_test.mean())
+
+    print(f"Overall ROC-AUC: {roc_auc:.3f}")
+    print(f"Overall PR-AUC:  {pr_auc:.3f}")
     print("\nOverall classification report:")
     print(classification_report(y_test, preds, digits=3))
 
     print("\nPer-source performance:")
+    per_source = {}
     for source in test["source"].cat.categories:
         mask = test["source"] == source
         if mask.sum() == 0:
@@ -114,14 +121,30 @@ def train_and_evaluate(train: pd.DataFrame, test: pd.DataFrame) -> lgb.LGBMClass
         if y_s.nunique() < 2:
             print(f"  {source}: only one class present in test slice, skipping AUC")
             continue
-        print(f"  {source}: n={mask.sum()}, ROC-AUC={roc_auc_score(y_s, p_s):.3f}, "
-              f"PR-AUC={average_precision_score(y_s, p_s):.3f}, positive_rate={y_s.mean():.3f}")
+        source_roc_auc = roc_auc_score(y_s, p_s)
+        source_pr_auc = average_precision_score(y_s, p_s)
+        print(f"  {source}: n={mask.sum()}, ROC-AUC={source_roc_auc:.3f}, "
+              f"PR-AUC={source_pr_auc:.3f}, positive_rate={y_s.mean():.3f}")
+        per_source[str(source)] = {
+            "n": int(mask.sum()),
+            "roc_auc": round(float(source_roc_auc), 4),
+            "pr_auc": round(float(source_pr_auc), 4),
+            "positive_rate": round(float(y_s.mean()), 4),
+        }
 
     print("\nTop 15 feature importances:")
     importances = pd.Series(model.feature_importances_, index=FEATURE_COLUMNS).sort_values(ascending=False)
     print(importances.head(15))
 
-    return model
+    metrics = {
+        "n_train": int(len(X_train)),
+        "n_test": int(len(X_test)),
+        "roc_auc": round(float(roc_auc), 4),
+        "pr_auc": round(float(pr_auc), 4),
+        "no_skill_pr_auc": round(no_skill_pr_auc, 4),
+        "per_source": per_source,
+    }
+    return model, metrics
 
 
 def main() -> None:
@@ -129,11 +152,14 @@ def main() -> None:
     train, test = time_based_split(df)
     print(f"Train: {len(train)} rows, Test: {len(test)} rows")
 
-    model = train_and_evaluate(train, test)
+    model, metrics = train_and_evaluate(train, test)
 
     MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(model, MODEL_PATH)
     print(f"\nSaved -> {MODEL_PATH}")
+
+    metrics_path = save_metrics("congestion", metrics)
+    print(f"Metrics saved -> {metrics_path}")
 
 
 if __name__ == "__main__":

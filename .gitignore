@@ -70,3 +70,7 @@ data/cleaned/
 data/features/
 data/processed/
 models/saved_models/*.joblib
+# Real metrics each train_*.py script persists alongside its model
+# (Slice 14) -- reproducible the same way the .joblib files are, so
+# not tracked for the same reason.
+models/saved_models/*_metrics.json

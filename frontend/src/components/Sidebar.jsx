@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Activity, Ship, Radio, ShieldAlert, Navigation, Anchor, Clock, Fuel,
-  Cpu, ScrollText, Settings as SettingsIcon, Circle, FlaskConical
+  Cpu, ScrollText, Settings as SettingsIcon, Circle, FlaskConical, BarChart3
 } from 'lucide-react';
 
 const NAV_GROUPS = [
@@ -34,6 +34,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'workflow', label: 'Agent Pipeline', icon: Cpu },
       { id: 'governance', label: 'Governance', icon: ScrollText },
+      { id: 'evaluation', label: 'Evaluation', icon: BarChart3 },
       { id: 'settings', label: 'Settings', icon: SettingsIcon },
     ],
   },

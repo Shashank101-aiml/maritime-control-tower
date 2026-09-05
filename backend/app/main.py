@@ -34,6 +34,7 @@ from app.api.routes.simulation import router as simulation_router
 from app.api.routes.anomaly import router as anomaly_router
 from app.api.routes.understanding import router as understanding_router
 from app.api.routes.feedback import router as feedback_router
+from app.api.routes.evaluation import router as evaluation_router
 
 from app.api.routes.auth import router as auth_router
 
@@ -236,3 +237,4 @@ app.include_router(simulation_router, prefix="/api", tags=["simulation"], depend
 app.include_router(anomaly_router, prefix="/api", tags=["anomaly"], dependencies=protected)
 app.include_router(understanding_router, prefix="/api", tags=["understanding"], dependencies=protected)
 app.include_router(feedback_router, prefix="/api", tags=["feedback"], dependencies=protected)
+app.include_router(evaluation_router, prefix="/api", tags=["evaluation"], dependencies=protected)
