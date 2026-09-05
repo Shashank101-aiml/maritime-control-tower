@@ -195,3 +195,88 @@ class TestCoordinatorPipeline:
         assert isinstance(decision["requires_human_approval"], bool)
         assert decision["recommended_lane_ids"] == route["lane_ids"]
         assert isinstance(decision["baseline_lane_ids"], list) and len(decision["baseline_lane_ids"]) >= 1
+
+        # Slice 13: the sample fixture's real risk score (28) is above
+        # the adaptive-orchestration threshold, so this run took the
+        # full chain -- confirms which path actually executed rather
+        # than inferring it from route/decision being non-null.
+        assert result["adaptive_pipeline"] == "full"
+
+
+class TestAdaptiveOrchestration:
+    """Spec section 21: a nominal-risk event should take a genuinely
+    shorter path through the coordinator, not the same fixed chain
+    regardless of what the risk agent found."""
+
+    def test_a_nominal_risk_event_skips_route_decision_and_explanation(self, monkeypatch):
+        import uuid
+
+        from app.agents.coordinator.coordinator_agent import CoordinatorAgent
+        from app.agents.risk.risk_agent import RiskAgent
+        from app.governance.policy import resolve_approval
+        from app.schemas.agent_io import RiskAssessment
+
+        monkeypatch.setattr(LiveConditionsClient, "get_all_events", lambda self, use_cache=True: [])
+
+        def fixed_nominal_score(self, event, route=None):
+            return RiskAssessment(
+                score=5, severity="info", likelihood="low", impact="low",
+                category="Calm Conditions", scoring_method="rule_based",
+            )
+
+        monkeypatch.setattr(RiskAgent, "calculate_risk", fixed_nominal_score)
+
+        db = next(get_db())
+        session_id = f"test-adaptive-simple-{uuid.uuid4()}"
+        result = CoordinatorAgent().run(db=db, session_id=session_id)
+
+        # The risk-agent step can still itself be gated (e.g. CRITICAL
+        # criticality always requires approval, independent of the
+        # score) -- walk through any such gate the same way the full-
+        # pipeline test does, so this exercises the real adaptive
+        # decision point after risk scoring, not a lucky first pass.
+        for _ in range(5):
+            if result["status"] != "PENDING_APPROVAL":
+                break
+            resolve_approval(db, result["approval_id"], "APPROVED", "test-runner")
+            result = CoordinatorAgent().run(db=db, session_id=session_id)
+
+        assert result["status"] == "COMPLETED"
+        assert result["risk_score"] == 5
+        assert result["adaptive_pipeline"] == "simple"
+        assert result["route"] is None
+        assert result["decision"] is None
+        assert result["decision_execution_id"] is None
+        assert "skipped" in result["explanation"].lower()
+
+    def test_an_elevated_risk_event_still_takes_the_full_chain(self, monkeypatch):
+        import uuid
+
+        from app.agents.coordinator.coordinator_agent import CoordinatorAgent
+        from app.agents.risk.risk_agent import RiskAgent
+        from app.governance.policy import resolve_approval
+        from app.schemas.agent_io import RiskAssessment
+
+        monkeypatch.setattr(LiveConditionsClient, "get_all_events", lambda self, use_cache=True: [])
+
+        def fixed_elevated_score(self, event, route=None):
+            return RiskAssessment(
+                score=80, severity="critical", likelihood="high", impact="high",
+                category="Severe Storm", scoring_method="rule_based",
+            )
+
+        monkeypatch.setattr(RiskAgent, "calculate_risk", fixed_elevated_score)
+
+        db = next(get_db())
+        session_id = f"test-adaptive-full-{uuid.uuid4()}"
+        result = CoordinatorAgent().run(db=db, session_id=session_id)
+        for _ in range(5):
+            if result["status"] != "PENDING_APPROVAL":
+                break
+            resolve_approval(db, result["approval_id"], "APPROVED", "test-runner")
+            result = CoordinatorAgent().run(db=db, session_id=session_id)
+
+        assert result["status"] == "COMPLETED"
+        assert result["adaptive_pipeline"] == "full"
+        assert result["route"] is not None
+        assert result["decision"] is not None

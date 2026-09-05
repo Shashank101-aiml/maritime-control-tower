@@ -41,5 +41,10 @@ export const createRecommendation = (rawRec = {}) => {
     // of starting a brand new (and therefore freshly-gated) session.
     session_id: rawRec.session_id ?? null,
     pending_step: rawRec.pending_step ?? null,
+    // "simple" | "full" | null -- spec section 21's adaptive
+    // orchestration. A nominal-risk event genuinely completes with no
+    // route/decision (the coordinator skipped those steps), which is
+    // not the same thing as an error and shouldn't be treated as one.
+    adaptive_pipeline: rawRec.adaptive_pipeline ?? null,
   };
 };

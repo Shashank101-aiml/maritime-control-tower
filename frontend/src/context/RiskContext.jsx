@@ -87,6 +87,15 @@ export const RiskProvider = ({ children }) => {
         setDecisionExecutionId(rec.decision_execution_id ?? null);
         setDecisionStatus('success');
         sessionIdRef.current = null; // completed -- a fresh click should start a fresh assessment
+      } else if (rec.adaptive_pipeline === 'simple') {
+        // Spec section 21: a nominal-risk event genuinely completes
+        // with no route/decision to show -- the coordinator adaptively
+        // skipped those steps, not an error.
+        setDecision(null);
+        setDecisionExecutionId(null);
+        setDecisionStatus('simple');
+        setDecisionMessage(rec.primary_recommendation || 'Risk is nominal -- no route change or decision needed.');
+        sessionIdRef.current = null;
       } else {
         setDecision(null);
         setDecisionExecutionId(null);
