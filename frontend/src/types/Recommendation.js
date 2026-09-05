@@ -29,5 +29,14 @@ export const createRecommendation = (rawRec = {}) => {
     primary_recommendation: rawRec.primary_recommendation || rawRec.explanation || null,
     suggested_route: rawRec.suggested_route || rawRec.route || null,
     assessed_risk: typeof rawRec.assessed_risk === 'number' ? rawRec.assessed_risk : (typeof rawRec.risk_score === 'number' ? rawRec.risk_score : null),
+    // Real trade-off comparison from the Decision Agent (Slice 07) --
+    // null when the pipeline hasn't reached that step (e.g. gated
+    // earlier), never a fabricated stand-in.
+    decision: rawRec.decision ?? null,
+    // Carries the coordinator session forward so a caller can pass it
+    // back on the next request and resume past an approved gate instead
+    // of starting a brand new (and therefore freshly-gated) session.
+    session_id: rawRec.session_id ?? null,
+    pending_step: rawRec.pending_step ?? null,
   };
 };

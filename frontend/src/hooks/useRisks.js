@@ -1,7 +1,8 @@
 import { useRiskContext } from '../context/RiskContext';
 
 /**
- * Custom hook to access fleet hazard risk scores, trends, and mitigation controls
+ * Custom hook to access fleet hazard risk scores, trends, and the
+ * real Decision Agent recommendation (Slice 07).
  */
 export const useRisks = () => {
   const {
@@ -11,8 +12,10 @@ export const useRisks = () => {
     fleetSummary,
     loading,
     error,
-    mitigationActive,
-    activateMitigation,
+    decision,
+    decisionStatus,
+    decisionMessage,
+    requestDecision,
     refreshRisk
   } = useRiskContext();
 
@@ -26,8 +29,10 @@ export const useRisks = () => {
     isHighRisk,
     loading,
     error,
-    mitigationActive,
-    activateMitigation,
+    decision,
+    decisionStatus,
+    decisionMessage,
+    requestDecision,
     refreshRisk
   };
 };

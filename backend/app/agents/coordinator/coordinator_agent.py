@@ -1,11 +1,12 @@
 from app.agents.ingestion.ingestion_agent import IngestionAgent
 from app.agents.risk.risk_agent import RiskAgent
 from app.agents.route.route_agent import RouteAgent
+from app.agents.decision.decision_agent import DecisionAgent
 from app.agents.explanation.explanation_agent import ExplanationAgent
 from app.api.dependencies.database import get_db
 from app.governance.core import GovernanceEngine
 from app.models.governance import AgentExecutionTrace, ApprovalRequest, AgentIdentity
-from app.schemas.agent_io import IngestedEvent, RiskAssessment, RouteRecommendation
+from app.schemas.agent_io import Decision, IngestedEvent, RiskAssessment, RouteRecommendation
 from app.twin.digital_twin import fetch_live_corridor_scores, get_digital_twin
 from sqlalchemy.orm import Session
 import uuid
@@ -182,9 +183,56 @@ class CoordinatorAgent:
         # which is worse than no fallback: it looked like a real decision.
         route = RouteRecommendation.model_validate(trace3.output_data)
 
-        # 4. Explanation Agent
-        trace4 = trace_map.get("explanation-agent")
+        # 4. Decision Agent -- turns the ranked route into a structured
+        # trade-off (spec Slice 07/§13): what changes versus the most
+        # obvious alternative, and whether that change is confident
+        # enough to act on without a human sign-off.
+        trace4 = trace_map.get("decision-agent")
         if not trace4:
+            q_status = check_agent_status("decision-agent")
+            if q_status:
+                return {
+                    "status": "FAILED",
+                    "session_id": session_id,
+                    "error": f"Decision Agent is {q_status}. Please resolve in governance dashboard."
+                }
+            try:
+                def make_decision(data):
+                    decision = DecisionAgent().decide(data)
+                    return decision, decision.confidence
+                trace4, req4 = engine.execute_agent_task("decision-agent", "DECIDE", route, make_decision, parent_execution_id=trace3.id)
+                trace4.request_id = session_id
+                db.commit()
+            except Exception as e:
+                return {
+                    "status": "FAILED",
+                    "session_id": session_id,
+                    "error": f"Decision Agent failed: {str(e)}"
+                }
+
+        # Check approval status for Decision Agent step
+        if trace4.approval_status == "PENDING":
+            app_req = db.query(ApprovalRequest).filter(ApprovalRequest.execution_id == trace4.id).first()
+            return {
+                "status": "PENDING_APPROVAL",
+                "session_id": session_id,
+                "pending_step": "Decision Agent",
+                "agent_id": "decision-agent",
+                "approval_id": app_req.id if app_req else None,
+                "reason": trace4.policy_decisions.get("reason") if trace4.policy_decisions else "Decision requires human confirmation."
+            }
+        elif trace4.approval_status == "REJECTED":
+            return {
+                "status": "REJECTED",
+                "session_id": session_id,
+                "error": "Pipeline execution was rejected at Decision step."
+            }
+
+        decision = Decision.model_validate(trace4.output_data)
+
+        # 5. Explanation Agent
+        trace5 = trace_map.get("explanation-agent")
+        if not trace5:
             q_status = check_agent_status("explanation-agent")
             if q_status:
                 return {
@@ -199,8 +247,8 @@ class CoordinatorAgent:
                     return ExplanationAgent().explain(
                         data.model_dump(), event=event.model_dump(), risk=risk.model_dump()
                     ), 0.95
-                trace4, req4 = engine.execute_agent_task("explanation-agent", "EXPLAIN", route, explain_route, parent_execution_id=trace3.id)
-                trace4.request_id = session_id
+                trace5, req5 = engine.execute_agent_task("explanation-agent", "EXPLAIN", route, explain_route, parent_execution_id=trace4.id)
+                trace5.request_id = session_id
                 db.commit()
             except Exception as e:
                 return {
@@ -210,27 +258,27 @@ class CoordinatorAgent:
                 }
 
         # Check approval status for Explanation Agent step
-        if trace4.approval_status == "PENDING":
-            app_req = db.query(ApprovalRequest).filter(ApprovalRequest.execution_id == trace4.id).first()
+        if trace5.approval_status == "PENDING":
+            app_req = db.query(ApprovalRequest).filter(ApprovalRequest.execution_id == trace5.id).first()
             return {
                 "status": "PENDING_APPROVAL",
                 "session_id": session_id,
                 "pending_step": "Explanation Agent",
                 "agent_id": "explanation-agent",
                 "approval_id": app_req.id if app_req else None,
-                "reason": trace4.policy_decisions.get("reason") if trace4.policy_decisions else "Explanation generation requires human confirmation."
+                "reason": trace5.policy_decisions.get("reason") if trace5.policy_decisions else "Explanation generation requires human confirmation."
             }
-        elif trace4.approval_status == "REJECTED":
+        elif trace5.approval_status == "REJECTED":
             return {
                 "status": "REJECTED",
                 "session_id": session_id,
                 "error": "Pipeline execution was rejected at Explanation step."
             }
 
-        # Same reasoning as the route fallback above: trace4 is always set
+        # Same reasoning as the route fallback above: trace5 is always set
         # here, so the old "else <fabricated sentence>" branch could never
         # run. explain() returns a plain string, so no rehydration needed.
-        explanation = trace4.output_data
+        explanation = trace5.output_data
 
         return {
             "status": "COMPLETED",
@@ -238,5 +286,6 @@ class CoordinatorAgent:
             "event": event.model_dump(),
             "risk_score": risk_score,
             "route": route.model_dump(),
+            "decision": decision.model_dump(),
             "explanation": explanation
         }
