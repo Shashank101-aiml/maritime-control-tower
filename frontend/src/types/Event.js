@@ -10,6 +10,8 @@
  * @property {Object|null} conditions - raw sea-state readings when present
  * @property {string|null} classification_reason - why this severity was assigned
  * @property {string|null} vessel_id
+ * @property {Array} related_news - real articles (NewsAPI), each with a real
+ *   `understanding` (category/matched_locations) from the Event Understanding Agent
  */
 
 /**
@@ -42,6 +44,7 @@ export const createEvent = (rawEvent = {}) => {
     conditions: rawEvent.conditions ?? null,
     classification_reason: rawEvent.classification_reason ?? null,
     vessel_id: rawEvent.vessel_id ?? null,
+    related_news: rawEvent.related_news ?? [],
   };
 };
 
