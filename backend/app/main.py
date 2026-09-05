@@ -44,7 +44,7 @@ from app.core.logging import get_logger
 from app.core.security import hash_password
 from app.database.base import Base
 from app.api.dependencies.database import SessionLocal, engine
-from app.models.governance import AgentIdentity, AgentHealth
+from app.models.governance import AgentIdentity, AgentHealth, AgentPermission
 from app.models.user import User
 
 logger = get_logger(__name__)
@@ -152,6 +152,24 @@ def seed_governance_agents():
         {"id": "fuel-agent", "agent_name": "Fuel Efficiency Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "LOW", "criticality": "MEDIUM", "confidence_threshold": 0.5},
     ]
     
+    # One row per real engine.execute_agent_task() call site in this
+    # codebase (coordinator_agent.py's five steps, plus the three
+    # standalone prediction routes) -- least privilege per spec section
+    # 17: an agent not listed here is denied by check_authorization(),
+    # not defaulted to allow. Extend this when a new governed call site
+    # is added; forgetting to means that agent starts denying its own
+    # (real) work, not silently over-permitting.
+    permissions = [
+        ("ingestion-agent", "COLLECT", "EXECUTE"),
+        ("risk-agent", "ANALYZE", "EXECUTE"),
+        ("route-agent", "PLAN", "EXECUTE"),
+        ("decision-agent", "DECIDE", "EXECUTE"),
+        ("explanation-agent", "EXPLAIN", "EXECUTE"),
+        ("congestion-agent", "PREDICT", "EXECUTE"),
+        ("delay-agent", "PREDICT", "EXECUTE"),
+        ("fuel-agent", "PREDICT", "EXECUTE"),
+    ]
+
     try:
         for a in agents:
             existing = db.query(AgentIdentity).filter(AgentIdentity.id == a["id"]).first()
@@ -162,6 +180,16 @@ def seed_governance_agents():
 
                 health = AgentHealth(agent_id=a["id"], status="HEALTHY")
                 db.add(health)
+                db.commit()
+
+        for agent_id, resource, action in permissions:
+            existing = db.query(AgentPermission).filter(
+                AgentPermission.agent_id == agent_id,
+                AgentPermission.resource == resource,
+                AgentPermission.action == action,
+            ).first()
+            if not existing:
+                db.add(AgentPermission(agent_id=agent_id, resource=resource, action=action))
                 db.commit()
     finally:
         db.close()
