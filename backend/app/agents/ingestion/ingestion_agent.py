@@ -50,7 +50,7 @@ class IngestionAgent:
 
         event, confidence = self._collect_maritime_event()
         event["weather"] = self._collect_weather(event.get("latitude"), event.get("longitude"))
-        event["related_news"] = self._collect_news(event.get("event_type"))
+        event["related_news"] = self._collect_news(event.get("location"))
         return IngestedEvent(**event), confidence
 
     def _collect_maritime_event(self) -> "tuple[Dict[str, Any], float]":
@@ -97,11 +97,18 @@ class IngestionAgent:
             logger.warning("Weather enrichment failed for (%s, %s): %s", latitude, longitude, exc)
             return None
 
-    def _collect_news(self, event_type: Optional[str]) -> list:
+    def _collect_news(self, location: Optional[str]) -> list:
         if not settings.NEWS_API_KEY:
             return []
         try:
-            query = f"maritime {event_type}" if event_type else None
+            # The synthesized event_type ("Moderate Swell & Strong
+            # Winds") used to be appended verbatim here -- a wave-height
+            # description, not a phrase anyone writes news about, so it
+            # matched real headlines only by coincidence. The corridor's
+            # real location name is what actually shows up in shipping
+            # news (Suez, Hormuz, Gulf of Aden...); pair it with generic
+            # maritime terms rather than searching for the description.
+            query = f'"{location}" AND (shipping OR maritime OR vessel)' if location else None
             return self.news_client.fetch_news(query=query, limit=5)
         except Exception as exc:  # network/API failures shouldn't break ingestion
             logger.warning("News enrichment failed: %s", exc)
