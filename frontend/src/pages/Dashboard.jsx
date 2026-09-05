@@ -1,22 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
   Ship, AlertTriangle, ShieldCheck, Cpu, Play, CheckCircle2,
-  MapPin, Wind, Navigation, RefreshCw, PauseCircle, XCircle, ArrowUpRight
+  Wind, Navigation, RefreshCw, PauseCircle, XCircle, ArrowUpRight
 } from 'lucide-react';
 import {
   fetchDashboard, fetchAgents, runWorkflow
 } from '../services/api';
-
-const severityTone = (severity) => {
-  const value = String(severity || '').toUpperCase();
-  if (value === 'HIGH' || value === 'CRITICAL') {
-    return { color: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' };
-  }
-  if (value === 'MEDIUM' || value === 'WARNING') {
-    return { color: 'var(--warning)', bg: 'var(--warning-soft)', border: 'var(--warning-border)' };
-  }
-  return { color: 'var(--info)', bg: 'var(--info-soft)', border: 'var(--info-border)' };
-};
+import { createEvent } from '../types/Event';
+import EventCard from '../components/EventCard';
+import { useCorridorContext } from '../context/CorridorContext';
 
 export default function Dashboard({ activeTab, setActiveTab }) {
   const [stats, setStats] = useState(null);
@@ -25,6 +17,11 @@ export default function Dashboard({ activeTab, setActiveTab }) {
   const [loading, setLoading] = useState(false);
   const [executing, setExecuting] = useState(false);
   const [error, setError] = useState(null);
+  // Shared across tabs (see CorridorContext.jsx) -- picking a corridor
+  // from the hazard feed here focuses it on Vessel Tracking's map,
+  // highlights it on Risk Analysis, and auto-fills Route Planning, the
+  // same as a selection made on any of those pages already does.
+  const { selectCorridor } = useCorridorContext();
 
   const loadData = async () => {
     setLoading(true);
@@ -264,41 +261,22 @@ export default function Dashboard({ activeTab, setActiveTab }) {
             <div className="section-header">
               <h2 className="section-title">
                 <Navigation size={17} color="var(--primary)" />
-                Live hazard feed
+                Live hazard feed ({stats?.recent_events?.length || 0} corridors)
               </h2>
             </div>
+            <p className="form-note" style={{ marginTop: 0, marginBottom: '14px' }}>
+              Every monitored corridor's current real reading -- wave, swell, secondary swell, ocean
+              current, visibility, and wind, from Open-Meteo's gridded marine and forecast models.
+              Expand a card for the full reading, or focus one to select it everywhere else.
+            </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {stats?.recent_events?.length ? stats.recent_events.map((evt, idx) => {
-                const tone = severityTone(evt.severity);
-                return (
-                  <div key={evt.id || idx} className="agent-item">
-                    <div className="agent-info">
-                      <div className="agent-avatar" style={{ background: tone.bg, color: tone.color }}>
-                        <AlertTriangle size={16} />
-                      </div>
-                      <div>
-                        <div className="agent-name">{evt.event_type}</div>
-                        <div className="agent-role" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                          <MapPin size={11} /> {evt.location}
-                        </div>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <span
-                        className="status-badge"
-                        style={{ background: tone.bg, borderColor: tone.border, color: tone.color }}
-                      >
-                        {String(evt.severity || '').toUpperCase()}
-                      </span>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-subtle)', marginTop: '4px' }}>
-                        {evt.timestamp}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }) : (
-                <p style={{ color: 'var(--text-subtle)' }}>No recent events.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {stats?.recent_events?.length ? stats.recent_events.map((raw) => (
+                <EventCard key={raw.id} event={createEvent(raw)} onFocusCorridor={selectCorridor} />
+              )) : (
+                <p style={{ color: 'var(--text-subtle)' }}>
+                  {stats ? 'No live conditions available right now.' : 'Loading…'}
+                </p>
               )}
             </div>
           </div>

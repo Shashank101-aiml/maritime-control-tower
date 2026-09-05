@@ -92,13 +92,31 @@ class LiveConditionsClient:
         self.locations = locations or MONITORED_LOCATIONS
 
     def fetch_conditions(self, lat: float, lon: float) -> Dict[str, Any]:
-        """Current marine + wind readings for one position. Raises on failure."""
+        """Current marine + wind readings for one position. Raises on failure.
+
+        Open-Meteo's marine endpoint is itself served from real gridded
+        numerical wave models (the same class of model NOAA/ECMWF
+        distribute as raw GRIB2 files) -- this consumes that model
+        output through Open-Meteo's decoded REST API rather than
+        parsing GRIB binaries directly, which would pull in a heavy,
+        version-fragile C dependency (ecCodes) for no gain: the
+        underlying values are the same, real, gridded model data either
+        way. Secondary swell and ocean current fields come from the
+        same marine endpoint; visibility from the standard forecast
+        endpoint alongside wind.
+        """
         marine = requests.get(
             MARINE_URL,
             params={
                 "latitude": lat,
                 "longitude": lon,
-                "current": "wave_height,wave_period,swell_wave_height,wind_wave_height",
+                "current": (
+                    "wave_height,wave_direction,wave_period,"
+                    "swell_wave_height,swell_wave_direction,swell_wave_period,"
+                    "wind_wave_height,wind_wave_direction,wind_wave_period,"
+                    "secondary_swell_wave_height,secondary_swell_wave_direction,secondary_swell_wave_period,"
+                    "ocean_current_velocity,ocean_current_direction"
+                ),
             },
             timeout=self.timeout,
         )
@@ -110,7 +128,7 @@ class LiveConditionsClient:
             params={
                 "latitude": lat,
                 "longitude": lon,
-                "current": "wind_speed_10m,wind_gusts_10m,wind_direction_10m",
+                "current": "wind_speed_10m,wind_gusts_10m,wind_direction_10m,visibility",
             },
             timeout=self.timeout,
         )
@@ -119,12 +137,23 @@ class LiveConditionsClient:
 
         return {
             "wave_height_m": marine_now.get("wave_height"),
+            "wave_direction_deg": marine_now.get("wave_direction"),
             "wave_period_s": marine_now.get("wave_period"),
             "swell_height_m": marine_now.get("swell_wave_height"),
+            "swell_direction_deg": marine_now.get("swell_wave_direction"),
+            "swell_period_s": marine_now.get("swell_wave_period"),
             "wind_wave_height_m": marine_now.get("wind_wave_height"),
+            "wind_wave_direction_deg": marine_now.get("wind_wave_direction"),
+            "wind_wave_period_s": marine_now.get("wind_wave_period"),
+            "secondary_swell_height_m": marine_now.get("secondary_swell_wave_height"),
+            "secondary_swell_direction_deg": marine_now.get("secondary_swell_wave_direction"),
+            "secondary_swell_period_s": marine_now.get("secondary_swell_wave_period"),
+            "ocean_current_velocity_kmh": marine_now.get("ocean_current_velocity"),
+            "ocean_current_direction_deg": marine_now.get("ocean_current_direction"),
             "wind_speed_kmh": wind_now.get("wind_speed_10m"),
             "wind_gusts_kmh": wind_now.get("wind_gusts_10m"),
             "wind_direction_deg": wind_now.get("wind_direction_10m"),
+            "visibility_m": wind_now.get("visibility"),
             "observed_at": marine_now.get("time") or wind_now.get("time"),
         }
 

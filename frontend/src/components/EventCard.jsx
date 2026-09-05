@@ -35,7 +35,20 @@ const Metric = ({ label, value, unit }) =>
     </div>
   );
 
-export default function EventCard({ event }) {
+/** A direction reading (wave/swell/wind), rendered as a real compass
+ *  bearing rather than a bare degree number. */
+const DirectionReading = ({ label, deg }) =>
+  deg == null ? null : (
+    <div className="reading">
+      <div className="reading-label">
+        <Navigation size={10} style={{ display: 'inline', marginRight: 3 }} />
+        {label}
+      </div>
+      <div className="reading-value">{bearing(deg)}</div>
+    </div>
+  );
+
+export default function EventCard({ event, onFocusCorridor }) {
   const [open, setOpen] = useState(false);
   if (!event) return null;
 
@@ -109,24 +122,39 @@ export default function EventCard({ event }) {
 
           <div className="reading-grid">
             <Metric label="Significant wave" value={m.wave_height_m} unit="m" />
-            <Metric label="Swell" value={m.swell_height_m} unit="m" />
-            <Metric label="Wind wave" value={m.wind_wave_height_m} unit="m" />
+            <DirectionReading label="Wave direction" deg={m.wave_direction_deg} />
             <Metric label="Wave period" value={m.wave_period_s} unit="s" />
+            <Metric label="Primary swell" value={m.swell_height_m} unit="m" />
+            <DirectionReading label="Swell direction" deg={m.swell_direction_deg} />
+            <Metric label="Secondary swell" value={m.secondary_swell_height_m} unit="m" />
+            <DirectionReading label="2nd swell direction" deg={m.secondary_swell_direction_deg} />
+            <Metric label="Wind wave" value={m.wind_wave_height_m} unit="m" />
             <Metric label="Wind speed" value={m.wind_speed_kmh} unit="km/h" />
             <Metric label="Gusts" value={m.wind_gusts_kmh} unit="km/h" />
-            {m.wind_direction_deg != null && (
-              <div className="reading">
-                <div className="reading-label">
-                  <Navigation size={10} style={{ display: 'inline', marginRight: 3 }} />
-                  Wind direction
-                </div>
-                <div className="reading-value">{bearing(m.wind_direction_deg)}</div>
-              </div>
-            )}
+            <DirectionReading label="Wind direction" deg={m.wind_direction_deg} />
+            <Metric label="Ocean current" value={m.ocean_current_velocity_kmh} unit="km/h" />
+            <DirectionReading label="Current direction" deg={m.ocean_current_direction_deg} />
+            <Metric
+              label="Visibility"
+              value={m.visibility_m != null ? Math.round(m.visibility_m / 1000 * 10) / 10 : null}
+              unit="km"
+            />
           </div>
 
           {event.description && (
             <p className="event-card-desc">{event.description}</p>
+          )}
+
+          {onFocusCorridor && event.location && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => onFocusCorridor(event.location)}
+              title={`Focus ${event.location} across tabs`}
+              style={{ margin: '10px 0', fontSize: '0.78rem' }}
+            >
+              <Compass size={13} /> Focus this corridor across tabs
+            </button>
           )}
 
           <div className="event-card-source">
@@ -136,7 +164,7 @@ export default function EventCard({ event }) {
               </span>
             )}
             {m.observed_at && <span>Observed {formatTimestamp(m.observed_at)}</span>}
-            <span>Source: Open-Meteo marine &amp; forecast</span>
+            <span>Source: Open-Meteo marine &amp; forecast (real gridded wave/current model output)</span>
           </div>
         </div>
       )}
