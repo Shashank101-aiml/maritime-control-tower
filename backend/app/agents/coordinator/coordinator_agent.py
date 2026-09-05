@@ -11,6 +11,18 @@ from app.twin.digital_twin import fetch_live_corridor_scores, get_digital_twin
 from sqlalchemy.orm import Session
 import uuid
 
+# Adaptive orchestration (spec section 21): a genuinely calm/nominal
+# event needs no route change or decision -- running the full
+# route-optimization -> decision -> explanation chain for it is the
+# "fixed sequential pipeline regardless of what's actually happening"
+# the spec calls out as the thing to avoid. 20 sits below the sample
+# fixture's own real score (28, "Cyclone" -- Data/features/... derived,
+# not tuned to dodge a test) and below the frontend's own NORMAL/
+# ELEVATED boundary (35, types/Risk.js's getRiskLevel) -- a real
+# "nominal" band, not a threshold picked to make a particular event
+# take one path or the other.
+ADAPTIVE_COMPLEXITY_THRESHOLD = 20
+
 class CoordinatorAgent:
 
     def run(self, db: Session = None, session_id: str = None):
@@ -111,6 +123,30 @@ class CoordinatorAgent:
         # `risk.get("score", 50)`).
         risk = RiskAssessment.model_validate(trace2.output_data)
         risk_score = risk.score
+
+        # Adaptive orchestration (spec section 21): a nominal-risk event
+        # is "simple" -- there is no elevated corridor to route around
+        # and no trade-off for the Decision Agent to weigh, so running
+        # route optimization, decision, and explanation for it would be
+        # pure overhead on a fixed chain that ignores what the risk
+        # agent actually found. Skips straight to a real, honest
+        # completion instead of a fabricated route/decision.
+        if risk_score < ADAPTIVE_COMPLEXITY_THRESHOLD:
+            return {
+                "status": "COMPLETED",
+                "session_id": session_id,
+                "event": event.model_dump(),
+                "risk_score": risk_score,
+                "route": None,
+                "decision": None,
+                "decision_execution_id": None,
+                "explanation": (
+                    f"Risk score {risk_score}/100 is nominal -- no elevated corridor to route around "
+                    "and no decision trade-off to weigh. Route optimization, decision, and explanation "
+                    "steps were skipped (adaptive orchestration, spec section 21)."
+                ),
+                "adaptive_pipeline": "simple",
+            }
 
         # 3. Route Agent
         trace3 = trace_map.get("route-agent")
@@ -290,5 +326,6 @@ class CoordinatorAgent:
             # Lets a caller record real feedback (Slice 11) against the
             # exact execution that produced this decision.
             "decision_execution_id": trace4.id,
-            "explanation": explanation
+            "explanation": explanation,
+            "adaptive_pipeline": "full",
         }

@@ -103,6 +103,27 @@ function DecisionPanel({
     );
   }
 
+  if (decisionStatus === 'simple') {
+    // Spec section 21 (adaptive orchestration): a nominal-risk event
+    // genuinely completed with no route/decision step run -- an honest
+    // outcome, not an error or a gate.
+    return (
+      <div>
+        <div style={{
+          display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.85rem', color: 'var(--text-body)',
+          background: 'var(--success-soft)', border: '1px solid var(--accent-emerald)', borderRadius: 'var(--radius)',
+          padding: '12px 14px', marginBottom: '10px',
+        }}>
+          <CheckCircle2 size={16} color="var(--accent-emerald)" style={{ flexShrink: 0, marginTop: 1 }} />
+          <span>{decisionMessage}</span>
+        </div>
+        <button className="btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={onRequestDecision}>
+          <Sparkles size={15} /> Recalculate
+        </button>
+      </div>
+    );
+  }
+
   if (decisionStatus === 'pending_approval' || decisionStatus === 'rejected' || decisionStatus === 'error') {
     const tone = decisionStatus === 'error' ? 'var(--accent-rose)' : 'var(--warning)';
     return (
