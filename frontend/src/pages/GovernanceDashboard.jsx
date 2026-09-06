@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShieldAlert, Activity, Cpu, CheckCircle, XCircle, AlertTriangle, Play, Lock } from 'lucide-react';
 import { 
   fetchGovernanceAgents, 
@@ -17,6 +17,13 @@ export default function GovernanceDashboard() {
   const [approvals, setApprovals] = useState([]);
   const [activeTab, setActiveTab] = useState('registry');
   const [loading, setLoading] = useState(true);
+  // The 5-second poll and an approve/reject's own reconciling fetch can
+  // land out of order (a slower, older poll resolving after a newer
+  // one) -- without this guard, whichever response happens to arrive
+  // last wins even when it's the stale one, which is what made an
+  // approval look like it hadn't taken effect until a full page reload
+  // finally issued a request with nothing left in flight to race it.
+  const requestSeqRef = useRef(0);
 
   useEffect(() => {
     loadData();
@@ -25,6 +32,7 @@ export default function GovernanceDashboard() {
   }, []);
 
   const loadData = async () => {
+    const seq = ++requestSeqRef.current;
     try {
       const [agData, exData, auData, apData] = await Promise.all([
         fetchGovernanceAgents(),
@@ -32,6 +40,7 @@ export default function GovernanceDashboard() {
         fetchGovernanceAudit(),
         fetchGovernanceApprovals()
       ]);
+      if (seq !== requestSeqRef.current) return; // superseded by a newer request
       setAgents(agData);
       setExecutions(exData);
       setAuditLogs(auData);
@@ -39,18 +48,33 @@ export default function GovernanceDashboard() {
     } catch (error) {
       console.error("Failed to load governance data:", error);
     } finally {
-      setLoading(false);
+      if (seq === requestSeqRef.current) setLoading(false);
     }
   };
 
   const handleApprove = async (id) => {
-    await approveGovernanceRequest(id);
-    loadData();
+    try {
+      await approveGovernanceRequest(id);
+      // Instant feedback -- don't wait on loadData()'s own round trip
+      // (and its own race exposure) just to remove the item the user
+      // already knows they just approved.
+      setApprovals((prev) => prev.filter((a) => a.id !== id));
+    } catch (error) {
+      console.error("Failed to approve request:", error);
+    } finally {
+      loadData();
+    }
   };
 
   const handleReject = async (id) => {
-    await rejectGovernanceRequest(id);
-    loadData();
+    try {
+      await rejectGovernanceRequest(id);
+      setApprovals((prev) => prev.filter((a) => a.id !== id));
+    } catch (error) {
+      console.error("Failed to reject request:", error);
+    } finally {
+      loadData();
+    }
   };
   
   const handleStatusChange = async (agentId, status) => {
@@ -79,7 +103,7 @@ export default function GovernanceDashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
         <MetricCard title="Total Agents" value={agents.length} icon={<Cpu />} />
         <MetricCard title="Active Executions" value={executions.length} icon={<Activity />} />
-        <MetricCard title="Pending Approvals" value={approvals.length} icon={<AlertTriangle color="var(--accent-amber)" />} highlight={approvals.length > 0} />
+        <MetricCard title="Pending Approvals" value={approvals.length} icon={<AlertTriangle color="var(--accent-amber)" />} />
         <MetricCard title="Policy Violations" value={auditLogs.filter(l => l.event_type === 'POLICY_VIOLATION').length} icon={<Lock color="var(--accent-red)" />} />
       </div>
 
@@ -104,9 +128,9 @@ export default function GovernanceDashboard() {
   );
 }
 
-function MetricCard({ title, value, icon, highlight }) {
+function MetricCard({ title, value, icon }) {
   return (
-    <div className="panel" style={{ border: highlight ? '1px solid var(--accent-amber)' : '1px solid var(--border-light)' }}>
+    <div className="panel" style={{ border: '1px solid var(--border-light)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '8px' }}>{title}</div>
