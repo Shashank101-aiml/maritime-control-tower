@@ -54,9 +54,11 @@ def clear_conditions_cache():
     would be served to the next."""
     live_conditions_client._cache["events"] = None
     live_conditions_client._cache["expires_at"] = 0.0
+    live_conditions_client._cache["refreshing"] = False
     yield
     live_conditions_client._cache["events"] = None
     live_conditions_client._cache["expires_at"] = 0.0
+    live_conditions_client._cache["refreshing"] = False
 
 
 @pytest.fixture(autouse=True)

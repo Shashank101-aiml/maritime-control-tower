@@ -42,7 +42,7 @@ PUBLISH_LAG_SECONDS = 60
 # Floor, so a failing upstream cannot be hammered once per request.
 MIN_CACHE_SECONDS = 60
 
-_cache: Dict[str, Any] = {"expires_at": 0.0, "events": None, "fetched_at": None}
+_cache: Dict[str, Any] = {"expires_at": 0.0, "events": None, "fetched_at": None, "refreshing": False}
 _cache_lock = threading.Lock()
 
 
@@ -105,33 +105,42 @@ class LiveConditionsClient:
         same marine endpoint; visibility from the standard forecast
         endpoint alongside wind.
         """
-        marine = requests.get(
-            MARINE_URL,
-            params={
-                "latitude": lat,
-                "longitude": lon,
-                "current": (
-                    "wave_height,wave_direction,wave_period,"
-                    "swell_wave_height,swell_wave_direction,swell_wave_period,"
-                    "wind_wave_height,wind_wave_direction,wind_wave_period,"
-                    "secondary_swell_wave_height,secondary_swell_wave_direction,secondary_swell_wave_period,"
-                    "ocean_current_velocity,ocean_current_direction"
-                ),
-            },
-            timeout=self.timeout,
-        )
+        # The marine and wind endpoints are independent, so they're fetched
+        # concurrently rather than back-to-back -- this alone was doubling
+        # every corridor's latency for no reason.
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            marine_future = pool.submit(
+                requests.get,
+                MARINE_URL,
+                params={
+                    "latitude": lat,
+                    "longitude": lon,
+                    "current": (
+                        "wave_height,wave_direction,wave_period,"
+                        "swell_wave_height,swell_wave_direction,swell_wave_period,"
+                        "wind_wave_height,wind_wave_direction,wind_wave_period,"
+                        "secondary_swell_wave_height,secondary_swell_wave_direction,secondary_swell_wave_period,"
+                        "ocean_current_velocity,ocean_current_direction"
+                    ),
+                },
+                timeout=self.timeout,
+            )
+            wind_future = pool.submit(
+                requests.get,
+                FORECAST_URL,
+                params={
+                    "latitude": lat,
+                    "longitude": lon,
+                    "current": "wind_speed_10m,wind_gusts_10m,wind_direction_10m,visibility",
+                },
+                timeout=self.timeout,
+            )
+            marine = marine_future.result()
+            wind = wind_future.result()
+
         marine.raise_for_status()
         marine_now = marine.json().get("current", {})
 
-        wind = requests.get(
-            FORECAST_URL,
-            params={
-                "latitude": lat,
-                "longitude": lon,
-                "current": "wind_speed_10m,wind_gusts_10m,wind_direction_10m,visibility",
-            },
-            timeout=self.timeout,
-        )
         wind.raise_for_status()
         wind_now = wind.json().get("current", {})
 
@@ -227,14 +236,46 @@ class LiveConditionsClient:
     def get_all_events(self, use_cache: bool = True) -> List[Dict[str, Any]]:
         """Every monitored corridor's current condition, worst first.
 
-        Cached for CACHE_TTL_SECONDS and fetched in parallel; a failed
+        Stale-while-revalidate: once the cache has ever been populated, a
+        request past its expiry gets that stale copy back immediately and
+        triggers a background refresh for the *next* caller, rather than
+        blocking on a fresh 8-corridor sweep itself. Only a genuine cold
+        start (nothing cached yet) pays for a synchronous fetch. A failed
         corridor is skipped rather than aborting the sweep.
         """
         if use_cache:
             with _cache_lock:
-                if _cache["events"] is not None and time.monotonic() < _cache["expires_at"]:
-                    return _cache["events"]
+                cached = _cache["events"]
+                is_fresh = cached is not None and time.monotonic() < _cache["expires_at"]
+            if cached is not None:
+                if not is_fresh:
+                    self._trigger_background_refresh()
+                return cached
 
+        return self._fetch_and_cache(use_cache=use_cache)
+
+    def _trigger_background_refresh(self) -> None:
+        """Kick off one background sweep to refresh the cache, unless one
+        is already running -- an expired cache with no in-flight refresh
+        would otherwise leave every subsequent request serving the same
+        stale copy forever."""
+        with _cache_lock:
+            if _cache["refreshing"]:
+                return
+            _cache["refreshing"] = True
+
+        def _run() -> None:
+            try:
+                self._fetch_and_cache(use_cache=True)
+            except Exception:
+                pass
+            finally:
+                with _cache_lock:
+                    _cache["refreshing"] = False
+
+        threading.Thread(target=_run, daemon=True, name="live-conditions-refresh").start()
+
+    def _fetch_and_cache(self, use_cache: bool) -> List[Dict[str, Any]]:
         with ThreadPoolExecutor(max_workers=MAX_PARALLEL_REQUESTS) as pool:
             results = list(pool.map(self._observe, self.locations))
 
@@ -265,10 +306,14 @@ class LiveConditionsClient:
         with _cache_lock:
             fetched_at = _cache.get("fetched_at")
             expires_in = max(0.0, _cache["expires_at"] - time.monotonic())
+            is_stale = time.monotonic() >= _cache["expires_at"]
+            refreshing = _cache["refreshing"]
         return {
             "fetched_at": fetched_at.isoformat().replace("+00:00", "Z") if fetched_at else None,
             "refresh_in_seconds": round(expires_in),
             "source_interval_seconds": SOURCE_INTERVAL_SECONDS,
+            "stale": is_stale,
+            "refreshing": refreshing,
         }
 
     def get_event(self) -> Dict[str, Any]:
