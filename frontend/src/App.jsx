@@ -71,7 +71,7 @@ export default function App() {
       case 'congestion':
         return <CongestionPredictor />;
       case 'delay':
-        return <DelayPredictor />;
+        return <DelayPredictor setActiveTab={setActiveTab} />;
       case 'fuel':
         return <FuelEfficiencyPredictor />;
       case 'governance':
