@@ -86,6 +86,43 @@ class TestDelayAgentPlantProfile:
         assert profile["profile"]["origin_port"] in overview["known_values"]["origin_port"]
 
 
+class TestDelayFeatureContributions:
+    def test_predict_returns_real_shap_style_contributions(self):
+        """LightGBM's own pred_contrib output -- a real, additive
+        per-prediction decomposition, not a post-hoc "looks unusual"
+        guess."""
+        agent = DelayAgent()
+        profile = agent.plant_profile("PLANT08")
+        features = {**profile["profile"], "plant_code": "PLANT08"}
+        result = agent.predict(features)
+
+        assert "feature_contributions" in result
+        contributions = result["feature_contributions"]
+        assert len(contributions) > 0
+        assert len(contributions) <= 6
+        # Sorted by magnitude, largest driver first.
+        magnitudes = [abs(c["contribution"]) for c in contributions]
+        assert magnitudes == sorted(magnitudes, reverse=True)
+        for c in contributions:
+            assert "label" in c and "value" in c
+
+    def test_contributions_vary_with_a_genuinely_different_input(self):
+        """Not a static/cached explanation -- a materially different
+        order should produce a different top contributor or magnitude."""
+        agent = DelayAgent()
+        low = agent.predict({
+            "origin_port": "PORT09", "destination_port": "PORT09", "carrier": "V44_3",
+            "service_level": "CRF", "customer": "V55555_53", "plant_code": "PLANT16",
+            "tpt": 1, "unit_quantity": 10, "weight": 1.0, "is_vmi_customer_anywhere": False,
+        })
+        high = agent.predict({
+            "origin_port": "PORT04", "destination_port": "PORT09", "carrier": "V444_0",
+            "service_level": "CRF", "customer": "V555555555_14", "plant_code": "PLANT08",
+            "tpt": 30, "unit_quantity": 50000, "weight": 5000.0, "is_vmi_customer_anywhere": False,
+        })
+        assert low["feature_contributions"] != high["feature_contributions"]
+
+
 class TestDelayApiRoutes:
     def _token(self):
         res = client.post(

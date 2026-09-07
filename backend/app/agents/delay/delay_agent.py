@@ -21,6 +21,16 @@ NUMERIC_FEATURES = [
 ]
 FEATURE_COLUMNS = CATEGORICAL_FEATURES + NUMERIC_FEATURES
 
+FEATURE_LABELS = {
+    "origin_port": "Origin Port", "carrier": "Carrier", "service_level": "Service Level",
+    "customer": "Customer", "plant_code": "Plant Code", "destination_port": "Destination Port",
+    "tpt": "Transit Time", "unit_quantity": "Unit Quantity", "weight": "Weight",
+    "freight_rate": "Freight Rate", "freight_min_cost": "Freight Min Cost",
+    "wh_cost_per_unit": "Warehouse Cost/Unit", "wh_daily_capacity": "Warehouse Daily Capacity",
+    "plant_week_order_count": "Plant Week Order Count", "backlog_vs_capacity": "Backlog vs Capacity",
+    "is_vmi_customer_anywhere": "VMI Customer",
+}
+
 # This is the same real training data the model was fit on
 # (data/features/delay_features.csv, built from the DataCo-style
 # anonymized supply-chain export in data/cleaned/supply_chain/) --
@@ -110,7 +120,40 @@ class DelayAgent:
             "late_probability": round(proba, 4),
             "is_late_flag": int(proba >= 0.5),
             "confidence": self._assess_confidence(proba),
+            "feature_contributions": self._feature_contributions(frame),
         }
+
+    def _feature_contributions(self, frame: "pd.DataFrame") -> List[Dict[str, Any]]:
+        """Real per-prediction SHAP-style attributions from LightGBM's
+        own pred_contrib output -- not a post-hoc "which input looks
+        unusual" guess, but the exact, additive decomposition (in
+        log-odds) LightGBM itself used to reach this prediction. The
+        booster's own feature order does not match FEATURE_COLUMNS, so
+        contributions are zipped against booster_.feature_name(), not
+        the input column order.
+        """
+        try:
+            contrib = self.model.predict(frame, pred_contrib=True)
+        except Exception as exc:
+            logger.warning("Could not compute feature contributions: %s", exc)
+            return []
+
+        feature_names = self.model.booster_.feature_name()
+        values = contrib[0][:-1]  # last column is the bias/expected-value term
+        row = frame.iloc[0]
+
+        entries = [
+            {
+                "feature": name,
+                "label": FEATURE_LABELS.get(name, name),
+                "value": _clean_number(row[name]) if name in NUMERIC_FEATURES else str(row[name]),
+                "contribution": round(float(value), 4),
+            }
+            for name, value in zip(feature_names, values)
+            if abs(value) > 1e-4
+        ]
+        entries.sort(key=lambda e: abs(e["contribution"]), reverse=True)
+        return entries[:6]
 
     def _assess_confidence(self, proba: float) -> float:
         distance_from_midpoint = abs(proba - 0.5) / 0.5

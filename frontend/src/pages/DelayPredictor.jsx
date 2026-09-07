@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   Clock, AlertTriangle, Send, Gauge, BarChart3, ArrowUpRight, Sparkles, RefreshCw,
-  Ship, Package, Warehouse, ChevronDown, CheckCircle2,
+  Ship, Package, Warehouse, ChevronDown, CheckCircle2, TrendingUp, TrendingDown, Info,
 } from 'lucide-react';
 import { predictDelay, getDelayOverview, getPlantProfile } from '../services/delayService';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -20,6 +20,90 @@ function FormSection({ icon, title, subtitle, children }) {
         {subtitle && <span style={{ fontSize: '0.76rem', color: 'var(--text-subtle)' }}>{subtitle}</span>}
       </div>
       <div className="predict-form">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * Where this prediction's probability sits against two real reference
+ * points -- the overall historical late rate and (when the selected
+ * plant has its own history) that plant's real rate -- rather than a
+ * bare percentage with nothing to compare it to.
+ */
+function RateComparisonMeter({ predictedRate, overallRate, plantRate, plantLabel }) {
+  const scaleMax = Math.max(predictedRate, overallRate, plantRate ?? 0, 0.02) * 1.3;
+  const pct = (v) => `${Math.min(100, (v / scaleMax) * 100)}%`;
+  const predictedColor = predictedRate >= 0.5 ? 'var(--accent-rose)' : predictedRate > overallRate ? 'var(--accent-amber)' : 'var(--accent-emerald)';
+
+  return (
+    <div>
+      <div style={{ position: 'relative', height: '24px', background: 'var(--surface-subtle)', borderRadius: '999px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+        <div style={{ position: 'absolute', inset: 0, width: pct(predictedRate), background: predictedColor, opacity: 0.85, transition: 'width 0.3s ease' }} />
+        <div title={`Overall real late rate: ${(overallRate * 100).toFixed(1)}%`}
+          style={{ position: 'absolute', left: pct(overallRate), top: 0, bottom: 0, width: '2px', background: 'var(--text-strong)' }} />
+        {plantRate != null && (
+          <div title={`${plantLabel}'s real late rate: ${(plantRate * 100).toFixed(1)}%`}
+            style={{ position: 'absolute', left: pct(plantRate), top: 0, bottom: 0, width: '2px', background: 'var(--accent-cyan)' }} />
+        )}
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', marginTop: '8px', fontSize: '0.74rem', color: 'var(--text-subtle)' }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: predictedColor, display: 'inline-block' }} />
+          This prediction: <strong style={{ color: 'var(--text-strong)' }}>{(predictedRate * 100).toFixed(1)}%</strong>
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ width: '2px', height: '10px', background: 'var(--text-strong)', display: 'inline-block' }} />
+          Overall real rate: <strong style={{ color: 'var(--text-strong)' }}>{(overallRate * 100).toFixed(1)}%</strong>
+        </span>
+        {plantRate != null && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ width: '2px', height: '10px', background: 'var(--accent-cyan)', display: 'inline-block' }} />
+            {plantLabel}'s real rate: <strong style={{ color: 'var(--text-strong)' }}>{(plantRate * 100).toFixed(1)}%</strong>
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Real per-prediction SHAP-style attributions from the model's own
+ * pred_contrib output (LightGBM), not a post-hoc "this looks unusual"
+ * guess -- an additive, exact decomposition of this specific
+ * prediction's log-odds.
+ */
+function ContributionsList({ contributions }) {
+  if (!contributions?.length) return null;
+  const maxAbs = Math.max(...contributions.map((c) => Math.abs(c.contribution)), 0.0001);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {contributions.map((c) => {
+        const increases = c.contribution > 0;
+        const halfWidthPct = (Math.abs(c.contribution) / maxAbs) * 50;
+        return (
+          <div key={c.feature} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ width: '150px', flexShrink: 0, fontSize: '0.78rem', color: 'var(--text-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {c.label}
+            </span>
+            <span style={{ flex: 1, position: 'relative', height: '14px' }}>
+              <span style={{ position: 'absolute', left: '50%', top: 0, bottom: 0, width: '1px', background: 'var(--border-strong)' }} />
+              <span style={{
+                position: 'absolute', top: '2px', bottom: '2px', borderRadius: '2px',
+                background: increases ? 'var(--accent-rose)' : 'var(--accent-emerald)', opacity: 0.8,
+                left: increases ? '50%' : `${50 - halfWidthPct}%`,
+                width: `${halfWidthPct}%`,
+              }} />
+            </span>
+            <span style={{ width: '90px', flexShrink: 0, fontSize: '0.72rem', textAlign: 'right', color: 'var(--text-subtle)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {c.value}
+            </span>
+            {increases
+              ? <TrendingUp size={13} color="var(--accent-rose)" style={{ flexShrink: 0 }} />
+              : <TrendingDown size={13} color="var(--accent-emerald)" style={{ flexShrink: 0 }} />}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -198,9 +282,12 @@ const buildDefaultForm = (overview) => ({
   service_level: overview.known_values.service_level[0] || '',
   customer: overview.known_values.customer[0] || '',
   plant_code: overview.known_values.plant_code[0] || '',
-  tpt: 1,
-  unit_quantity: 500,
-  weight: 10,
+  // Real dataset medians, not arbitrary round numbers -- these are the
+  // three required numeric fields, so unlike the optional profile
+  // fields below they need a real starting value, not a blank.
+  tpt: overview.typical.tpt ?? 1,
+  unit_quantity: overview.typical.unit_quantity ?? 500,
+  weight: overview.typical.weight ?? 10,
   freight_rate: '',
   freight_min_cost: '',
   wh_cost_per_unit: '',
@@ -541,6 +628,7 @@ export default function DelayPredictor({ setActiveTab }) {
         {result && (
           <div className="prediction-result">
             <h3 className="section-title" style={{ fontSize: '1.1rem' }}>Prediction</h3>
+
             <div className="result-metric-grid">
               <div className="result-metric">
                 <div className="result-metric-label">Late Probability</div>
@@ -564,7 +652,34 @@ export default function DelayPredictor({ setActiveTab }) {
                 </div>
               </div>
             </div>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '14px' }}>
+
+            {overview && (
+              <div style={{ marginTop: '20px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-subtle)', marginBottom: '8px' }}>
+                  How this compares to real history
+                </div>
+                <RateComparisonMeter
+                  predictedRate={result.late_probability}
+                  overallRate={overview.overall_late_rate}
+                  plantRate={overview.breakdown.plant_code.find((p) => p.value === form.plant_code)?.late_rate ?? null}
+                  plantLabel={form.plant_code}
+                />
+              </div>
+            )}
+
+            {result.feature_contributions?.length > 0 && (
+              <div style={{ marginTop: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-subtle)', marginBottom: '10px' }}>
+                  What drove this prediction
+                  <span title="LightGBM's own per-prediction contribution breakdown (pred_contrib) -- exact, not an approximation.">
+                    <Info size={12} />
+                  </span>
+                </div>
+                <ContributionsList contributions={result.feature_contributions} />
+              </div>
+            )}
+
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '18px' }}>
               Trained on a small, imbalanced historical sample (~2% of orders were late) — treat as directional, not precise.
             </p>
           </div>
