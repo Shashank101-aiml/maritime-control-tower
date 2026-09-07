@@ -142,10 +142,21 @@ class DelayAgent:
             for col in ["origin_port", "destination_port", "carrier", "plant_code", "service_level", "customer"]
         }
 
+        # Dataset-wide medians for the numeric fields the old form left
+        # blank -- shown as real placeholder hints ("e.g. 0.55") rather
+        # than an invented example number, so a field left empty still
+        # gives a sense of scale.
+        typical_columns = [
+            "tpt", "unit_quantity", "weight", "freight_rate", "freight_min_cost",
+            "wh_cost_per_unit", "wh_daily_capacity", "plant_week_order_count", "backlog_vs_capacity",
+        ]
+        typical = {col: _clean_number(df[col].median()) for col in typical_columns}
+
         return {
             "orders": int(len(df)),
             "overall_late_rate": round(overall_late_rate, 4),
             "breakdown": breakdown,
+            "typical": typical,
             "known_values": known_values,
             "plant_ports": self._plant_ports,
         }

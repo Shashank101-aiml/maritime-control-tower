@@ -1,7 +1,28 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Clock, AlertTriangle, Send, Gauge, BarChart3, ArrowUpRight, Sparkles, RefreshCw } from 'lucide-react';
+import {
+  Clock, AlertTriangle, Send, Gauge, BarChart3, ArrowUpRight, Sparkles, RefreshCw,
+  Ship, Package, Warehouse, ChevronDown, CheckCircle2,
+} from 'lucide-react';
 import { predictDelay, getDelayOverview, getPlantProfile } from '../services/delayService';
 import LoadingSpinner from '../components/LoadingSpinner';
+
+const OPTIONAL_PROFILE_FIELDS = [
+  'freight_rate', 'freight_min_cost', 'wh_cost_per_unit',
+  'wh_daily_capacity', 'plant_week_order_count', 'backlog_vs_capacity',
+];
+
+function FormSection({ icon, title, subtitle, children }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
+        <span style={{ display: 'flex', color: 'var(--accent-teal, var(--accent-cyan))' }}>{icon}</span>
+        <h4 style={{ fontSize: '0.92rem', fontWeight: 600, color: 'var(--text-strong)', margin: 0 }}>{title}</h4>
+        {subtitle && <span style={{ fontSize: '0.76rem', color: 'var(--text-subtle)' }}>{subtitle}</span>}
+      </div>
+      <div className="predict-form">{children}</div>
+    </div>
+  );
+}
 
 const BREAKDOWN_TABS = [
   { value: 'plant_code', label: 'By plant' },
@@ -199,7 +220,12 @@ export default function DelayPredictor({ setActiveTab }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [prefillNote, setPrefillNote] = useState(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const formRef = useRef(null);
+
+  const filledProfileCount = form
+    ? OPTIONAL_PROFILE_FIELDS.filter((f) => form[f] !== '' && form[f] != null).length
+    : 0;
 
   const loadOverview = async () => {
     setOverviewLoading(true);
@@ -264,6 +290,7 @@ export default function DelayPredictor({ setActiveTab }) {
     setResult(null);
     setError(null);
     setPrefillNote(profileResponse.plant_code);
+    setProfileOpen(true);
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -356,99 +383,142 @@ export default function DelayPredictor({ setActiveTab }) {
                 Prefilled with {prefillNote}'s real historical profile. Adjust anything below, or hit Predict as-is.
               </div>
             )}
-            <form className="predict-form" onSubmit={handleSubmit}>
-              <div className="form-group">
-                <label className="form-label">Origin Port</label>
-                <select className="form-select" value={form.origin_port} onChange={(e) => update('origin_port', e.target.value)}>
-                  {overview.known_values.origin_port.map((v) => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Destination Port</label>
-                <select className="form-select" value={form.destination_port} onChange={(e) => update('destination_port', e.target.value)}>
-                  {overview.known_values.destination_port.map((v) => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Carrier</label>
-                <select className="form-select" value={form.carrier} onChange={(e) => update('carrier', e.target.value)}>
-                  {overview.known_values.carrier.map((v) => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Service Level</label>
-                <select className="form-select" value={form.service_level} onChange={(e) => update('service_level', e.target.value)}>
-                  {overview.known_values.service_level.map((v) => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Customer</label>
-                <select className="form-select" value={form.customer} onChange={(e) => update('customer', e.target.value)}>
-                  {overview.known_values.customer.map((v) => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Plant Code</label>
-                <select className="form-select" value={form.plant_code} onChange={(e) => update('plant_code', e.target.value)}>
-                  {overview.known_values.plant_code.map((v) => <option key={v} value={v}>{v}</option>)}
-                </select>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Transit Time (days)</label>
-                <input className="form-input" type="number" min="0" step="any" value={form.tpt} onChange={(e) => update('tpt', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Unit Quantity</label>
-                <input className="form-input" type="number" min="0" step="any" value={form.unit_quantity} onChange={(e) => update('unit_quantity', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Weight</label>
-                <input className="form-input" type="number" min="0" step="any" value={form.weight} onChange={(e) => update('weight', e.target.value)} />
-              </div>
-              <div className="form-group" style={{ justifyContent: 'flex-end' }}>
-                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <input
-                    type="checkbox"
-                    checked={form.is_vmi_customer_anywhere}
-                    onChange={(e) => update('is_vmi_customer_anywhere', e.target.checked)}
-                  />
-                  VMI Customer
-                </label>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <FormSection icon={<Ship size={16} />} title="Shipment route">
+                <div className="form-group">
+                  <label className="form-label">Origin Port</label>
+                  <select className="form-select" value={form.origin_port} onChange={(e) => update('origin_port', e.target.value)}>
+                    {overview.known_values.origin_port.map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Destination Port</label>
+                  <select className="form-select" value={form.destination_port} onChange={(e) => update('destination_port', e.target.value)}>
+                    {overview.known_values.destination_port.map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Carrier</label>
+                  <select className="form-select" value={form.carrier} onChange={(e) => update('carrier', e.target.value)}>
+                    {overview.known_values.carrier.map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Service Level</label>
+                  <select className="form-select" value={form.service_level} onChange={(e) => update('service_level', e.target.value)}>
+                    {overview.known_values.service_level.map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+              </FormSection>
+
+              <FormSection icon={<Package size={16} />} title="Order details">
+                <div className="form-group">
+                  <label className="form-label">Customer</label>
+                  <select className="form-select" value={form.customer} onChange={(e) => update('customer', e.target.value)}>
+                    {overview.known_values.customer.map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Plant Code</label>
+                  <select className="form-select" value={form.plant_code} onChange={(e) => update('plant_code', e.target.value)}>
+                    {overview.known_values.plant_code.map((v) => <option key={v} value={v}>{v}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Transit Time (days)</label>
+                  <input className="form-input" type="number" min="0" step="any" value={form.tpt} onChange={(e) => update('tpt', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Unit Quantity</label>
+                  <input className="form-input" type="number" min="0" step="any" value={form.unit_quantity} onChange={(e) => update('unit_quantity', e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Weight (kg)</label>
+                  <input className="form-input" type="number" min="0" step="any" value={form.weight} onChange={(e) => update('weight', e.target.value)} />
+                </div>
+                <div className="form-group" style={{ justifyContent: 'center' }}>
+                  <label style={{
+                    display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.85rem',
+                    color: 'var(--text-body)', background: 'var(--surface-subtle)', border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-sm)', padding: '8px 11px',
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={form.is_vmi_customer_anywhere}
+                      onChange={(e) => update('is_vmi_customer_anywhere', e.target.checked)}
+                    />
+                    VMI Customer
+                  </label>
+                </div>
+              </FormSection>
+
+              <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden' }}>
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((o) => !o)}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: 'var(--surface-subtle)', border: 'none', padding: '12px 16px', cursor: 'pointer',
+                  }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-strong)', fontSize: '0.92rem', fontWeight: 600 }}>
+                    <Warehouse size={16} color="var(--accent-teal, var(--accent-cyan))" />
+                    Plant &amp; freight profile
+                    <span style={{
+                      fontSize: '0.7rem', fontWeight: 600, padding: '2px 8px', borderRadius: '999px',
+                      background: filledProfileCount > 0 ? 'var(--accent-emerald)' : 'var(--surface)',
+                      color: filledProfileCount > 0 ? '#ffffff' : 'var(--text-subtle)',
+                      border: filledProfileCount > 0 ? 'none' : '1px solid var(--border)',
+                    }}>
+                      {filledProfileCount > 0 ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                          <CheckCircle2 size={11} /> {filledProfileCount} of 6 set
+                        </span>
+                      ) : 'optional'}
+                    </span>
+                  </span>
+                  <ChevronDown size={16} color="var(--text-subtle)" style={{ transform: profileOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+                </button>
+
+                {profileOpen && (
+                  <div style={{ padding: '16px' }}>
+                    <p className="form-note" style={{ marginTop: 0, marginBottom: '14px' }}>
+                      Real per-plant freight &amp; warehouse figures -- the model was trained with these, but the
+                      original form never collected them. Click a plant in the overview above to fill them from its
+                      real historical profile, or enter your own. Unfilled fields are placeholders showing the
+                      dataset-wide median, not blanks the model treats as zero.
+                    </p>
+                    <div className="predict-form">
+                      <div className="form-group">
+                        <label className="form-label">Freight Rate ($/unit)</label>
+                        <input className="form-input" type="number" step="any" placeholder={`e.g. ${overview.typical.freight_rate}`} value={form.freight_rate} onChange={(e) => update('freight_rate', e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Freight Min Cost ($)</label>
+                        <input className="form-input" type="number" step="any" placeholder={`e.g. ${overview.typical.freight_min_cost}`} value={form.freight_min_cost} onChange={(e) => update('freight_min_cost', e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Warehouse Cost / Unit ($)</label>
+                        <input className="form-input" type="number" step="any" placeholder={`e.g. ${overview.typical.wh_cost_per_unit}`} value={form.wh_cost_per_unit} onChange={(e) => update('wh_cost_per_unit', e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Warehouse Daily Capacity (units)</label>
+                        <input className="form-input" type="number" step="any" placeholder={`e.g. ${overview.typical.wh_daily_capacity}`} value={form.wh_daily_capacity} onChange={(e) => update('wh_daily_capacity', e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Plant Week Order Count</label>
+                        <input className="form-input" type="number" step="any" placeholder={`e.g. ${overview.typical.plant_week_order_count}`} value={form.plant_week_order_count} onChange={(e) => update('plant_week_order_count', e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Backlog vs Capacity</label>
+                        <input className="form-input" type="number" step="any" placeholder={`e.g. ${overview.typical.backlog_vs_capacity}`} value={form.backlog_vs_capacity} onChange={(e) => update('backlog_vs_capacity', e.target.value)} />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="form-group span-2" style={{ marginTop: '8px' }}>
-                <p className="form-note" style={{ margin: 0 }}>
-                  Real per-plant freight &amp; warehouse figures -- the model was trained with these, but the
-                  original form never collected them. Click a plant above to fill them from its real historical
-                  profile, or enter your own.
-                </p>
-              </div>
-              <div className="form-group">
-                <label className="form-label">Freight Rate</label>
-                <input className="form-input" type="number" step="any" value={form.freight_rate} onChange={(e) => update('freight_rate', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Freight Min Cost</label>
-                <input className="form-input" type="number" step="any" value={form.freight_min_cost} onChange={(e) => update('freight_min_cost', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Warehouse Cost / Unit</label>
-                <input className="form-input" type="number" step="any" value={form.wh_cost_per_unit} onChange={(e) => update('wh_cost_per_unit', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Warehouse Daily Capacity</label>
-                <input className="form-input" type="number" step="any" value={form.wh_daily_capacity} onChange={(e) => update('wh_daily_capacity', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Plant Week Order Count</label>
-                <input className="form-input" type="number" step="any" value={form.plant_week_order_count} onChange={(e) => update('plant_week_order_count', e.target.value)} />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Backlog vs Capacity</label>
-                <input className="form-input" type="number" step="any" value={form.backlog_vs_capacity} onChange={(e) => update('backlog_vs_capacity', e.target.value)} />
-              </div>
-
-              <div className="form-actions">
+              <div className="form-actions" style={{ marginTop: 0 }}>
                 <button className="btn-action" type="submit" disabled={loading}>
                   <Send size={16} className={loading ? 'spin' : ''} />
                   {loading ? 'Predicting…' : 'Predict Delay Risk'}

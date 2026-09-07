@@ -46,6 +46,13 @@ class TestDelayAgentOverview:
         assert rates == sorted(rates, reverse=True)
         assert sum(c["orders"] for c in carrier_breakdown) == overview["orders"]
 
+    def test_typical_values_are_real_dataset_medians(self):
+        agent = DelayAgent()
+        overview = agent.overview()
+        expected_freight_rate_median = float(agent._orders["freight_rate"].median())
+        assert overview["typical"]["freight_rate"] == pytest.approx(expected_freight_rate_median)
+        assert overview["typical"]["weight"] is not None
+
     def test_plant_ports_mapping_is_real_and_not_a_fabricated_link_to_congestion(self):
         """PLANT03's real port is PORT04 -- the old hardcoded form
         default (plant_code=PLANT03, origin_port=PORT08) was never a
