@@ -91,6 +91,63 @@ class AnomalyAgent:
             reason=self._explain(port, row),
         )
 
+    def port_snapshot(self, port: str) -> Dict:
+        """Everything about this port's own real history needed to (a)
+        prefill a manual congestion-prediction query with this port's
+        actual latest values instead of requiring someone to type them
+        in by hand, and (b) chart its recent trend.
+
+        `predict_inputs` is computed the same way
+        pipeline/merge_congestion_datasets.py builds the *_lag1w /
+        *_roll4w_mean features the congestion model was trained on --
+        shift(1) before the rolling mean, so both only ever use weeks
+        strictly before the latest one (no leakage from the week being
+        described).
+        """
+        if port not in self._latest_by_port:
+            raise ValueError(f"{port!r} has no congestion history to score.")
+
+        row = self._latest_by_port[port]
+        history = self._history_by_port[port]
+        prior = history.iloc[:-1]  # weeks strictly before the latest
+
+        def lag1w(col: str) -> Optional[float]:
+            return float(prior[col].iloc[-1]) if len(prior) else None
+
+        def roll4w_mean(col: str) -> Optional[float]:
+            return float(prior[col].tail(4).mean()) if len(prior) else None
+
+        trend = history.tail(26)
+
+        return {
+            "port": port,
+            "region": row.get("region"),
+            "week_start": str(row["week_start"]),
+            "current": {
+                "congestion_index": float(row["congestion_index"]),
+                "avg_wait_days": float(row["avg_wait_days"]),
+                "vessels_at_anchor": float(row["vessels_at_anchor"]),
+                "port_utilization_pct": float(row["port_utilization_pct"]),
+                "berth_delay_hrs": float(row["berth_delay_hrs"]),
+            },
+            "predict_inputs": {
+                "region": row.get("region"),
+                "congestion_index_lag1w": lag1w("congestion_index"),
+                "congestion_index_roll4w_mean": roll4w_mean("congestion_index"),
+                "avg_wait_days_lag1w": lag1w("avg_wait_days"),
+                "vessels_at_anchor_lag1w": lag1w("vessels_at_anchor"),
+            },
+            "trend": [
+                {
+                    "week_start": str(r["week_start"]),
+                    "congestion_index": float(r["congestion_index"]),
+                    "avg_wait_days": float(r["avg_wait_days"]),
+                    "vessels_at_anchor": float(r["vessels_at_anchor"]),
+                }
+                for _, r in trend.iterrows()
+            ],
+        }
+
     def _explain(self, port: str, row: "pd.Series") -> str:
         """Which real feature deviates furthest (in standard deviations)
         from this port's own historical mean -- a genuinely computed

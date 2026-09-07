@@ -42,8 +42,16 @@ PUBLISH_LAG_SECONDS = 60
 # Floor, so a failing upstream cannot be hammered once per request.
 MIN_CACHE_SECONDS = 60
 
-_cache: Dict[str, Any] = {"expires_at": 0.0, "events": None, "fetched_at": None, "refreshing": False}
+# Keyed by cache_key rather than one shared dict, so a second location
+# set (e.g. ports, scored separately from the monitored corridors) gets
+# its own independent stale-while-revalidate cache instead of clobbering
+# -- or being clobbered by -- whichever set fetched most recently.
+_caches: Dict[str, Dict[str, Any]] = {}
 _cache_lock = threading.Lock()
+
+
+def _cache_for(key: str) -> Dict[str, Any]:
+    return _caches.setdefault(key, {"expires_at": 0.0, "events": None, "fetched_at": None, "refreshing": False})
 
 
 def _seconds_until_next_publication() -> float:
@@ -87,9 +95,11 @@ class LiveConditionsClient:
         self,
         timeout: int = DEFAULT_TIMEOUT_SECONDS,
         locations: Optional[List[Dict[str, Any]]] = None,
+        cache_key: str = "corridors",
     ) -> None:
         self.timeout = timeout
         self.locations = locations or MONITORED_LOCATIONS
+        self.cache_key = cache_key
 
     def fetch_conditions(self, lat: float, lon: float) -> Dict[str, Any]:
         """Current marine + wind readings for one position. Raises on failure.
@@ -244,9 +254,10 @@ class LiveConditionsClient:
         corridor is skipped rather than aborting the sweep.
         """
         if use_cache:
+            cache = _cache_for(self.cache_key)
             with _cache_lock:
-                cached = _cache["events"]
-                is_fresh = cached is not None and time.monotonic() < _cache["expires_at"]
+                cached = cache["events"]
+                is_fresh = cached is not None and time.monotonic() < cache["expires_at"]
             if cached is not None:
                 if not is_fresh:
                     self._trigger_background_refresh()
@@ -259,10 +270,11 @@ class LiveConditionsClient:
         is already running -- an expired cache with no in-flight refresh
         would otherwise leave every subsequent request serving the same
         stale copy forever."""
+        cache = _cache_for(self.cache_key)
         with _cache_lock:
-            if _cache["refreshing"]:
+            if cache["refreshing"]:
                 return
-            _cache["refreshing"] = True
+            cache["refreshing"] = True
 
         def _run() -> None:
             try:
@@ -271,9 +283,9 @@ class LiveConditionsClient:
                 pass
             finally:
                 with _cache_lock:
-                    _cache["refreshing"] = False
+                    cache["refreshing"] = False
 
-        threading.Thread(target=_run, daemon=True, name="live-conditions-refresh").start()
+        threading.Thread(target=_run, daemon=True, name=f"live-conditions-refresh-{self.cache_key}").start()
 
     def _fetch_and_cache(self, use_cache: bool) -> List[Dict[str, Any]]:
         with ThreadPoolExecutor(max_workers=MAX_PARALLEL_REQUESTS) as pool:
@@ -291,23 +303,24 @@ class LiveConditionsClient:
         )
 
         if use_cache and events:
+            cache = _cache_for(self.cache_key)
             with _cache_lock:
-                _cache["events"] = events
-                _cache["expires_at"] = time.monotonic() + _seconds_until_next_publication()
-                _cache["fetched_at"] = datetime.now(timezone.utc)
+                cache["events"] = events
+                cache["expires_at"] = time.monotonic() + _seconds_until_next_publication()
+                cache["fetched_at"] = datetime.now(timezone.utc)
 
         return events
 
-    @staticmethod
-    def cache_status() -> Dict[str, Any]:
+    def cache_status(self) -> Dict[str, Any]:
         """When this data was fetched and when it will next be refreshed,
         so the UI can show freshness instead of leaving the reader unable
         to tell live data from a frozen feed."""
+        cache = _cache_for(self.cache_key)
         with _cache_lock:
-            fetched_at = _cache.get("fetched_at")
-            expires_in = max(0.0, _cache["expires_at"] - time.monotonic())
-            is_stale = time.monotonic() >= _cache["expires_at"]
-            refreshing = _cache["refreshing"]
+            fetched_at = cache.get("fetched_at")
+            expires_in = max(0.0, cache["expires_at"] - time.monotonic())
+            is_stale = time.monotonic() >= cache["expires_at"]
+            refreshing = cache["refreshing"]
         return {
             "fetched_at": fetched_at.isoformat().replace("+00:00", "Z") if fetched_at else None,
             "refresh_in_seconds": round(expires_in),

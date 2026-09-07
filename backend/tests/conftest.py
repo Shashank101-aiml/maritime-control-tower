@@ -49,16 +49,12 @@ def unauthenticated():
 
 @pytest.fixture(autouse=True)
 def clear_conditions_cache():
-    """The live client caches corridor readings in a module-level dict.
-    Left alone it leaks between tests, so one test's stubbed readings
-    would be served to the next."""
-    live_conditions_client._cache["events"] = None
-    live_conditions_client._cache["expires_at"] = 0.0
-    live_conditions_client._cache["refreshing"] = False
+    """The live client caches readings in module-level dicts, one per
+    cache_key. Left alone it leaks between tests, so one test's stubbed
+    readings would be served to the next."""
+    live_conditions_client._caches.clear()
     yield
-    live_conditions_client._cache["events"] = None
-    live_conditions_client._cache["expires_at"] = 0.0
-    live_conditions_client._cache["refreshing"] = False
+    live_conditions_client._caches.clear()
 
 
 @pytest.fixture(autouse=True)

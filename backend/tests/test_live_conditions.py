@@ -104,7 +104,7 @@ class TestStaleWhileRevalidate:
 
         events = client.get_all_events()
         assert len(events) == 1
-        assert live_conditions_client._cache["events"] is not None
+        assert live_conditions_client._cache_for(client.cache_key)["events"] is not None
 
     def test_stale_cache_is_served_immediately_not_blocked_on_refresh(self, monkeypatch):
         client = LiveConditionsClient(locations=[{"name": "Corridor", "lat": 1.0, "lon": 1.0}])
@@ -115,7 +115,7 @@ class TestStaleWhileRevalidate:
 
         # Expire it, then swap in a fetch that blocks until released --
         # simulating a slow upstream sweep.
-        live_conditions_client._cache["expires_at"] = time.monotonic() - 1
+        live_conditions_client._cache_for(client.cache_key)["expires_at"] = time.monotonic() - 1
         release = threading.Event()
         calls = []
 
@@ -135,9 +135,9 @@ class TestStaleWhileRevalidate:
         assert second[0]["conditions"]["wave_height_m"] == 0.5
 
         release.set()
-        _wait_until(lambda: not live_conditions_client._cache["refreshing"])
+        _wait_until(lambda: not live_conditions_client._cache_for(client.cache_key)["refreshing"])
         assert calls == [1]
-        assert live_conditions_client._cache["events"][0]["conditions"]["wave_height_m"] == 9.0
+        assert live_conditions_client._cache_for(client.cache_key)["events"][0]["conditions"]["wave_height_m"] == 9.0
 
     def test_only_one_background_refresh_runs_at_a_time(self, monkeypatch):
         """Two stale calls in quick succession must not spawn two
@@ -145,7 +145,7 @@ class TestStaleWhileRevalidate:
         client = LiveConditionsClient(locations=[{"name": "Corridor", "lat": 1.0, "lon": 1.0}])
         monkeypatch.setattr(client, "fetch_conditions", lambda lat, lon: {"wave_height_m": 0.5, "wind_gusts_kmh": 5})
         client.get_all_events()
-        live_conditions_client._cache["expires_at"] = time.monotonic() - 1
+        live_conditions_client._cache_for(client.cache_key)["expires_at"] = time.monotonic() - 1
 
         release = threading.Event()
         calls = []
@@ -161,7 +161,7 @@ class TestStaleWhileRevalidate:
         client.get_all_events()  # must not spawn a second
 
         release.set()
-        _wait_until(lambda: not live_conditions_client._cache["refreshing"])
+        _wait_until(lambda: not live_conditions_client._cache_for(client.cache_key)["refreshing"])
         assert calls == [1]
 
 
