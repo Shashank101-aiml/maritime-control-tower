@@ -55,3 +55,15 @@ export const getRiskLevel = (score) => {
   if (score >= 35) return 'ELEVATED';
   return 'NORMAL';
 };
+
+/**
+ * Shared color tokens per risk level -- single source of truth so
+ * RiskCard and the per-corridor grid (RiskAnalysis) don't each keep
+ * their own slightly-different copy of the same three colors.
+ * @type {Record<'CRITICAL'|'ELEVATED'|'NORMAL', {fg: string, bg: string, border: string}>}
+ */
+export const RISK_TONES = {
+  CRITICAL: { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' },
+  ELEVATED: { fg: 'var(--warning)', bg: 'var(--warning-soft)', border: 'var(--warning-border)' },
+  NORMAL: { fg: 'var(--success)', bg: 'var(--success-soft)', border: 'var(--success-border)' },
+};

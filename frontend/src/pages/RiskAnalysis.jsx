@@ -9,20 +9,7 @@ import RiskTrendChart from '../components/Charts/RiskTrendChart';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { getRiskCorridors } from '../services/riskService';
 import { useCorridorContext } from '../context/CorridorContext';
-
-const TONES = {
-  CRITICAL: { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' },
-  HIGH: { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' },
-  WARNING: { fg: 'var(--warning)', bg: 'var(--warning-soft)', border: 'var(--warning-border)' },
-  LOW: { fg: 'var(--info)', bg: 'var(--info-soft)', border: 'var(--info-border)' },
-  INFO: { fg: 'var(--success)', bg: 'var(--success-soft)', border: 'var(--success-border)' },
-};
-
-const scoreTone = (score) => {
-  if (score >= 60) return TONES.CRITICAL;
-  if (score >= 35) return TONES.WARNING;
-  return TONES.INFO;
-};
+import { getRiskLevel, RISK_TONES } from '../types/Risk';
 
 /** Tiny inline trend line for the selected corridor's own score history --
  *  scaled to its own min/max (not the big chart's shared scale), since
@@ -107,7 +94,7 @@ export default function RiskAnalysis({ setActiveTab }) {
   const activeHistory = selectedCorridor
     ? [...(trendsByCorridor[selectedCorridor.location] || [])].sort((a, b) => new Date(a.time) - new Date(b.time))
     : [];
-  const activeTone = activeCorridor ? scoreTone(activeCorridor.score) : null;
+  const activeTone = activeCorridor ? RISK_TONES[getRiskLevel(activeCorridor.score)] : null;
   const activeColor = activeCorridor
     ? (activeCorridor.score >= 60 ? '#fb7185' : activeCorridor.score >= 35 ? '#fbbf24' : '#34d399')
     : null;
@@ -357,7 +344,8 @@ export default function RiskAnalysis({ setActiveTab }) {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '14px' }}>
                 {corridors.map((c) => {
-                  const tone = scoreTone(c.score);
+                  const level = getRiskLevel(c.score);
+                  const tone = RISK_TONES[level];
                   const m = c.conditions || {};
                   const isSelected = selectedCorridor?.location === c.location;
                   // Real least-squares trend (Slice 15) over this
@@ -373,22 +361,25 @@ export default function RiskAnalysis({ setActiveTab }) {
                       title={isSelected ? `Clear ${c.location} selection` : `Select ${c.location} — shows full detail above`}
                       style={{
                         textAlign: 'left', cursor: 'pointer', font: 'inherit',
-                        background: isSelected ? 'var(--primary-soft)' : 'var(--surface-subtle)',
-                        border: isSelected ? '1px solid var(--accent-cyan)' : '1px solid var(--border)',
-                        borderLeft: `3px solid ${tone.fg}`,
+                        background: isSelected ? 'var(--primary-soft)' : tone.bg,
+                        border: isSelected
+                          ? '1px solid var(--accent-cyan)'
+                          : `${level === 'CRITICAL' ? '2px' : '1px'} solid ${tone.border}`,
                         boxShadow: isSelected ? '0 0 0 1px var(--accent-cyan)' : 'none',
                         padding: '16px',
                         borderRadius: 'var(--radius)',
-                        transition: 'background 0.3s ease, box-shadow 0.3s ease'
+                        transition: 'background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease'
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '4px' }}>
                         <h4 style={{ fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <MapPin size={13} color="var(--text-subtle)" />
+                          {level === 'CRITICAL'
+                            ? <ShieldAlert size={13} color={tone.fg} />
+                            : <MapPin size={13} color="var(--text-subtle)" />}
                           {c.location}
                         </h4>
                         <span className="status-badge" style={{ fontSize: '0.68rem', background: tone.bg, borderColor: tone.border, color: tone.fg }}>
-                          {c.score}/100
+                          {level} · {c.score}/100
                         </span>
                       </div>
                       <p style={{ fontSize: '0.82rem', color: 'var(--text-subtle)', marginBottom: '10px' }}>

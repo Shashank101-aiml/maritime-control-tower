@@ -4,7 +4,7 @@ import {
   Sparkles, Clock, DollarSign, TrendingDown, TrendingUp, Hourglass, XCircle,
   ThumbsUp, ThumbsDown, PenLine, CheckCircle2,
 } from 'lucide-react';
-import { getRiskLevel } from '../types/Risk';
+import { getRiskLevel, RISK_TONES } from '../types/Risk';
 
 /**
  * Real human feedback on a completed decision (Slice 11) -- distinct
@@ -71,12 +71,6 @@ function FeedbackButtons({ feedbackStatus, feedbackError, onSubmit }) {
     </div>
   );
 }
-
-const TONES = {
-  CRITICAL: { fg: 'var(--danger)', bg: 'var(--danger-soft)', border: 'var(--danger-border)' },
-  ELEVATED: { fg: 'var(--warning)', bg: 'var(--warning-soft)', border: 'var(--warning-border)' },
-  NORMAL: { fg: 'var(--success)', bg: 'var(--success-soft)', border: 'var(--success-border)' },
-};
 
 /**
  * Real Decision Agent output (Slice 07) or an honest in-progress /
@@ -199,7 +193,7 @@ export default function RiskCard({
 
   const level = getRiskLevel(risk.risk_score);
   const isCritical = level === 'CRITICAL';
-  const tone = TONES[level] || TONES.NORMAL;
+  const tone = RISK_TONES[level] || RISK_TONES.NORMAL;
 
   return (
     <div className="panel" style={{ borderColor: isCritical ? tone.border : 'var(--border)' }}>
