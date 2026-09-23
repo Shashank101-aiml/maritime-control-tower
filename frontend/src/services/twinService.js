@@ -29,3 +29,54 @@ export const lanesCrossingCorridor = (twin, corridorLocation) => {
     .filter((e) => (e.waypoints || []).includes(corridorLocation))
     .sort((a, b) => (b.risk ?? 0) - (a.risk ?? 0));
 };
+
+/**
+ * Real coordinates for every point a route might pass through: ports
+ * from the digital twin's own nodes, plus every waypoint any edge
+ * actually crosses -- from `twin.waypoints` (backend/app/twin/
+ * digital_twin.py's to_dict()), not the live conditions feed. A
+ * waypoint's coordinate is real either way, live-monitored or not
+ * (e.g. the Strait of Gibraltar has no live sea-state feed at all);
+ * `corridorReadings`, when available, only adds a live severity color
+ * on top for the ones that are actually monitored.
+ */
+export const buildCoordLookup = (twin, corridorReadings) => {
+  const map = {};
+  (twin?.nodes || []).forEach((n) => {
+    if (n.lat != null && n.lon != null) map[n.id] = { lat: n.lat, lon: n.lon, type: 'port' };
+  });
+
+  const severityByName = {};
+  (corridorReadings || []).forEach((r) => {
+    if (r.location) severityByName[r.location] = r.severity;
+  });
+
+  Object.entries(twin?.waypoints || {}).forEach(([name, w]) => {
+    map[name] = { lat: w.lat, lon: w.lon, type: 'corridor', severity: severityByName[name] };
+  });
+
+  return map;
+};
+
+/**
+ * Full ordered geometry for one candidate -- ports AND every real
+ * waypoint each hop's lane actually crosses, in travel order (a
+ * lane's stored waypoints run port_a -> port_b, so they're reversed
+ * when a candidate traverses it the other way).
+ */
+export const lanePathToPoints = (twin, laneIds, origin, coordLookup) => {
+  const points = [];
+  let current = origin;
+  if (coordLookup[current]) points.push({ name: current, ...coordLookup[current] });
+  for (const laneId of laneIds || []) {
+    const edge = twin?.edges?.find((e) => e.lane_id === laneId);
+    if (!edge) break;
+    const forward = edge.port_a === current;
+    const next = forward ? edge.port_b : edge.port_a;
+    const wps = forward ? (edge.waypoints || []) : [...(edge.waypoints || [])].reverse();
+    wps.forEach((name) => { if (coordLookup[name]) points.push({ name, ...coordLookup[name] }); });
+    if (coordLookup[next]) points.push({ name: next, ...coordLookup[next] });
+    current = next;
+  }
+  return points;
+};

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   FlaskConical, RefreshCw, AlertCircle, MapPin, ShieldCheck, ShieldAlert, XOctagon, ArrowRight,
 } from 'lucide-react';
-import { getTwin } from '../services/twinService';
+import { getTwin, buildCoordLookup, lanePathToPoints } from '../services/twinService';
 import { simulateScenario } from '../services/routeService';
 import { getEventHistory } from '../services/eventService';
 import RouteMap from '../components/RouteMap';
@@ -13,37 +13,6 @@ const SCENARIOS = [
   { id: 'MODERATE', label: 'Moderate disruption', description: 'The corridor\'s risk rises to an elevated (70/100) band.' },
   { id: 'SEVERE', label: 'Severe disruption', description: 'Every lane crossing the corridor is treated as impassable.' },
 ];
-
-/** Same real-geometry reconstruction RouteRecommendations.jsx uses --
- *  ports from the digital twin, monitored corridors from the live
- *  conditions feed, in real travel order per hop. */
-const buildCoordLookup = (twin, corridorReadings) => {
-  const map = {};
-  (twin?.nodes || []).forEach((n) => {
-    if (n.lat != null && n.lon != null) map[n.id] = { lat: n.lat, lon: n.lon, type: 'port' };
-  });
-  (corridorReadings || []).forEach((r) => {
-    if (r.coordinates) map[r.location] = { lat: r.coordinates.lat, lon: r.coordinates.lng, type: 'corridor', severity: r.severity };
-  });
-  return map;
-};
-
-const lanePathToPoints = (twin, laneIds, origin, coordLookup) => {
-  const points = [];
-  let current = origin;
-  if (coordLookup[current]) points.push({ name: current, ...coordLookup[current] });
-  for (const laneId of laneIds || []) {
-    const edge = twin?.edges?.find((e) => e.lane_id === laneId);
-    if (!edge) break;
-    const forward = edge.port_a === current;
-    const next = forward ? edge.port_b : edge.port_a;
-    const wps = forward ? (edge.waypoints || []) : [...(edge.waypoints || [])].reverse();
-    wps.forEach((name) => { if (coordLookup[name]) points.push({ name, ...coordLookup[name] }); });
-    if (coordLookup[next]) points.push({ name: next, ...coordLookup[next] });
-    current = next;
-  }
-  return points;
-};
 
 export default function ScenarioSimulator() {
   const [twin, setTwin] = useState(null);

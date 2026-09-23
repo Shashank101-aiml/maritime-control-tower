@@ -3,7 +3,7 @@ import {
   Navigation, ShieldCheck, RefreshCw, AlertCircle, CheckCircle2, MapPin, Sliders, X, Waves,
   Route as RouteIcon, ArrowLeftRight, ShieldAlert, Gauge, DollarSign, Scale, Leaf, Link2,
 } from 'lucide-react';
-import { getTwin, lanesCrossingCorridor } from '../services/twinService';
+import { getTwin, lanesCrossingCorridor, buildCoordLookup, lanePathToPoints } from '../services/twinService';
 import { getCorridorOptionsFor } from '../services/routeService';
 import { getEventHistory } from '../services/eventService';
 import { getSeverityTone, getSeverityLabel } from '../types/Event';
@@ -43,43 +43,6 @@ const lanePathToPorts = (twin, laneIds, origin) => {
     ports.push(current);
   }
   return ports;
-};
-
-/** Real coordinates for every point a route might pass through: ports
- *  from the digital twin's own nodes, monitored corridors from the
- *  live conditions feed (the same data the Selected Corridor panel and
- *  Event Monitor use) -- nothing interpolated or invented. */
-const buildCoordLookup = (twin, corridorReadings) => {
-  const map = {};
-  (twin?.nodes || []).forEach((n) => {
-    if (n.lat != null && n.lon != null) map[n.id] = { lat: n.lat, lon: n.lon, type: 'port' };
-  });
-  (corridorReadings || []).forEach((r) => {
-    if (r.coordinates) map[r.location] = { lat: r.coordinates.lat, lon: r.coordinates.lng, type: 'corridor', severity: r.severity };
-  });
-  return map;
-};
-
-/** Full ordered geometry for one candidate -- ports AND the real
- *  monitored corridors each hop's lane actually crosses, in travel
- *  order (a lane's stored waypoints run port_a -> port_b, so they're
- *  reversed when a candidate traverses it the other way). This is what
- *  RouteMap plots; lanePathToPorts above stays port-only for DelayChart. */
-const lanePathToPoints = (twin, laneIds, origin, coordLookup) => {
-  const points = [];
-  let current = origin;
-  if (coordLookup[current]) points.push({ name: current, ...coordLookup[current] });
-  for (const laneId of laneIds || []) {
-    const edge = twin?.edges?.find((e) => e.lane_id === laneId);
-    if (!edge) break;
-    const forward = edge.port_a === current;
-    const next = forward ? edge.port_b : edge.port_a;
-    const wps = forward ? (edge.waypoints || []) : [...(edge.waypoints || [])].reverse();
-    wps.forEach((name) => { if (coordLookup[name]) points.push({ name, ...coordLookup[name] }); });
-    if (coordLookup[next]) points.push({ name: next, ...coordLookup[next] });
-    current = next;
-  }
-  return points;
 };
 
 export default function RouteRecommendations({ setActiveTab }) {

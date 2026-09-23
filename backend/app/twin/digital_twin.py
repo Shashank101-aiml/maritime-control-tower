@@ -38,7 +38,7 @@ from app.agents.ingestion.live_conditions_client import (
     LiveConditionsClient,
 )
 from app.core.logging import get_logger
-from app.twin.coordinates import PORT_COORDINATES
+from app.twin.coordinates import EXTRA_WAYPOINT_COORDINATES, PORT_COORDINATES
 from app.twin.lanes import SHIPPING_LANES
 
 logger = get_logger(__name__)
@@ -47,8 +47,16 @@ PORT_CONGESTION_CSV = (
     Path(__file__).resolve().parents[3] / "data" / "cleaned" / "port_congestion.csv"
 )
 
+# Names that are live-monitored (Open-Meteo sea-state feed) vs. real
+# but geometry-only waypoints (see coordinates.py) -- kept as two
+# source dicts merged here so a caller can still tell which is which
+# (annotate_risk() only ever looks a name up in live corridor_scores,
+# so a geometry-only name simply never matches and never fabricates a
+# risk score; to_dict() reports the distinction explicitly instead).
+_MONITORED_WAYPOINT_NAMES = {loc["name"] for loc in MONITORED_LOCATIONS}
 WAYPOINT_COORDINATES: Dict[str, tuple] = {
-    loc["name"]: (loc["lat"], loc["lon"]) for loc in MONITORED_LOCATIONS
+    **{loc["name"]: (loc["lat"], loc["lon"]) for loc in MONITORED_LOCATIONS},
+    **EXTRA_WAYPOINT_COORDINATES,
 }
 
 EARTH_RADIUS_NM = 3440.065  # nautical miles
@@ -157,6 +165,8 @@ class DigitalTwin:
                 lane.port_b,
                 key=lane.lane_id,
                 lane_id=lane.lane_id,
+                lane_port_a=lane.port_a,
+                lane_port_b=lane.port_b,
                 waypoints=list(lane.waypoints),
                 distance_nm=round(distance_nm),
                 transit_days=round(transit_days, 1),
@@ -235,11 +245,36 @@ class DigitalTwin:
         nodes = [
             {"id": port, **attrs} for port, attrs in self.graph.nodes(data=True)
         ]
+        # NetworkX yields an undirected edge's endpoints in node-insertion
+        # order, which can be the reverse of the lane's own direction --
+        # but `waypoints` are stored port_a -> port_b, so the endpoints
+        # reported here must be the lane's, or a client walking the lane
+        # draws its waypoints backwards.
         edges = [
-            {"port_a": a, "port_b": b, **attrs}
-            for a, b, attrs in self.graph.edges(data=True)
+            {**attrs, "port_a": attrs["lane_port_a"], "port_b": attrs["lane_port_b"]}
+            for _, _, attrs in self.graph.edges(data=True)
         ]
-        return {"nodes": nodes, "edges": edges}
+
+        # Real coordinates for every waypoint an edge actually crosses,
+        # regardless of whether it's currently reporting live sea-state
+        # -- geometry (where a lane's line is drawn) shouldn't depend on
+        # the live feed being up, and a geometry-only waypoint like the
+        # Strait of Gibraltar never has a live reading in the first
+        # place. `is_monitored` tells the caller which is which, so a
+        # live severity color can still only be applied to a real
+        # monitored corridor.
+        used_names = {name for _, _, attrs in self.graph.edges(data=True) for name in attrs["waypoints"]}
+        waypoints = {
+            name: {
+                "lat": WAYPOINT_COORDINATES[name][0],
+                "lon": WAYPOINT_COORDINATES[name][1],
+                "is_monitored": name in _MONITORED_WAYPOINT_NAMES,
+            }
+            for name in used_names
+            if name in WAYPOINT_COORDINATES
+        }
+
+        return {"nodes": nodes, "edges": edges, "waypoints": waypoints}
 
 
 _shared_twin: Optional[DigitalTwin] = None

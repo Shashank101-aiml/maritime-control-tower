@@ -42,36 +42,42 @@ SHIPPING_LANES: List[Lane] = [
     Lane("hongkong-losangeles", "Hong Kong", "Los Angeles", []),
 
     # --- Asia - Europe via Suez ---
+    # The real track continues past Suez through the Mediterranean and
+    # out into the Atlantic via Gibraltar, then up the Iberian coast,
+    # across Biscay and through the Channel; without those waypoints the
+    # plotted line jumped straight from Suez to the destination, cutting
+    # across Europe. Everything after Suez is geometry only (no live feed
+    # except the Dover corridor).
     Lane("shanghai-rotterdam-suez", "Shanghai", "Rotterdam",
-         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)"]),
+         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar", "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)"]),
     Lane("shanghai-hamburg-suez", "Shanghai", "Hamburg",
-         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)"]),
+         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar", "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)", "Southern North Sea", "German Bight"]),
     Lane("ningbo-rotterdam-suez", "Ningbo", "Rotterdam",
-         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)"]),
+         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar", "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)"]),
     Lane("singapore-rotterdam-suez", "Singapore", "Rotterdam",
-         ["Gulf of Aden", "Suez Canal (Gulf of Suez)"]),
+         ["Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar", "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)"]),
     Lane("hongkong-felixstowe-suez", "Hong Kong", "Felixstowe",
-         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)"]),
+         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar", "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)"]),
 
     # --- Asia - Europe via Cape of Good Hope (real alternative to Suez) ---
     Lane("shanghai-rotterdam-cape", "Shanghai", "Rotterdam",
-         ["Strait of Malacca", "Cape of Good Hope"]),
+         ["Strait of Malacca", "Cape of Good Hope", "Off Cape Verde", "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)"]),
     Lane("singapore-rotterdam-cape", "Singapore", "Rotterdam",
-         ["Cape of Good Hope"]),
+         ["Cape of Good Hope", "Off Cape Verde", "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)"]),
 
     # --- Middle East ---
     Lane("dubai-singapore", "Dubai (Jebel Ali)", "Singapore",
          ["Strait of Hormuz", "Arabian Sea"]),
     Lane("dubai-rotterdam", "Dubai (Jebel Ali)", "Rotterdam",
-         ["Strait of Hormuz", "Gulf of Aden", "Suez Canal (Gulf of Suez)"]),
+         ["Strait of Hormuz", "Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar", "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)"]),
     Lane("dubai-colombo", "Dubai (Jebel Ali)", "Colombo",
          ["Strait of Hormuz", "Arabian Sea"]),
 
     # --- Asia - US East Coast via Suez ---
     Lane("shanghai-newyork-suez", "Shanghai", "New York",
-         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)"]),
+         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar"]),
     Lane("ningbo-newyork-suez", "Ningbo", "New York",
-         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)"]),
+         ["Strait of Malacca", "Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar"]),
 
     # --- Intra-Southeast/South Asia ---
     Lane("singapore-colombo", "Singapore", "Colombo", []),

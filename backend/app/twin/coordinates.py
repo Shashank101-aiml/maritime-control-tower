@@ -40,3 +40,29 @@ PORT_COORDINATES: Dict[str, Tuple[float, float]] = {
     "Tanjung Pelepas": (1.36, 103.55),
     "Tanjung Priok": (-6.10, 106.88),
 }
+
+# Real maritime chokepoints used purely for route *geometry* -- summing
+# great-circle segments through a named waypoint like this is how
+# digital_twin.py keeps a lane's plotted path from cutting across land,
+# same idea as the 8 corridors in MONITORED_LOCATIONS. These aren't
+# live sea-state monitored (no Open-Meteo feed keyed to them), so they
+# carry no severity/live risk -- geometry only, kept separate from
+# MONITORED_LOCATIONS so that distinction stays explicit rather than
+# quietly implying a live reading exists where none does.
+#
+# Added because every Suez<->Atlantic lane (Europe or US East Coast)
+# jumped straight from the Suez Canal waypoint to the destination port
+# with nothing in between -- a straight line over that span cuts across
+# Southern/Eastern Europe instead of following the real track out
+# through the Strait of Gibraltar.
+EXTRA_WAYPOINT_COORDINATES: Dict[str, Tuple[float, float]] = {
+    "Strait of Gibraltar": (36.00, -5.60),
+    # Offshore points that keep the Iberian / Biscay / West Africa legs
+    # over water instead of cutting a corner across land.
+    "Cape St. Vincent": (36.90, -10.00),
+    "Cape Finisterre": (43.00, -10.50),
+    "Ushant": (48.60, -5.80),
+    "Off Cape Verde": (15.00, -25.00),
+    "Southern North Sea": (52.60, 3.20),
+    "German Bight": (54.00, 7.50),
+}
