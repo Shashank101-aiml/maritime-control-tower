@@ -52,7 +52,9 @@ services:
       # than the agents above).
       - ./data:/data:ro
     env_file:
-      - ./backend/.env
+      # The project's single env file (also what compose reads for the
+      # ${...} substitutions above).
+      - ./.env
     environment:
       # Overrides the .env value so the container talks to the db
       # service rather than a host-local SQLite file.

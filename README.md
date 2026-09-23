@@ -57,7 +57,7 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-4. Create a `.env` file in `backend/app` or project root with required config:
+4. Create the project's single `.env` in the repo root (`cp .env.example .env`) and fill it in. It holds every setting -- backend, database, external API keys and the frontend's `VITE_*` origin -- and is read by Docker Compose, the backend and Vite:
 
 ```text
 SECRET_KEY=...

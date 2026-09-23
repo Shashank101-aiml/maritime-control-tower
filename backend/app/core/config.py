@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Dict, List, Optional
 from typing_extensions import Annotated
 
@@ -83,8 +84,14 @@ class Settings(BaseSettings):
         return value
 
     class Config:
-        env_file = ".env"
+        # The project's single .env lives at the repo root (backend/app/core
+        # -> parents[3]). In Docker the file isn't in the image; compose
+        # injects the same variables through env_file instead.
+        env_file = str(Path(__file__).resolve().parents[3] / ".env")
         env_file_encoding = "utf-8"
+        # The shared file also holds POSTGRES_* and VITE_* keys that
+        # belong to other services, not to these settings.
+        extra = "ignore"
 
 
 settings = Settings()
