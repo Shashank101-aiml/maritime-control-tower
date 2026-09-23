@@ -29,6 +29,7 @@ PROTECTED = [
     ("get", "/api/vessels"),
     ("get", "/api/events"),
     ("get", "/api/run-workflow"),
+    ("get", "/api/news"),
 ]
 
 

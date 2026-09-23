@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Radio, Filter, RefreshCw, AlertTriangle, MapPin, X, Waves, Info, Navigation, Clock, Newspaper, Tag,
 } from 'lucide-react';
@@ -9,6 +9,19 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import { SEVERITY_LEVELS, getSeverityTone, getSeverityLabel } from '../types/Event';
 import FreshnessIndicator from '../components/FreshnessIndicator';
 import { useCorridorContext } from '../context/CorridorContext';
+import { getNews } from '../services/newsService';
+
+const NEWS_POLL_MS = 5 * 60 * 1000;
+
+/** "2026-09-23T10:00:00Z" -> "23 Sep, 10:00 UTC" */
+const formatPublished = (value) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toLocaleString('en-GB', {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hour12: false,
+  }) + ' UTC';
+};
 
 /** "2026-09-01T11:00" -> "11:00 UTC"; passes anything unparsable through. */
 const formatTime = (value) => {
@@ -50,13 +63,6 @@ export default function EventMonitor() {
     freshness
   } = useEvents();
 
-  // Real news articles (NewsAPI) already fetched by the backend
-  // alongside the latest ingested event, each carrying real structured
-  // understanding (category + matched real locations) from the Event
-  // Understanding Agent -- reusing data already in context, no new
-  // network call.
-  const relatedNews = events?.[0]?.related_news ?? [];
-
   // Shared across tabs (see CorridorContext.jsx). This page both reads a
   // selection made elsewhere (to drive the dedicated status panel below)
   // and writes one from the Corridor Status list further down -- so a
@@ -65,6 +71,31 @@ export default function EventMonitor() {
   // origin/destination, exactly as a selection made on Vessel Tracking
   // shows up here.
   const { selectedCorridor, selectCorridor, clearCorridor } = useCorridorContext();
+
+  // Real NewsAPI articles from the backend's cached feed (/api/news),
+  // newest first and tagged by the Event Understanding Agent. Follows the
+  // selected corridor when there is one, and re-polls so the panel keeps
+  // moving with the news instead of freezing on whatever loaded first.
+  const [news, setNews] = useState(null);
+  const [newsError, setNewsError] = useState(null);
+  const selectedLocation = selectedCorridor?.location ?? null;
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const feed = await getNews(selectedLocation);
+        if (!cancelled) { setNews(feed); setNewsError(null); }
+      } catch (err) {
+        if (!cancelled) setNewsError(err.message);
+      }
+    };
+    load();
+    const timer = setInterval(load, NEWS_POLL_MS);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [selectedLocation]);
+
+  const relatedNews = news?.articles ?? [];
   const corridorFiltered = selectedCorridor
     ? eventHistory.filter((evt) => evt.location === selectedCorridor.location)
     : eventHistory;
@@ -274,24 +305,36 @@ export default function EventMonitor() {
             )}
           </div>
 
-          {/* Related news -- real NewsAPI articles the backend already
-              fetched alongside the latest ingested event, each
-              classified by the real Event Understanding Agent (TF-IDF
-              similarity against explicit reference terms, not an
-              invented label) and checked against this system's own
-              real port/corridor names, not generic NER that would
-              recognize places this system can't act on. */}
-          {relatedNews.length > 0 && (
+          {/* Related news -- real NewsAPI articles, newest first, from the
+              backend's cached feed. Each is classified by the Event
+              Understanding Agent (TF-IDF similarity against explicit
+              reference terms, not an invented label) and checked against
+              this system's own real port/corridor names. */}
+          {news?.configured !== false && (news || newsError) && (
             <div className="panel" style={{ marginTop: '20px' }}>
               <div className="section-header">
                 <h3 className="section-title">
                   <Newspaper size={17} color="var(--accent-amber)" />
-                  Related news ({relatedNews.length})
+                  {selectedLocation ? `News: ${selectedLocation}` : 'Maritime news'} ({relatedNews.length})
                 </h3>
+                {news?.fetched_at && (
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-subtle)' }}>
+                    Updated {formatTime(news.fetched_at)}{news.stale ? ' · showing last successful update' : ''}
+                  </span>
+                )}
               </div>
+              {newsError && !news && (
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-subtle)' }}>Could not load news: {newsError}</p>
+              )}
+              {news && relatedNews.length === 0 && (
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-subtle)' }}>
+                  No shipping news mentioning {selectedLocation ?? 'the monitored corridors'} in the last 7 days.
+                </p>
+              )}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {relatedNews.map((article, i) => {
                   const u = article.understanding;
+                  const published = formatPublished(article.published_at);
                   return (
                     <a
                       key={article.url || i}
@@ -305,7 +348,7 @@ export default function EventMonitor() {
                         {article.title}
                       </div>
                       <div style={{ fontSize: '0.72rem', color: 'var(--text-subtle)', marginBottom: u ? '6px' : 0 }}>
-                        {article.source}
+                        {article.source}{published ? ` · ${published}` : ''}
                       </div>
                       {u && (
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>

@@ -11,6 +11,7 @@ from app.agents.ingestion.news_client import NewsClient
 from app.agents.understanding.event_understanding_agent import EventUnderstandingAgent
 from app.core.config import settings
 from app.main import app
+from app.services import news_service
 
 client = TestClient(app)
 with client:
@@ -59,9 +60,10 @@ class TestEventUnderstandingAgent:
 class TestIngestionAgentNewsUnderstanding:
     def test_each_related_news_article_gets_real_understanding(self, monkeypatch):
         monkeypatch.setattr(settings, "NEWS_API_KEY", "test-key")
+        news_service.reset_cache()
         monkeypatch.setattr(
             NewsClient, "fetch_news",
-            lambda self, query=None, limit=10, language="en": [
+            lambda self, query=None, limit=10, language="en", **kwargs: [
                 {"title": "Storm closes Suez Canal to shipping", "description": None, "content": None,
                  "source": "Test Wire", "url": "https://example.com/1", "published_at": None},
             ],

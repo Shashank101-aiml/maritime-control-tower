@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     WEATHER_API_KEY: Optional[str] = None
     NEWS_API_KEY: Optional[str] = None
+    # A news refresh is cached this long. It costs up to 2 NewsAPI requests
+    # and the free tier allows 100/day, so 3600s (<= 48/day) leaves headroom.
+    NEWS_CACHE_TTL_SECONDS: int = 3600
+    NEWS_LOOKBACK_DAYS: int = 7
     # Live sea-state ingestion via Open-Meteo. Needs no API key; set false
     # to run fully offline (tests, air-gapped demos).
     ENABLE_LIVE_INGESTION: bool = True

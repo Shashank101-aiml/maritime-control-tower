@@ -2,12 +2,11 @@ from typing import Any, Dict, Optional
 
 from app.agents.ingestion.live_conditions_client import LiveConditionsClient
 from app.agents.ingestion.maritime_client import MaritimeClient
-from app.agents.ingestion.news_client import NewsClient
 from app.agents.ingestion.weather_client import WeatherClient
-from app.agents.understanding.event_understanding_agent import EventUnderstandingAgent
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.schemas.agent_io import IngestedEvent
+from app.services.news_service import articles_for_location
 
 logger = get_logger(__name__)
 
@@ -23,14 +22,11 @@ class IngestionAgent:
         self,
         maritime_client: Optional[MaritimeClient] = None,
         weather_client: Optional[WeatherClient] = None,
-        news_client: Optional[NewsClient] = None,
         live_client: Optional[LiveConditionsClient] = None,
     ) -> None:
         self.maritime_client = maritime_client or MaritimeClient()
         self.weather_client = weather_client or WeatherClient(api_key=settings.WEATHER_API_KEY)
-        self.news_client = news_client or NewsClient(api_key=settings.NEWS_API_KEY)
         self.live_client = live_client or LiveConditionsClient()
-        self.understanding_agent = EventUnderstandingAgent()
 
     def collect_data(self, source_payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Dict form, for the HTTP routes (dashboard/events/risks) that
@@ -100,30 +96,17 @@ class IngestionAgent:
             return None
 
     def _collect_news(self, location: Optional[str]) -> list:
+        """Recent articles about this corridor, from the shared cached feed
+        (app/services/news_service.py) -- already newest-first and tagged
+        by the Event Understanding Agent, and never a per-call NewsAPI
+        request. Failures degrade to an empty list, not a broken ingestion."""
         if not settings.NEWS_API_KEY:
             return []
         try:
-            # The synthesized event_type ("Moderate Swell & Strong
-            # Winds") used to be appended verbatim here -- a wave-height
-            # description, not a phrase anyone writes news about, so it
-            # matched real headlines only by coincidence. The corridor's
-            # real location name is what actually shows up in shipping
-            # news (Suez, Hormuz, Gulf of Aden...); pair it with generic
-            # maritime terms rather than searching for the description.
-            query = f'"{location}" AND (shipping OR maritime OR vessel)' if location else None
-            articles = self.news_client.fetch_news(query=query, limit=5)
-        except Exception as exc:  # network/API failures shouldn't break ingestion
+            return articles_for_location(location, limit=5)
+        except Exception as exc:
             logger.warning("News enrichment failed: %s", exc)
             return []
-
-        # Slice 07 (Event Understanding, spec section 7): structured
-        # category + real-location extraction over each article's own
-        # text, not the whole article handed to an LLM for what's
-        # fundamentally text classification.
-        for article in articles:
-            text = " ".join(filter(None, [article.get("title"), article.get("description"), article.get("content")]))
-            article["understanding"] = self.understanding_agent.analyze(text).model_dump()
-        return articles
 
     def _normalize_event(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         return {
