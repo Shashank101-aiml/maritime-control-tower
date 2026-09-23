@@ -12,6 +12,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.api.dependencies.database import get_db
+from app.core.constants import UserRole
 from app.core.security import decode_access_token
 from app.models.user import User
 
@@ -52,13 +53,43 @@ def get_current_active_user(current_user: User = Depends(get_current_user)) -> U
     return current_user
 
 
+# Higher rank includes every permission of the ranks below it.
+ROLE_RANK = {UserRole.OPERATOR: 1, UserRole.SUPERVISOR: 2, UserRole.ADMIN: 3}
+
+
+def effective_role(user: User) -> UserRole:
+    """The superuser flag always means admin, even if `role` was left at its
+    default -- so an account can never hold admin power without the role."""
+    if user.is_superuser:
+        return UserRole.ADMIN
+    try:
+        return UserRole(user.role)
+    except ValueError:
+        return UserRole.OPERATOR
+
+
+def require_role(minimum: UserRole):
+    """Dependency factory: 403 unless the signed-in user's role is at least
+    `minimum` (operator < supervisor < admin)."""
+
+    def dependency(current_user: User = Depends(get_current_active_user)) -> User:
+        if ROLE_RANK[effective_role(current_user)] < ROLE_RANK[minimum]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Requires the {minimum.value} role or higher",
+            )
+        return current_user
+
+    return dependency
+
+
 def get_current_active_superuser(
     current_user: User = Depends(get_current_active_user),
 ) -> User:
-    """Reserved for destructive operations (quarantining agents, etc.)."""
-    if not current_user.is_superuser:
+    """Admin-only: quarantining agents and managing users."""
+    if effective_role(current_user) != UserRole.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient privileges",
+            detail="Requires the admin role",
         )
     return current_user

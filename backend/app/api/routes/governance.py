@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
-from app.api.dependencies.auth import get_current_active_superuser
+from app.api.dependencies.auth import get_current_active_superuser, require_role
+from app.core.constants import UserRole
 from app.api.dependencies.database import get_db
 from app.models.governance import AgentIdentity, AgentExecutionTrace, AuditLog, ApprovalRequest, AgentHealth
 from app.models.user import User
@@ -39,12 +40,12 @@ def read_agents(db: Session = Depends(get_db)):
         })
     return result
 
-@router.get("/executions")
+@router.get("/executions", dependencies=[Depends(require_role(UserRole.SUPERVISOR))])
 def read_executions(db: Session = Depends(get_db)):
     executions = db.query(AgentExecutionTrace).order_by(AgentExecutionTrace.started_at.desc()).limit(50).all()
     return executions
 
-@router.get("/audit")
+@router.get("/audit", dependencies=[Depends(require_role(UserRole.SUPERVISOR))])
 def read_audit(db: Session = Depends(get_db)):
     logs = db.query(AuditLog).order_by(AuditLog.timestamp.desc()).limit(100).all()
     return logs
@@ -70,19 +71,27 @@ def read_approvals(db: Session = Depends(get_db)):
     return result
 
 @router.post("/approvals/{approval_id}/approve")
-def approve_request(approval_id: int, db: Session = Depends(get_db)):
+def approve_request(
+    approval_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.SUPERVISOR)),
+):
     try:
-        app = resolve_approval(db, approval_id, "APPROVED", "USER")
-        log_audit_event(db, "APPROVAL_GRANTED", app.agent_id, app.execution_id, "USER", "APPROVAL", "APPROVE", "APPROVED")
+        app = resolve_approval(db, approval_id, "APPROVED", current_user.username)
+        log_audit_event(db, "APPROVAL_GRANTED", app.agent_id, app.execution_id, current_user.username, "APPROVAL", "APPROVE", "APPROVED")
         return {"status": "success"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 @router.post("/approvals/{approval_id}/reject")
-def reject_request(approval_id: int, db: Session = Depends(get_db)):
+def reject_request(
+    approval_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role(UserRole.SUPERVISOR)),
+):
     try:
-        app = resolve_approval(db, approval_id, "REJECTED", "USER")
-        log_audit_event(db, "APPROVAL_REJECTED", app.agent_id, app.execution_id, "USER", "APPROVAL", "REJECT", "REJECTED")
+        app = resolve_approval(db, approval_id, "REJECTED", current_user.username)
+        log_audit_event(db, "APPROVAL_REJECTED", app.agent_id, app.execution_id, current_user.username, "APPROVAL", "REJECT", "REJECTED")
         return {"status": "success"}
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -95,7 +104,7 @@ def update_agent_status(
     current_user: User = Depends(get_current_active_superuser),
 ):
     """Quarantining or re-enabling an agent halts or resumes the whole
-    pipeline, so it requires a superuser rather than any signed-in user.
+    pipeline, so it is admin-only.
     """
     agent = db.query(AgentIdentity).filter(AgentIdentity.id == agent_id).first()
     if not agent:

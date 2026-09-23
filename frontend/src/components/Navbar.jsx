@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Anchor, Clock, User as UserIcon, LogOut } from 'lucide-react';
+import { roleOf, ROLE_LABELS } from '../utils/permissions';
 
 const formatUtc = (date) =>
   date.toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
@@ -60,10 +61,13 @@ export default function Navbar({ backendOnline, onBrandClick, user, onSignOut })
           <button
             className="user-chip"
             onClick={onSignOut}
-            title={`Signed in as ${user.username}${user.is_superuser ? ' (admin)' : ''} — click to sign out`}
+            title={`Signed in as ${user.username} (${ROLE_LABELS[roleOf(user)]}) — click to sign out`}
           >
             <UserIcon size={13} />
             {user.username}
+            <span style={{ fontSize: '0.66rem', textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.75 }}>
+              {ROLE_LABELS[roleOf(user)]}
+            </span>
             <LogOut size={13} />
           </button>
         )}

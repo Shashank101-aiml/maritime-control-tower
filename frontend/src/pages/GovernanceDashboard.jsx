@@ -9,8 +9,15 @@ import {
   rejectGovernanceRequest,
   updateAgentStatus
 } from '../services/api';
+import { can, roleOf, ROLE_LABELS } from '../utils/permissions';
 
-export default function GovernanceDashboard() {
+export default function GovernanceDashboard({ user }) {
+  // What this role may see and do. The backend enforces the same rules;
+  // this only keeps controls the server would reject off the screen.
+  const canApprove = can(user, 'approveActions');
+  const canAudit = can(user, 'viewAuditTrail');
+  const canManageAgents = can(user, 'manageAgents');
+
   const [agents, setAgents] = useState([]);
   const [executions, setExecutions] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
@@ -36,8 +43,8 @@ export default function GovernanceDashboard() {
     try {
       const [agData, exData, auData, apData] = await Promise.all([
         fetchGovernanceAgents(),
-        fetchGovernanceExecutions(),
-        fetchGovernanceAudit(),
+        canAudit ? fetchGovernanceExecutions() : Promise.resolve([]),
+        canAudit ? fetchGovernanceAudit() : Promise.resolve([]),
         fetchGovernanceApprovals()
       ]);
       if (seq !== requestSeqRef.current) return; // superseded by a newer request
@@ -96,15 +103,16 @@ export default function GovernanceDashboard() {
           </h1>
           <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>
             Centralized authorization, human-in-the-loop workflows, and audit trail for autonomous agents.
+            {' '}Signed in as <strong>{ROLE_LABELS[roleOf(user)]}</strong>.
           </p>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
         <MetricCard title="Total Agents" value={agents.length} icon={<Cpu />} />
-        <MetricCard title="Active Executions" value={executions.length} icon={<Activity />} />
+        <MetricCard title="Active Executions" value={canAudit ? executions.length : '—'} icon={<Activity />} />
         <MetricCard title="Pending Approvals" value={approvals.length} icon={<AlertTriangle color="var(--accent-amber)" />} />
-        <MetricCard title="Policy Violations" value={auditLogs.filter(l => l.event_type === 'POLICY_VIOLATION').length} icon={<Lock color="var(--accent-red)" />} />
+        <MetricCard title="Policy Violations" value={canAudit ? auditLogs.filter(l => l.event_type === 'POLICY_VIOLATION').length : '—'} icon={<Lock color="var(--accent-red)" />} />
       </div>
 
       <div className="panel" style={{ padding: '0', display: 'flex', flexDirection: 'column' }}>
@@ -113,15 +121,19 @@ export default function GovernanceDashboard() {
           <TabButton active={activeTab === 'approvals'} onClick={() => setActiveTab('approvals')}>
             Human Approvals {approvals.length > 0 && <span style={{ background: 'var(--accent-red)', color: 'var(--text-strong)', padding: '2px 6px', borderRadius: '10px', fontSize: '0.75rem', marginLeft: '6px' }}>{approvals.length}</span>}
           </TabButton>
-          <TabButton active={activeTab === 'executions'} onClick={() => setActiveTab('executions')}>Execution Trace</TabButton>
-          <TabButton active={activeTab === 'audit'} onClick={() => setActiveTab('audit')}>Audit Log</TabButton>
+          {canAudit && (
+            <>
+              <TabButton active={activeTab === 'executions'} onClick={() => setActiveTab('executions')}>Execution Trace</TabButton>
+              <TabButton active={activeTab === 'audit'} onClick={() => setActiveTab('audit')}>Audit Log</TabButton>
+            </>
+          )}
         </div>
 
         <div style={{ padding: '20px' }}>
-          {activeTab === 'registry' && <AgentRegistryTable agents={agents} onStatusChange={handleStatusChange} />}
-          {activeTab === 'approvals' && <PendingApprovals approvals={approvals} onApprove={handleApprove} onReject={handleReject} />}
-          {activeTab === 'executions' && <ExecutionTrace executions={executions} />}
-          {activeTab === 'audit' && <AuditLogTable logs={auditLogs} />}
+          {activeTab === 'registry' && <AgentRegistryTable agents={agents} onStatusChange={handleStatusChange} canManage={canManageAgents} />}
+          {activeTab === 'approvals' && <PendingApprovals approvals={approvals} onApprove={handleApprove} onReject={handleReject} canApprove={canApprove} />}
+          {canAudit && activeTab === 'executions' && <ExecutionTrace executions={executions} />}
+          {canAudit && activeTab === 'audit' && <AuditLogTable logs={auditLogs} />}
         </div>
       </div>
     </div>
@@ -163,7 +175,7 @@ function TabButton({ children, active, onClick }) {
   );
 }
 
-function AgentRegistryTable({ agents, onStatusChange }) {
+function AgentRegistryTable({ agents, onStatusChange, canManage }) {
   return (
     <table style={{ width: '100%', borderCollapse: 'collapse', color: 'var(--text-light)' }}>
       <thead>
@@ -207,7 +219,9 @@ function AgentRegistryTable({ agents, onStatusChange }) {
               <Badge color={a.status === 'ACTIVE' ? 'var(--accent-cyan)' : 'var(--accent-amber)'}>{a.status}</Badge>
             </td>
             <td style={{ padding: '12px 8px' }}>
-              {a.status === 'ACTIVE' ? (
+              {!canManage ? (
+                <span style={{ color: 'var(--text-muted)' }} title="Only admins can quarantine or re-enable agents">—</span>
+              ) : a.status === 'ACTIVE' ? (
                 <button 
                   onClick={() => onStatusChange(a.id, 'QUARANTINED')}
                   style={{ background: 'var(--accent-red)', color: 'var(--text-strong)', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem' }}>
@@ -228,12 +242,17 @@ function AgentRegistryTable({ agents, onStatusChange }) {
   );
 }
 
-function PendingApprovals({ approvals, onApprove, onReject }) {
+function PendingApprovals({ approvals, onApprove, onReject, canApprove }) {
   if (approvals.length === 0) {
     return <div style={{ color: 'var(--text-muted)', padding: '20px', textAlign: 'center' }}>No pending approvals.</div>;
   }
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      {!canApprove && (
+        <div role="note" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '10px 14px', border: '1px solid var(--border-light)', borderRadius: '6px' }}>
+          You can see what is waiting, but only supervisors and admins can approve or reject agent actions.
+        </div>
+      )}
       {approvals.map(a => (
         <div key={a.id} style={{ border: '1px solid var(--accent-amber)', borderRadius: '8px', padding: '16px', background: 'var(--warning-soft)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -253,7 +272,7 @@ function PendingApprovals({ approvals, onApprove, onReject }) {
             <strong>Reason:</strong> {a.reason}
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          {canApprove && <div style={{ display: 'flex', gap: '12px' }}>
             <button 
               onClick={() => onApprove(a.id)}
               style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--accent-emerald)', color: '#ffffff', fontWeight: 'bold', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
@@ -264,7 +283,7 @@ function PendingApprovals({ approvals, onApprove, onReject }) {
               style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'transparent', color: 'var(--accent-red)', border: '1px solid var(--accent-red)', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
               <XCircle size={16} /> Reject
             </button>
-          </div>
+          </div>}
         </div>
       ))}
     </div>

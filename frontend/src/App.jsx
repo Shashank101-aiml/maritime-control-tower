@@ -14,6 +14,8 @@ import GovernanceDashboard from './pages/GovernanceDashboard';
 import CongestionPredictor from './pages/CongestionPredictor';
 import DelayPredictor from './pages/DelayPredictor';
 import FuelEfficiencyPredictor from './pages/FuelEfficiencyPredictor';
+import UserManagement from './pages/UserManagement';
+import { can } from './utils/permissions';
 import { fetchCurrentUser, logout } from './services/authService';
 import { AUTH_EXPIRED_EVENT } from './services/apiClient';
 import './index.css';
@@ -75,7 +77,12 @@ export default function App() {
       case 'fuel':
         return <FuelEfficiencyPredictor />;
       case 'governance':
-        return <GovernanceDashboard />;
+        return <GovernanceDashboard user={user} />;
+      case 'users':
+        // Hidden from the sidebar for other roles; this also covers a stale tab.
+        return can(user, 'manageUsers')
+          ? <UserManagement currentUser={user} />
+          : <Dashboard activeTab="dashboard" setActiveTab={setActiveTab} />;
       case 'settings':
         return <Settings />;
       default:

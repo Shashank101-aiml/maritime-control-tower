@@ -30,6 +30,7 @@ from app.api.routes.delay import router as delay_router
 from app.api.routes.fuel import router as fuel_router
 from app.api.routes.twin import router as twin_router
 from app.api.routes.news import router as news_router
+from app.api.routes.users import router as users_router
 from app.api.routes.route import router as route_optimization_router
 from app.api.routes.simulation import router as simulation_router
 from app.api.routes.anomaly import router as anomaly_router
@@ -234,6 +235,7 @@ app.include_router(delay_router, prefix="/api", tags=["delay"], dependencies=pro
 app.include_router(fuel_router, prefix="/api", tags=["fuel"], dependencies=protected)
 app.include_router(twin_router, prefix="/api", tags=["twin"], dependencies=protected)
 app.include_router(news_router, prefix="/api", tags=["news"], dependencies=protected)
+app.include_router(users_router, prefix="/api", tags=["users"], dependencies=protected)
 app.include_router(route_optimization_router, prefix="/api", tags=["route"], dependencies=protected)
 app.include_router(simulation_router, prefix="/api", tags=["simulation"], dependencies=protected)
 app.include_router(anomaly_router, prefix="/api", tags=["anomaly"], dependencies=protected)

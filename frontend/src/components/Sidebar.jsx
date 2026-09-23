@@ -1,8 +1,9 @@
 import React from 'react';
 import {
   Activity, Ship, Radio, ShieldAlert, Navigation, Anchor, Clock, Fuel,
-  Cpu, ScrollText, Settings as SettingsIcon, Circle, FlaskConical, BarChart3
+  Cpu, ScrollText, Settings as SettingsIcon, Circle, FlaskConical, BarChart3, Users
 } from 'lucide-react';
+import { hasRole } from '../utils/permissions';
 
 const NAV_GROUPS = [
   {
@@ -35,16 +36,22 @@ const NAV_GROUPS = [
       { id: 'workflow', label: 'Agent Pipeline', icon: Cpu },
       { id: 'governance', label: 'Governance', icon: ScrollText },
       { id: 'evaluation', label: 'Evaluation', icon: BarChart3 },
+      { id: 'users', label: 'User Management', icon: Users, minRole: 'admin' },
       { id: 'settings', label: 'Settings', icon: SettingsIcon },
     ],
   },
 ];
 
-export default function Sidebar({ activeTab, setActiveTab, backendOnline }) {
+export default function Sidebar({ activeTab, setActiveTab, backendOnline, user }) {
+  // Items above the signed-in user's role are not shown at all.
+  const visibleGroups = NAV_GROUPS
+    .map((group) => ({ ...group, items: group.items.filter((item) => !item.minRole || hasRole(user, item.minRole)) }))
+    .filter((group) => group.items.length > 0);
+
   return (
     <aside className="sidebar">
       <nav className="sidebar-nav">
-        {NAV_GROUPS.map((group) => (
+        {visibleGroups.map((group) => (
           <div className="nav-group" key={group.label}>
             <div className="nav-group-label">{group.label}</div>
             {group.items.map((item) => {

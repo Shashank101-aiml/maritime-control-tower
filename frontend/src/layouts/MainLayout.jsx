@@ -53,6 +53,7 @@ const MainContentWrapper = ({ activeTab, setActiveTab, onExitToLanding, user, on
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           backendOnline={backendOnline}
+          user={user}
         />
         <main className="main-content">
           <AlertBanner
