@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Activity, Ship, Radio, ShieldAlert, Navigation, Anchor, Clock, Fuel,
-  Cpu, ScrollText, Settings as SettingsIcon, Circle, FlaskConical, BarChart3, Users
+  Cpu, ScrollText, Settings as SettingsIcon, Circle, FlaskConical, BarChart3, Users, Container
 } from 'lucide-react';
 import { hasRole } from '../utils/permissions';
 
@@ -11,6 +11,7 @@ const NAV_GROUPS = [
     items: [
       { id: 'dashboard', label: 'Fleet Overview', icon: Activity },
       { id: 'tracking', label: 'Vessel Tracking', icon: Ship },
+      { id: 'fleet', label: 'My Fleet', icon: Container },
       { id: 'monitor', label: 'Event Monitor', icon: Radio },
     ],
   },

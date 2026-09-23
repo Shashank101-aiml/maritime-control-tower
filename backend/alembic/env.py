@@ -15,7 +15,7 @@ from app.database.base import Base
 
 # Every model module must be imported before autogenerate runs, or the
 # missing tables are read as "dropped" and the migration deletes them.
-from app.models import event, governance, observation, recommendation, risk, user  # noqa: F401
+from app.models import event, fleet, governance, observation, recommendation, risk, user  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", str(settings.DATABASE_URL))

@@ -40,6 +40,7 @@ CORRIDOR_BOX_HALF_DEGREES = 1.5
 VESSEL_TTL_SECONDS = 1800
 
 RECONNECT_BASE_DELAY = 5
+RECV_POLL_SECONDS = 5  # how often an idle connection checks for stop/resubscribe
 RECONNECT_MAX_DELAY = 300
 
 # AIS numeric ship-type codes -> human labels, per ITU-R M.1371.
@@ -159,6 +160,15 @@ class VesselRegistry:
         fresh.sort(key=lambda v: v.get("_seen_at", 0), reverse=True)
         return [{k: v for k, v in vessel.items() if not k.startswith("_")} for vessel in fresh]
 
+    def get(self, mmsi: int) -> Optional[Dict[str, Any]]:
+        """The latest record for one vessel, or None if never heard / expired."""
+        cutoff = time.monotonic() - self._ttl
+        with self._lock:
+            record = self._vessels.get(mmsi)
+            if record is None or record.get("_seen_at", 0) < cutoff:
+                return None
+            return {k: v for k, v in record.items() if not k.startswith("_")}
+
     def count(self) -> int:
         return len(self.list_vessels())
 
@@ -175,6 +185,7 @@ class AISStreamCollector:
         self.registry = vessel_registry
         self._thread: Optional[threading.Thread] = None
         self._stop = threading.Event()
+        self._resubscribe = threading.Event()
 
     @property
     def configured(self) -> bool:
@@ -207,31 +218,51 @@ class AISStreamCollector:
         finally:
             loop.close()
 
+    def _subscription(self) -> Dict[str, Any]:
+        """What to ask AISStream for. Subclasses override this."""
+        return {
+            "BoundingBoxes": corridor_bounding_boxes(),
+            "FilterMessageTypes": ["PositionReport", "ShipStaticData"],
+        }
+
+    def _should_connect(self) -> bool:
+        """Subclasses with nothing to subscribe to can stay disconnected."""
+        return True
+
+    def _describe_subscription(self) -> str:
+        return f"{len(corridor_bounding_boxes())} corridor boxes"
+
     async def _consume_forever(self) -> None:
         import asyncio
 
         import websockets
 
         delay = RECONNECT_BASE_DELAY
-        subscription = json.dumps({
-            "APIKey": self.api_key,
-            "BoundingBoxes": corridor_bounding_boxes(),
-            "FilterMessageTypes": ["PositionReport", "ShipStaticData"],
-        })
 
         while not self._stop.is_set():
+            if not self._should_connect():
+                await asyncio.sleep(2)
+                continue
+
+            self._resubscribe.clear()
+            subscription = json.dumps({"APIKey": self.api_key, **self._subscription()})
+
             try:
                 async with websockets.connect(AIS_STREAM_URL, open_timeout=20) as ws:
                     await ws.send(subscription)
                     self.registry.connected = True
                     self.registry.last_error = None
                     delay = RECONNECT_BASE_DELAY  # reset backoff on success
-                    logger.info("AISStream connected; subscribed to %d corridor boxes.",
-                                len(corridor_bounding_boxes()))
+                    logger.info("AISStream connected; subscribed to %s.", self._describe_subscription())
 
-                    async for raw in ws:
-                        if self._stop.is_set():
-                            break
+                    # Poll with a timeout instead of blocking on the next
+                    # message, so a quiet stream still notices a stop or a
+                    # changed subscription promptly.
+                    while not self._stop.is_set() and not self._resubscribe.is_set():
+                        try:
+                            raw = await asyncio.wait_for(ws.recv(), timeout=RECV_POLL_SECONDS)
+                        except asyncio.TimeoutError:
+                            continue
                         try:
                             self._handle_message(json.loads(raw))
                         except Exception as exc:

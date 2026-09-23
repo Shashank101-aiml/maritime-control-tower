@@ -106,6 +106,9 @@ Open the API documentation:
 - `/api/dashboard`
 - `/api/recommendations`
 - `/api/agents`
+- `/api/fleet/vessels` - operator fleets: register a ship by IMO/MMSI (`POST`), list your fleet with live AIS positions (`GET`, `?scope=all` for supervisors/admins), change or remove one (`PATCH` / `DELETE /api/fleet/vessels/{id}`)
+- `/api/fleet/alerts` - alerts the Fleet Monitoring Agent raised for your vessels
+- `/api/users` - admin-only user management
 
 ## Testing
 

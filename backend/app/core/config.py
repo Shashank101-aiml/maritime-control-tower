@@ -49,6 +49,16 @@ class Settings(BaseSettings):
     # configured: false rather than showing stale or invented vessels.
     AISSTREAM_API_KEY: Optional[str] = None
 
+    # Operator fleets. AISStream allows at most 50 MMSIs per subscription,
+    # so that is the ceiling on vessels tracked across all operators.
+    FLEET_MAX_TRACKED_VESSELS: int = 50
+    # How often the fleet monitoring agent re-assesses every tracked vessel.
+    FLEET_MONITOR_INTERVAL_SECONDS: int = 300
+    # No AIS report for this long marks a previously-seen vessel as silent.
+    FLEET_POSITION_STALE_MINUTES: int = 30
+    # Recent positions kept in memory per vessel for its track on the map.
+    FLEET_TRAIL_POINTS: int = 60
+
     # Requests per minute per client IP on prediction/workflow routes.
     RATE_LIMIT_PER_MINUTE: int = 60
 

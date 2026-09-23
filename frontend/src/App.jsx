@@ -15,6 +15,7 @@ import CongestionPredictor from './pages/CongestionPredictor';
 import DelayPredictor from './pages/DelayPredictor';
 import FuelEfficiencyPredictor from './pages/FuelEfficiencyPredictor';
 import UserManagement from './pages/UserManagement';
+import MyFleet from './pages/MyFleet';
 import { can } from './utils/permissions';
 import { fetchCurrentUser, logout } from './services/authService';
 import { AUTH_EXPIRED_EVENT } from './services/apiClient';
@@ -60,6 +61,8 @@ export default function App() {
         return <Dashboard activeTab="workflow" setActiveTab={setActiveTab} />;
       case 'tracking':
         return <VesselTracking />;
+      case 'fleet':
+        return <MyFleet user={user} setActiveTab={setActiveTab} />;
       case 'monitor':
         return <EventMonitor />;
       case 'risk':

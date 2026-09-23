@@ -18,6 +18,8 @@ from app.api.routes.health import router as health_router
 from app.api.routes.governance import router as governance_router
 from app.api.routes.vessels import router as vessels_router
 
+from app.agents.fleet.fleet_monitor_agent import FleetMonitorLoop, sync_tracker
+from app.agents.fleet.tracker import fleet_tracker
 from app.agents.ingestion.ais_client import AISStreamCollector
 from app.core.config import settings
 from app.core.logging import setup_logging
@@ -31,6 +33,7 @@ from app.api.routes.fuel import router as fuel_router
 from app.api.routes.twin import router as twin_router
 from app.api.routes.news import router as news_router
 from app.api.routes.users import router as users_router
+from app.api.routes.fleet import router as fleet_router
 from app.api.routes.route import router as route_optimization_router
 from app.api.routes.simulation import router as simulation_router
 from app.api.routes.anomaly import router as anomaly_router
@@ -62,7 +65,12 @@ async def lifespan(app: FastAPI):
     seed_governance_agents()
     seed_first_superuser()
     ais_collector.start()  # No-op when AISSTREAM_API_KEY is unset.
+    fleet_tracker.start()  # Same; idles until vessels are registered.
+    sync_fleet_tracker()
+    fleet_monitor_loop.start()
     yield
+    fleet_monitor_loop.stop()
+    fleet_tracker.stop()
     ais_collector.stop()
 
 
@@ -153,6 +161,7 @@ def seed_governance_agents():
         {"id": "congestion-agent", "agent_name": "Congestion Prediction Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "MEDIUM", "criticality": "HIGH", "confidence_threshold": 0.7},
         {"id": "delay-agent", "agent_name": "Delay Prediction Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "MEDIUM", "criticality": "HIGH", "confidence_threshold": 0.7},
         {"id": "fuel-agent", "agent_name": "Fuel Efficiency Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "LOW", "criticality": "MEDIUM", "confidence_threshold": 0.5},
+        {"id": "fleet-monitor-agent", "agent_name": "Fleet Monitoring Agent", "agent_type": "MONITOR", "version": "v1.0", "risk_level": "LOW", "criticality": "MEDIUM", "confidence_threshold": 0.5},
     ]
     
     # One row per real engine.execute_agent_task() call site in this
@@ -171,6 +180,7 @@ def seed_governance_agents():
         ("congestion-agent", "PREDICT", "EXECUTE"),
         ("delay-agent", "PREDICT", "EXECUTE"),
         ("fuel-agent", "PREDICT", "EXECUTE"),
+        ("fleet-monitor-agent", "MONITOR", "EXECUTE"),
     ]
 
     try:
@@ -198,6 +208,19 @@ def seed_governance_agents():
         db.close()
 
 ais_collector = AISStreamCollector(settings.AISSTREAM_API_KEY)
+fleet_monitor_loop = FleetMonitorLoop(SessionLocal)
+
+
+def sync_fleet_tracker():
+    """Resume tracking every registered vessel after a restart."""
+    db = SessionLocal()
+    try:
+        sync_tracker(db)
+    except Exception as exc:  # a missing table must not stop the API booting
+        logger.warning("Could not load fleet vessels for tracking: %s", exc)
+    finally:
+        db.close()
+
 
 @app.get("/")
 def root():
@@ -236,6 +259,7 @@ app.include_router(fuel_router, prefix="/api", tags=["fuel"], dependencies=prote
 app.include_router(twin_router, prefix="/api", tags=["twin"], dependencies=protected)
 app.include_router(news_router, prefix="/api", tags=["news"], dependencies=protected)
 app.include_router(users_router, prefix="/api", tags=["users"], dependencies=protected)
+app.include_router(fleet_router, prefix="/api", tags=["fleet"], dependencies=protected)
 app.include_router(route_optimization_router, prefix="/api", tags=["route"], dependencies=protected)
 app.include_router(simulation_router, prefix="/api", tags=["simulation"], dependencies=protected)
 app.include_router(anomaly_router, prefix="/api", tags=["anomaly"], dependencies=protected)
