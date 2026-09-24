@@ -8,6 +8,8 @@ import {
 } from '../services/api';
 import { createEvent } from '../types/Event';
 import EventCard from '../components/EventCard';
+import SeaTrend from '../components/SeaTrend';
+import { useSeaStateHistory } from '../hooks/useSeaStateHistory';
 import { useCorridorContext } from '../context/CorridorContext';
 
 export default function Dashboard({ activeTab, setActiveTab }) {
@@ -22,6 +24,7 @@ export default function Dashboard({ activeTab, setActiveTab }) {
   // highlights it on Risk Analysis, and auto-fills Route Planning, the
   // same as a selection made on any of those pages already does.
   const { selectCorridor } = useCorridorContext();
+  const seaHistory = useSeaStateHistory(24);
 
   const loadData = async () => {
     setLoading(true);
@@ -272,7 +275,12 @@ export default function Dashboard({ activeTab, setActiveTab }) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {stats?.recent_events?.length ? stats.recent_events.map((raw) => (
-                <EventCard key={raw.id} event={createEvent(raw)} onFocusCorridor={selectCorridor} />
+                <EventCard
+                  key={raw.id}
+                  event={createEvent(raw)}
+                  onFocusCorridor={selectCorridor}
+                  trend={<SeaTrend points={seaHistory ? (seaHistory[raw.location] ?? []) : null} />}
+                />
               )) : (
                 <p style={{ color: 'var(--text-subtle)' }}>
                   {stats ? 'No live conditions available right now.' : 'Loading…'}

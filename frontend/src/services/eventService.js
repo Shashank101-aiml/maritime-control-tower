@@ -55,3 +55,14 @@ export const getEventHistory = async () => {
     },
   };
 };
+
+/**
+ * Recorded wave height and gusts per corridor over the last `hours`, oldest
+ * first, exactly as observed (gaps where the app was not running stay gaps).
+ * Returns { corridors: { [location]: [{ time, wave_height_m, wind_gusts_kmh, severity }] } }.
+ */
+export const getConditionsHistory = async (hours = 24) => {
+  const res = await apiFetch(`${BASE_URL}/conditions/history?hours=${hours}`);
+  if (!res.ok) throw new Error(`Conditions history request failed (${res.status})`);
+  return res.json();
+};

@@ -79,6 +79,44 @@ def record_conditions(db: Session, conditions: List[Dict[str, Any]]) -> int:
     return written
 
 
+def sea_state_history(db: Session, hours: int = 24) -> Dict[str, Any]:
+    """Recorded wave height and wind gusts per corridor over the last
+    `hours`, oldest first, exactly as observed -- no smoothing, resampling
+    or gap-filling.
+
+    The source publishes every 15 minutes, but a reading is only stored
+    while this deployment is running, so a series can have gaps (the app
+    was off). Each point keeps its own timestamp so the caller can show
+    that honestly instead of joining points across a gap.
+    """
+    hours = max(1, min(hours, 168))
+    # observed_at is an ISO-like UTC string, so it sorts and compares lexically.
+    cutoff = (datetime.now(timezone.utc) - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M")
+
+    rows = (
+        db.query(
+            ConditionReading.location,
+            ConditionReading.observed_at,
+            ConditionReading.wave_height_m,
+            ConditionReading.wind_gusts_kmh,
+            ConditionReading.severity,
+        )
+        .filter(ConditionReading.observed_at >= cutoff)
+        .order_by(ConditionReading.location, ConditionReading.observed_at)
+        .all()
+    )
+
+    corridors: Dict[str, List[Dict[str, Any]]] = {}
+    for location, observed_at, wave, gusts, severity in rows:
+        corridors.setdefault(location, []).append({
+            "time": observed_at,
+            "wave_height_m": wave,
+            "wind_gusts_kmh": gusts,
+            "severity": severity,
+        })
+    return {"hours": hours, "corridors": corridors}
+
+
 def record_risk(db: Session, risk: Dict[str, Any], location: Optional[str] = None) -> None:
     """Stores one risk scoring. Never raises."""
     score = risk.get("score")

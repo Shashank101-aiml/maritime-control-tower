@@ -10,6 +10,8 @@ import { SEVERITY_LEVELS, getSeverityTone, getSeverityLabel } from '../types/Eve
 import FreshnessIndicator from '../components/FreshnessIndicator';
 import { useCorridorContext } from '../context/CorridorContext';
 import { getNews } from '../services/newsService';
+import SeaTrend from '../components/SeaTrend';
+import { useSeaStateHistory } from '../hooks/useSeaStateHistory';
 
 const NEWS_POLL_MS = 5 * 60 * 1000;
 
@@ -96,6 +98,11 @@ export default function EventMonitor() {
   }, [selectedLocation]);
 
   const relatedNews = news?.articles ?? [];
+
+  // Recorded readings per corridor, so each one shows how it has moved
+  // rather than only where it stands right now.
+  const seaHistory = useSeaStateHistory(24);
+  const trendFor = (location) => (seaHistory ? (seaHistory[location] ?? []) : null);
   const corridorFiltered = selectedCorridor
     ? eventHistory.filter((evt) => evt.location === selectedCorridor.location)
     : eventHistory;
@@ -299,7 +306,7 @@ export default function EventMonitor() {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {corridorFiltered.map((evt, i) => (
-                  <EventCard key={evt.id || i} event={evt} />
+                  <EventCard key={evt.id || i} event={evt} trend={<SeaTrend points={trendFor(evt.location)} />} />
                 ))}
               </div>
             )}
@@ -387,9 +394,10 @@ export default function EventMonitor() {
             </h3>
           </div>
           <p className="form-note" style={{ marginTop: 0, marginBottom: '14px' }}>
-            Live sea state per monitored corridor. Select one to see its full current status above,
-            filter the log feed here, and focus it across Vessel Tracking, Risk Analysis, and
-            Route Planning.
+            Live sea state per monitored corridor, with how it has moved over the last 24 hours. The
+            arrow is the change since the previous reading (the source updates every 15 minutes).
+            Select a corridor to see its full status above, filter the log feed here, and focus it
+            across Vessel Tracking, Risk Analysis, and Route Planning.
           </p>
 
           {loading && rawHistory.length === 0 ? (
@@ -422,8 +430,11 @@ export default function EventMonitor() {
                         </div>
                       </div>
                     </div>
-                    <span className="status-badge" style={{ background: 'transparent', borderColor: tone.fg, color: tone.fg, fontSize: '0.68rem' }}>
-                      {getSeverityLabel(c.severity)}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '12px' }}>
+                      <SeaTrend points={trendFor(c.location)} />
+                      <span className="status-badge" style={{ background: 'transparent', borderColor: tone.fg, color: tone.fg, fontSize: '0.68rem' }}>
+                        {getSeverityLabel(c.severity)}
+                      </span>
                     </span>
                   </button>
                 );

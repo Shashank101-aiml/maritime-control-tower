@@ -48,7 +48,7 @@ const DirectionReading = ({ label, deg }) =>
     </div>
   );
 
-export default function EventCard({ event, onFocusCorridor }) {
+export default function EventCard({ event, onFocusCorridor, trend = null }) {
   const [open, setOpen] = useState(false);
   if (!event) return null;
 
@@ -99,6 +99,7 @@ export default function EventCard({ event, onFocusCorridor }) {
           <span className="status-badge" style={{ background: tone.bg, borderColor: tone.border, color: tone.fg, fontSize: '0.68rem' }}>
             {getSeverityLabel(event.severity)}
           </span>
+          {trend}
           {event.timestamp && (
             <span className="event-card-time">
               <Clock size={11} /> {formatTimestamp(event.timestamp)}

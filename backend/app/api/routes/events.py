@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.agents.ingestion.ingestion_agent import IngestionAgent
 from app.agents.ingestion.live_conditions_client import LiveConditionsClient
 from app.api.dependencies.database import get_db
 from app.core.logging import get_logger
-from app.services.observation_service import record_conditions
+from app.services.observation_service import record_conditions, sea_state_history
 
 logger = get_logger(__name__)
 
@@ -17,6 +17,18 @@ def get_events():
     """The single most severe condition currently observed across the
     monitored corridors."""
     return IngestionAgent().collect_data()
+
+
+@router.get("/conditions/history")
+def get_conditions_history(
+    hours: int = Query(24, ge=1, le=168),
+    db: Session = Depends(get_db),
+):
+    """Recorded wave height and gusts per corridor, oldest first, so the UI
+    can show how each corridor's sea state has actually moved -- a trend,
+    not just the latest snapshot. Points are exactly as observed; gaps
+    (the app being off) are left as gaps."""
+    return sea_state_history(db, hours)
 
 
 @router.get("/conditions")

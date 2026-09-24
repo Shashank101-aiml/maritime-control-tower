@@ -31,6 +31,7 @@ PROTECTED = [
     ("get", "/api/run-workflow"),
     ("get", "/api/news"),
     ("get", "/api/users"),
+    ("get", "/api/conditions/history"),
 ]
 
 
