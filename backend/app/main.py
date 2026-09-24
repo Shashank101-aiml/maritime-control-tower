@@ -159,7 +159,7 @@ def seed_governance_agents():
         {"id": "decision-agent", "agent_name": "Decision Agent", "agent_type": "PLANNER", "version": "v1.0", "risk_level": "HIGH", "criticality": "HIGH", "confidence_threshold": 0.7},
         {"id": "explanation-agent", "agent_name": "Explanation Agent", "agent_type": "COMMUNICATOR", "version": "v1.0", "risk_level": "LOW", "criticality": "LOW", "confidence_threshold": 0.6},
         {"id": "congestion-agent", "agent_name": "Congestion Prediction Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "MEDIUM", "criticality": "HIGH", "confidence_threshold": 0.7},
-        {"id": "delay-agent", "agent_name": "Delay Prediction Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "MEDIUM", "criticality": "HIGH", "confidence_threshold": 0.7},
+        {"id": "delay-agent", "agent_name": "Delay Intelligence Agent", "agent_type": "ANALYZER", "version": "v2.0", "risk_level": "LOW", "criticality": "MEDIUM", "confidence_threshold": 0.7},
         {"id": "fuel-agent", "agent_name": "Fuel Efficiency Agent", "agent_type": "ANALYZER", "version": "v1.0", "risk_level": "LOW", "criticality": "MEDIUM", "confidence_threshold": 0.5},
         {"id": "fleet-monitor-agent", "agent_name": "Fleet Monitoring Agent", "agent_type": "MONITOR", "version": "v1.0", "risk_level": "LOW", "criticality": "MEDIUM", "confidence_threshold": 0.5},
     ]
@@ -178,9 +178,15 @@ def seed_governance_agents():
         ("decision-agent", "DECIDE", "EXECUTE"),
         ("explanation-agent", "EXPLAIN", "EXECUTE"),
         ("congestion-agent", "PREDICT", "EXECUTE"),
-        ("delay-agent", "PREDICT", "EXECUTE"),
+        ("delay-agent", "ASSESS", "EXECUTE"),
         ("fuel-agent", "PREDICT", "EXECUTE"),
         ("fleet-monitor-agent", "MONITOR", "EXECUTE"),
+    ]
+
+    # Permissions an agent used to hold for a call site that no longer
+    # exists -- removed so a rename doesn't leave stale access behind.
+    retired_permissions = [
+        ("delay-agent", "PREDICT", "EXECUTE"),
     ]
 
     try:
@@ -194,6 +200,19 @@ def seed_governance_agents():
                 health = AgentHealth(agent_id=a["id"], status="HEALTHY")
                 db.add(health)
                 db.commit()
+            elif (existing.agent_name, existing.version) != (a["agent_name"], a["version"]):
+                # An agent that was rebuilt keeps its identity and history;
+                # only what it is called (and which version) is refreshed.
+                existing.agent_name, existing.version = a["agent_name"], a["version"]
+                db.commit()
+
+        for agent_id, resource, action in retired_permissions:
+            db.query(AgentPermission).filter(
+                AgentPermission.agent_id == agent_id,
+                AgentPermission.resource == resource,
+                AgentPermission.action == action,
+            ).delete()
+            db.commit()
 
         for agent_id, resource, action in permissions:
             existing = db.query(AgentPermission).filter(

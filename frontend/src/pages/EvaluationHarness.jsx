@@ -5,7 +5,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 const MODEL_LABELS = {
   congestion: 'Congestion classifier',
-  delay: 'Shipment delay classifier',
+  delay: 'Shipment delay (lane statistics, backtested)',
   fuel: 'Fuel efficiency regressor',
   anomaly: 'Anomaly detector (Isolation Forest)',
 };
@@ -30,15 +30,44 @@ function ModelMetricCard({ name, metrics }) {
 
   const isClassifier = 'roc_auc' in metrics;
   const isRegressor = 'r2' in metrics;
+  const isBacktest = metrics.kind === 'backtest';
+  const sevenDay = isBacktest ? metrics.delayed.find((d) => d.threshold_days === 7) : null;
 
   return (
     <div className="panel">
       <div className="section-header">
         <h3 className="section-title" style={{ fontSize: '1rem' }}>{MODEL_LABELS[name]}</h3>
         <span style={{ fontSize: '0.7rem', color: 'var(--text-subtle)' }}>
-          {metrics.n_train ?? metrics.n_samples} train rows
+          {isBacktest ? `${metrics.n_journeys} real journeys` : `${metrics.n_train ?? metrics.n_samples} train rows`}
         </span>
       </div>
+
+      {isBacktest && (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+            <div className="result-metric">
+              <div className="result-metric-label">Transit MAE — lane median</div>
+              <div className="result-metric-value" style={{ color: 'var(--accent-emerald)' }}>{metrics.transit_days.lane_median_mae_days} d</div>
+            </div>
+            <div className="result-metric">
+              <div className="result-metric-label">Transit MAE — LightGBM</div>
+              <div className="result-metric-value">{metrics.transit_days.lightgbm_mae_days} d</div>
+            </div>
+            <div className="result-metric">
+              <div className="result-metric-label">7-day-late AUC — lane history</div>
+              <div className="result-metric-value" style={{ color: 'var(--accent-emerald)' }}>{sevenDay.lane_history_auc}</div>
+            </div>
+            <div className="result-metric">
+              <div className="result-metric-label">7-day-late AUC — LightGBM</div>
+              <div className="result-metric-value">{sevenDay.lightgbm_auc}</div>
+            </div>
+          </div>
+          <p style={{ fontSize: '0.78rem', color: 'var(--text-subtle)' }}>
+            <TrendingUp size={12} style={{ verticalAlign: '-1px', marginRight: '3px' }} />
+            {metrics.conclusion} Evaluated {metrics.folds}. The service reports {metrics.served_method}.
+          </p>
+        </>
+      )}
 
       {isClassifier && (
         <>

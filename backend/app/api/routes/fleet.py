@@ -25,7 +25,7 @@ from app.fleet.identifiers import (
     VESSEL_TYPE_LABELS, VESSEL_TYPES, clean_imo, imo_is_valid, mmsi_is_valid,
     normalize_name, verify_identity,
 )
-from app.models.fleet import Vessel, VesselAlert
+from app.models.fleet import Vessel, VesselAlert, VoyagePlan
 from app.models.user import User
 
 router = APIRouter()
@@ -356,6 +356,7 @@ def remove_vessel(
 ):
     vessel = _load_vessel(db, vessel_id, user, write=True)
     db.query(VesselAlert).filter(VesselAlert.vessel_id == vessel.id).delete()
+    db.query(VoyagePlan).filter(VoyagePlan.vessel_id == vessel.id).delete()
     db.delete(vessel)
     db.commit()
     sync_tracker(db)

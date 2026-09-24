@@ -163,6 +163,13 @@ class TestGraphStructure:
             assert attrs["country"] is not None, f"{port} has no country"
 
 
+@pytest.mark.parametrize("n,expected", [(1, "1st"), (2, "2nd"), (3, "3rd"), (4, "4th"), (11, "11th"), (12, "12th"),
+                                        (13, "13th"), (21, "21st"), (42, "42nd"), (47, "47th"), (63, "63rd"), (100, "100th")])
+def test_percentiles_read_as_proper_ordinals(n, expected):
+    from app.twin.digital_twin import _ordinal
+    assert _ordinal(n) == expected
+
+
 class TestIndianPorts:
     """Ports the congestion dataset doesn't cover: real coordinates and
     lanes, but no invented congestion figures."""

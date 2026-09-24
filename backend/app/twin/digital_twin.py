@@ -74,6 +74,13 @@ COST_PER_NM_USD = 1.0
 EMISSIONS_PER_NM = 1.0
 
 
+def _ordinal(n: int) -> str:
+    """1 -> 1st, 42 -> 42nd, 11 -> 11th."""
+    if 11 <= n % 100 <= 13:
+        return f"{n}th"
+    return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th') }"
+
+
 def haversine_nm(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     """Great-circle distance between two points, in nautical miles."""
     lat1, lon1, lat2, lon2 = map(radians, (lat1, lon1, lat2, lon2))
@@ -216,7 +223,7 @@ class DigitalTwin:
             else:
                 worse_port = port_a if a_pct >= b_pct else port_b
                 risk, reason = congestion_component, (
-                    f"{worse_port}'s congestion is at the {congestion_component}th percentile "
+                    f"{worse_port}'s congestion is at the {_ordinal(congestion_component)} percentile "
                     "of its own history."
                 )
 

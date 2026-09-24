@@ -47,7 +47,7 @@ class TestRealAuthorization:
             ("decision-agent", "DECIDE"),
             ("explanation-agent", "EXPLAIN"),
             ("congestion-agent", "PREDICT"),
-            ("delay-agent", "PREDICT"),
+            ("delay-agent", "ASSESS"),
             ("fuel-agent", "PREDICT"),
         ]
         for agent_id, resource in real_call_sites:

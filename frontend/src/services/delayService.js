@@ -1,33 +1,52 @@
 import { apiFetch } from './apiClient';
+import { failureMessage, jsonRequest } from './apiErrors';
 import { API_BASE_URL as BASE_URL } from '../config';
 
-/** Calls the delay prediction agent. No mock fallback -- see congestionService.js. */
-export const predictDelay = async (payload) => {
-  const res = await apiFetch(`${BASE_URL}/delay/predict`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-  if (!res.ok) throw new Error('Delay prediction request failed');
+/**
+ * What the real container-journey data covers: journey and lane counts, the
+ * date range, which lanes have enough history to report on, what cleaning
+ * dropped and why, and the backtest that decided the service reports lane
+ * statistics rather than a model score.
+ */
+export const getDelayOverview = async () => {
+  const res = await apiFetch(`${BASE_URL}/delay/overview`);
+  if (!res.ok) throw new Error(await failureMessage(res, `Delay overview request failed (${res.status})`));
   return res.json();
 };
 
 /**
- * Real historical shape of the training data -- overall/per-category
- * late rates, every real value each field takes, and the real
- * plant->port mapping -- so the manual form can offer real dropdown
- * options instead of free text against a single static example.
+ * Real transit statistics for one lane, run through governance.
+ * Resolves to the agent's response ({ status, assessment | reason | error });
+ * a lane without enough history rejects with the server's reason.
  */
-export const getDelayOverview = async () => {
-  const res = await apiFetch(`${BASE_URL}/delay/overview`);
-  if (!res.ok) throw new Error(`Delay overview request failed (${res.status})`);
+export const assessDelay = async ({ origin, destination, loadingDate }) => {
+  const res = await apiFetch(
+    `${BASE_URL}/delay/assess`,
+    jsonRequest('POST', { origin, destination, loading_date: loadingDate || null }),
+  );
+  if (!res.ok) throw new Error(await failureMessage(res, 'Delay assessment failed'));
   return res.json();
 };
 
-/** One plant's real historical profile (median/most-common real feature
- * values), for a "use this plant's real profile" prefill. */
-export const getPlantProfile = async (plantCode) => {
-  const res = await apiFetch(`${BASE_URL}/delay/plant/${encodeURIComponent(plantCode)}/profile`);
-  if (!res.ok) throw new Error(`Plant profile request failed (${res.status})`);
+/**
+ * Live ETA and on-time verdict for each fleet vessel, from its AIS position and
+ * speed. scope is 'mine' or (supervisor and up) 'all'.
+ */
+export const getVoyages = async (scope = 'mine') => {
+  const res = await apiFetch(`${BASE_URL}/delay/voyages?scope=${encodeURIComponent(scope)}`);
+  if (!res.ok) throw new Error(await failureMessage(res, `Voyage request failed (${res.status})`));
+  return res.json();
+};
+
+/** Set (or, with both fields empty, clear) where a vessel is due and when. */
+export const saveVoyagePlan = async (vesselId, { destinationPort, scheduledArrival }) => {
+  const res = await apiFetch(
+    `${BASE_URL}/delay/voyages/${vesselId}`,
+    jsonRequest('PUT', {
+      destination_port: destinationPort || null,
+      scheduled_arrival: scheduledArrival ? new Date(scheduledArrival).toISOString() : null,
+    }),
+  );
+  if (!res.ok) throw new Error(await failureMessage(res, 'Could not save the voyage plan'));
   return res.json();
 };

@@ -309,10 +309,25 @@ class AISStreamCollector:
                 "call_sign": (body.get("CallSign") or "").strip() or None,
                 "ship_type": _ship_type_label(body.get("Type")),
                 "destination": (body.get("Destination") or "").strip() or None,
+                "ais_eta": _valid_eta(body.get("Eta")),
                 "draught_m": body.get("MaximumStaticDraught"),
                 "length_m": _dimension_sum(dimension.get("A"), dimension.get("B")),
                 "width_m": _dimension_sum(dimension.get("C"), dimension.get("D")),
             })
+
+
+def _valid_eta(value: Any) -> Optional[Dict[str, int]]:
+    """The crew-entered ETA in a static message: month/day/hour/minute, with
+    no year. AIS uses 0 / 0 / 24 / 60 for 'not available', which is None here."""
+    if not isinstance(value, dict):
+        return None
+    try:
+        month, day, hour, minute = (int(value[k]) for k in ("Month", "Day", "Hour", "Minute"))
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not (1 <= month <= 12 and 1 <= day <= 31 and 0 <= hour <= 23 and 0 <= minute <= 59):
+        return None
+    return {"month": month, "day": day, "hour": hour, "minute": minute}
 
 
 def _valid_heading(value: Any) -> Optional[int]:

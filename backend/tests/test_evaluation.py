@@ -35,9 +35,20 @@ class TestModelMetricsEndpoint:
 
     def test_a_classifiers_metrics_include_the_no_skill_baseline(self):
         res = client.get("/api/evaluation/model-metrics")
-        delay = res.json().get("delay")
+        congestion = res.json().get("congestion")
+        if congestion is not None:
+            assert congestion["pr_auc"] > congestion["no_skill_pr_auc"]
+
+    def test_delay_reports_its_backtest_including_when_no_model_won(self):
+        """Shipment delay is served as lane statistics because no model beat
+        them out of time -- its metrics must say what was tested, not
+        present a model score."""
+        delay = client.get("/api/evaluation/model-metrics").json().get("delay")
         if delay is not None:
-            assert delay["pr_auc"] > delay["no_skill_pr_auc"]
+            assert delay["kind"] == "backtest"
+            assert delay["transit_days"]["lane_median_mae_days"] > 0
+            assert isinstance(delay["model_beats_baseline"], bool)
+            assert "roc_auc" not in delay
 
 
 class TestGovernanceImpactEndpoint:

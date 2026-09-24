@@ -12,7 +12,7 @@ import EvaluationHarness from './pages/EvaluationHarness';
 import Settings from './pages/Settings';
 import GovernanceDashboard from './pages/GovernanceDashboard';
 import CongestionPredictor from './pages/CongestionPredictor';
-import DelayPredictor from './pages/DelayPredictor';
+import DelayIntelligence from './pages/DelayIntelligence';
 import FuelEfficiencyPredictor from './pages/FuelEfficiencyPredictor';
 import UserManagement from './pages/UserManagement';
 import MyFleet from './pages/MyFleet';
@@ -76,7 +76,7 @@ export default function App() {
       case 'congestion':
         return <CongestionPredictor />;
       case 'delay':
-        return <DelayPredictor setActiveTab={setActiveTab} />;
+        return <DelayIntelligence user={user} setActiveTab={setActiveTab} />;
       case 'fuel':
         return <FuelEfficiencyPredictor />;
       case 'governance':

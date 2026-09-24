@@ -106,6 +106,7 @@ Open the API documentation:
 - `/api/dashboard`
 - `/api/recommendations`
 - `/api/agents`
+- `/api/delay/overview`, `/api/delay/assess` - real container-journey transit statistics for a lane (governed), and what the data covers
 - `/api/fleet/vessels` - operator fleets: register a ship by IMO/MMSI (`POST`), list your fleet with live AIS positions (`GET`, `?scope=all` for supervisors/admins), change or remove one (`PATCH` / `DELETE /api/fleet/vessels/{id}`)
 - `/api/fleet/alerts` - alerts the Fleet Monitoring Agent raised for your vessels
 - `/api/users` - admin-only user management
@@ -140,9 +141,9 @@ pytest
 
 Architected a governed, 12-agent multi-agent system (ingestion, risk, route optimisation, decision, explanation, anomaly detection, feedback) coordinated through an adaptively-routed pipeline, with a runtime governance engine that gates low-confidence or high-criticality actions behind human approval and logs a full audit trail.
 
-Trained and benchmarked three independent LightGBM models against their own real baselines — a port/vessel congestion classifier (138K+ samples across 3 sources, ROC-AUC 0.82), a shipment-delay classifier (9.2K orders, PR-AUC 0.90 vs. a 0.02 baseline on a ~2% positive rate), and a fuel-consumption regressor (R²=0.95, 83.6% lower MAE than a naive baseline) — plus an unsupervised Isolation Forest anomaly detector over real per-port congestion history.
+Trained and benchmarked LightGBM models against their own real baselines — a port/vessel congestion classifier (138K+ samples across 3 sources, ROC-AUC 0.82) and a fuel-consumption regressor (R²=0.95, 83.6% lower MAE than a naive baseline) — plus an unsupervised Isolation Forest anomaly detector over real per-port congestion history. Backtested shipment-delay models out of time on 1.1K real container journeys (rolling expanding windows); none beat each lane's own history, so delay is served as real lane statistics (typical and worst-case transit, share of journeys running late) rather than an unsupported model score.
 
 Built a live digital twin (NetworkX graph of 25 real ports (20 with weekly congestion data, 5 Indian ports without) and shipping lanes) with multi-objective route optimisation (cost, delay, risk, emissions) and a what-if scenario simulator for evaluating rerouting under corridor disruption.
-Ingested real-time AIS vessel positions over WebSocket, live marine/weather conditions across 8 monitored corridors, and maritime news events (NLP classification + location extraction) into the governed pipeline, closing the loop with human-in-the-loop feedback and per-prediction model explainability (LightGBM feature attribution).
+Ingested real-time AIS vessel positions over WebSocket, live marine/weather conditions across 8 monitored corridors, and maritime news events (NLP classification + location extraction) into the governed pipeline, closing the loop with human-in-the-loop feedback and a data-driven explanation for every routing recommendation.
 
 Tech Stack: Python, FastAPI, LightGBM, scikit-learn, NetworkX, PostgreSQL (SQLAlchemy, Alembic), React, Vite, Leaflet, Docker, GitHub Actions

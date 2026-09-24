@@ -75,3 +75,19 @@ class VesselAlert(Base):
     message = Column(Text, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow, index=True)
     resolved_at = Column(DateTime, nullable=True)
+
+
+class VoyagePlan(Base):
+    """What an operator expects of a vessel's current voyage: where it is
+    going and when it is due. Optional -- without one the Shipment Delay
+    page falls back on the destination and ETA the ship broadcasts itself.
+    Kept apart from Vessel so the fleet registry is unaffected."""
+
+    __tablename__ = "voyage_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    vessel_id = Column(Integer, ForeignKey("fleet_vessels.id"), nullable=False, unique=True, index=True)
+    owner_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    destination_port = Column(String(80), nullable=True)
+    scheduled_arrival = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)

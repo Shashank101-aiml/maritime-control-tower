@@ -1,7 +1,6 @@
 from fastapi.testclient import TestClient
 
 from app.agents.congestion.congestion_agent import CongestionAgent
-from app.agents.delay.delay_agent import DelayAgent
 from app.agents.fuel.fuel_agent import FuelAgent
 from app.main import app
 
@@ -24,24 +23,6 @@ def test_congestion_agent_loads_and_predicts():
     })
     assert 0.0 <= result["congestion_probability"] <= 1.0
     assert result["congestion_flag"] in (0, 1)
-
-
-def test_delay_agent_loads_and_predicts():
-    agent = DelayAgent()
-    assert agent.is_available is True
-
-    result = agent.predict({
-        "origin_port": "PORT09",
-        "destination_port": "PORT09",
-        "carrier": "V44_3",
-        "service_level": "CRF",
-        "customer": "V555555555555555_29",
-        "plant_code": "PLANT03",
-        "tpt": 1,
-        "unit_quantity": 500,
-        "weight": 10.0,
-    })
-    assert 0.0 <= result["late_probability"] <= 1.0
 
 
 def test_fuel_agent_loads_and_predicts():
@@ -84,18 +65,6 @@ def test_congestion_predict_endpoint_returns_completed():
         "quarter": 3,
         "events_last_4w": 3,
         "cumulative_events_to_date": 20,
-    })
-    assert response.status_code == 200
-    body = response.json()
-    assert body["status"] in ("COMPLETED", "PENDING_APPROVAL")
-
-
-def test_delay_predict_endpoint_returns_completed():
-    response = client.post("/api/delay/predict", json={
-        "origin_port": "PORT09", "destination_port": "PORT09",
-        "carrier": "V44_3", "service_level": "CRF",
-        "customer": "V555555555555555_29", "plant_code": "PLANT03",
-        "tpt": 1, "unit_quantity": 500, "weight": 10.0,
     })
     assert response.status_code == 200
     body = response.json()

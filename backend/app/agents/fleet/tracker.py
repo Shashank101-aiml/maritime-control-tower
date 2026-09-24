@@ -94,7 +94,9 @@ class FleetTracker(AISStreamCollector):
             with self._state_lock:
                 self._received_at[mmsi] = now
                 trail = self._trails.setdefault(mmsi, deque(maxlen=settings.FLEET_TRAIL_POINTS))
-                trail.append([float(lat), float(lon), now.isoformat() + "Z"])
+                # [lat, lon, time, speed over ground] -- speed lets a voyage ETA use
+                # the ship's recent pace instead of one instantaneous reading.
+                trail.append([float(lat), float(lon), now.isoformat() + "Z", body.get("Sog")])
         else:
             super()._handle_message(payload)
 
