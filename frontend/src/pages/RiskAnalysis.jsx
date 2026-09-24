@@ -70,7 +70,7 @@ export default function RiskAnalysis({ setActiveTab }) {
     return () => clearInterval(interval);
   }, []);
 
-  // A corridor selected on Vessel Tracking scrolls its card into view
+  // A corridor selected on Corridors & Vessels scrolls its card into view
   // and stays highlighted here, instead of the two pages being unaware
   // of each other.
   const { selectedCorridor, selectCorridor, clearCorridor } = useCorridorContext();
@@ -131,7 +131,7 @@ export default function RiskAnalysis({ setActiveTab }) {
       ) : (
         <>
           {/* Selected Corridor -- Risk Detail. A dedicated breakdown for
-              whichever corridor is selected (from Vessel Tracking, Event
+              whichever corridor is selected (from Corridors & Vessels, Event
               Monitor, or the trend chart / corridor grid below), not just
               a highlighted card. Every field here is real: score,
               likelihood/impact from the same model call that scores the
