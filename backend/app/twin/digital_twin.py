@@ -38,7 +38,7 @@ from app.agents.ingestion.live_conditions_client import (
     LiveConditionsClient,
 )
 from app.core.logging import get_logger
-from app.twin.coordinates import EXTRA_WAYPOINT_COORDINATES, PORT_COORDINATES
+from app.twin.coordinates import EXTRA_WAYPOINT_COORDINATES, PORT_COORDINATES, PORTS_WITHOUT_CONGESTION_DATA
 from app.twin.lanes import SHIPPING_LANES
 
 logger = get_logger(__name__)
@@ -140,14 +140,18 @@ class DigitalTwin:
         for port, (lat, lon) in PORT_COORDINATES.items():
             row = metrics.get(port, {})
             congestion_index = float(row["congestion_index"]) if row else None
+            # A port with no congestion data keeps None for every metric --
+            # never 0, which would read as "calm" -- and says so explicitly.
+            fallback_country, fallback_region = PORTS_WITHOUT_CONGESTION_DATA.get(port, (None, None))
             self.graph.add_node(
                 port,
                 lat=lat,
                 lon=lon,
-                country=row.get("country"),
-                region=row.get("region"),
+                country=row.get("country") or fallback_country,
+                region=row.get("region") or fallback_region,
+                has_congestion_data=bool(row),
                 congestion_index=congestion_index,
-                congestion_percentile=self._congestion_percentile(port, congestion_index),
+                congestion_percentile=self._congestion_percentile(port, congestion_index) if row else None,
                 avg_wait_days=float(row["avg_wait_days"]) if row else None,
                 berth_delay_hrs=float(row["berth_delay_hrs"]) if row else None,
                 port_utilization_pct=float(row["port_utilization_pct"]) if row else None,
@@ -215,6 +219,14 @@ class DigitalTwin:
                     f"{worse_port}'s congestion is at the {congestion_component}th percentile "
                     "of its own history."
                 )
+
+            # Say so when an end of the lane has no congestion data, so a
+            # low score isn't mistaken for "both ports were checked and calm".
+            missing = [
+                p for p in (port_a, port_b) if not self.graph.nodes[p].get("has_congestion_data", True)
+            ]
+            if missing:
+                reason += f" No congestion data for {' or '.join(missing)}."
 
             self.graph.edges[port_a, port_b, lane_id]["risk"] = risk
             self.graph.edges[port_a, port_b, lane_id]["risk_reason"] = reason

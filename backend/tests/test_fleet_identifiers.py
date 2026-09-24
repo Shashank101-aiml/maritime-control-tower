@@ -129,6 +129,11 @@ def test_nearest_port():
     assert name == "Rotterdam" and distance < 20
 
 
+def test_a_ship_off_mumbai_is_now_matched_to_an_indian_port():
+    assert nearest_port(18.90, 72.80)[0] == "Nhava Sheva (Mumbai)"
+    assert nearest_port(9.95, 76.20)[0] == "Cochin"
+
+
 # --- the AIS fleet tracker -----------------------------------------------
 
 @pytest.fixture

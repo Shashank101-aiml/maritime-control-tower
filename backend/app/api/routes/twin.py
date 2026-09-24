@@ -8,7 +8,7 @@ router = APIRouter()
 @router.get("/twin")
 def get_twin_graph():
     """The logistics graph backing Simulation (Slice 08) and Optimization
-    (Slice 06) -- 20 ports as nodes, real shipping lanes as edges, each
+    (Slice 06) -- 25 ports as nodes (5 of them Indian ports with no congestion data), real shipping lanes as edges, each
     edge's risk freshly computed from live sea-state plus real port
     congestion on every request. See app/twin/digital_twin.py's module
     docstring for exactly which fields are real data, which are labeled

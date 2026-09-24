@@ -3,7 +3,7 @@ import { apiFetch } from './apiClient';
 import { API_BASE_URL as BASE_URL } from '../config';
 
 /**
- * The full digital twin graph -- 20 real ports as nodes, real shipping
+ * The full digital twin graph -- 25 real ports as nodes (20 with congestion data, 5 Indian ports without), real shipping
  * lanes as edges, each edge's risk freshly computed from live sea
  * state on every request. See backend/app/twin/digital_twin.py's
  * module docstring for exactly which fields are real data, which are

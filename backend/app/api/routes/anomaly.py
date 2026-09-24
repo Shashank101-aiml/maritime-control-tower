@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException
 from app.agents.anomaly.anomaly_agent import get_anomaly_agent
 from app.agents.ingestion.live_conditions_client import LiveConditionsClient
 from app.core.logging import get_logger
-from app.twin.coordinates import PORT_COORDINATES
+from app.twin.coordinates import PORT_COORDINATES, PORTS_WITHOUT_CONGESTION_DATA
 
 logger = get_logger(__name__)
 
@@ -15,7 +15,13 @@ router = APIRouter()
 # `cache_key="ports"` keeps this fully independent of that corridor
 # cache -- otherwise the two location sets would clobber each other.
 _port_conditions_client = LiveConditionsClient(
-    locations=[{"name": name, "lat": lat, "lon": lon} for name, (lat, lon) in PORT_COORDINATES.items()],
+    # Only ports the anomaly model actually has congestion history for --
+    # the twin also holds ports with no such data (e.g. Indian ports).
+    locations=[
+        {"name": name, "lat": lat, "lon": lon}
+        for name, (lat, lon) in PORT_COORDINATES.items()
+        if name not in PORTS_WITHOUT_CONGESTION_DATA
+    ],
     cache_key="ports",
 )
 

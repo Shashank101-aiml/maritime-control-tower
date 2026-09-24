@@ -101,4 +101,37 @@ SHIPPING_LANES: List[Lane] = [
     Lane("rotterdam-felixstowe", "Rotterdam", "Felixstowe", ["English Channel (Dover)"]),
     Lane("hamburg-antwerp", "Hamburg", "Antwerp", []),
     Lane("antwerp-felixstowe", "Antwerp", "Felixstowe", ["English Channel (Dover)"]),
+
+    # --- India (ports with no congestion data; see PORTS_WITHOUT_CONGESTION_DATA) ---
+    # West coast -> Sri Lanka rounds Cape Comorin; -> Singapore then continues
+    # south of Sri Lanka and up into the Strait of Malacca via Aceh's northern
+    # tip. East coast -> Colombo goes around Sri Lanka's east then south side;
+    # -> Singapore crosses the Andaman Sea through the Ten Degree Channel.
+    Lane("nhavasheva-colombo", "Nhava Sheva (Mumbai)", "Colombo",
+         ["Off Goa", "Off Kochi", "Cape Comorin"]),
+    Lane("nhavasheva-dubai", "Nhava Sheva (Mumbai)", "Dubai (Jebel Ali)",
+         ["Arabian Sea", "Strait of Hormuz"]),
+    Lane("nhavasheva-singapore", "Nhava Sheva (Mumbai)", "Singapore",
+         ["Off Goa", "Off Kochi", "Cape Comorin", "South of Sri Lanka", "Off Sabang",
+          "Northern Strait of Malacca", "Strait of Malacca"]),
+    Lane("nhavasheva-rotterdam-suez", "Nhava Sheva (Mumbai)", "Rotterdam",
+         ["Arabian Sea", "Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar",
+          "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)"]),
+    Lane("mundra-dubai", "Mundra", "Dubai (Jebel Ali)",
+         ["Gulf of Oman", "Strait of Hormuz"]),
+    Lane("mundra-rotterdam-suez", "Mundra", "Rotterdam",
+         ["Gulf of Aden", "Suez Canal (Gulf of Suez)", "Strait of Gibraltar",
+          "Cape St. Vincent", "Cape Finisterre", "Ushant", "English Channel (Dover)"]),
+    Lane("cochin-colombo", "Cochin", "Colombo",
+         ["Off Kochi", "Cape Comorin"]),
+    Lane("cochin-dubai", "Cochin", "Dubai (Jebel Ali)",
+         ["Arabian Sea", "Strait of Hormuz"]),
+    Lane("chennai-colombo", "Chennai", "Colombo",
+         ["East of Sri Lanka", "Southeast of Sri Lanka", "South of Sri Lanka"]),
+    Lane("chennai-singapore", "Chennai", "Singapore",
+         ["Ten Degree Channel", "Off Sabang", "Northern Strait of Malacca", "Strait of Malacca"]),
+    Lane("visakhapatnam-colombo", "Visakhapatnam", "Colombo",
+         ["East of Sri Lanka", "Southeast of Sri Lanka", "South of Sri Lanka"]),
+    Lane("visakhapatnam-singapore", "Visakhapatnam", "Singapore",
+         ["Ten Degree Channel", "Off Sabang", "Northern Strait of Malacca", "Strait of Malacca"]),
 ]

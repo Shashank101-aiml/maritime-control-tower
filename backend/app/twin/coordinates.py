@@ -1,7 +1,7 @@
 """Curated port coordinates for the digital twin.
 
 data/cleaned/port_congestion.csv has real weekly congestion metrics for
-these 20 ports (throughput, vessels at anchor, wait days, congestion
+the first 20 ports below (throughput, vessels at anchor, wait days, congestion
 index, utilization, berth delay -- see DigitalTwin._load_port_metrics())
 but no lat/lon column. This is the one piece of node data that isn't
 already in the dataset: manually sourced port-area coordinates (public
@@ -39,6 +39,29 @@ PORT_COORDINATES: Dict[str, Tuple[float, float]] = {
     "Singapore": (1.26, 103.84),
     "Tanjung Pelepas": (1.36, 103.55),
     "Tanjung Priok": (-6.10, 106.88),
+    # Indian ports. Unlike the 20 above they are NOT in port_congestion.csv,
+    # so they have coordinates and lanes but no congestion metrics -- see
+    # PORTS_WITHOUT_CONGESTION_DATA. Port-area coordinates, same convention.
+    "Nhava Sheva (Mumbai)": (18.95, 72.95),
+    "Mundra": (22.74, 69.70),
+    "Chennai": (13.10, 80.30),
+    "Cochin": (9.97, 76.26),
+    "Visakhapatnam": (17.69, 83.30),
+}
+
+# Ports that are in the twin but absent from port_congestion.csv, so
+# their country/region can't come from it and they have no congestion
+# metrics at all. DigitalTwin marks them `has_congestion_data: False`
+# and leaves every congestion figure None rather than inventing one; a
+# lane's risk then rests on the sea-state corridors it crosses and on
+# whichever end *does* have congestion data. "Asia" matches how the CSV
+# itself labels South Asian ports (e.g. Colombo).
+PORTS_WITHOUT_CONGESTION_DATA: Dict[str, Tuple[str, str]] = {
+    "Nhava Sheva (Mumbai)": ("India", "Asia"),
+    "Mundra": ("India", "Asia"),
+    "Chennai": ("India", "Asia"),
+    "Cochin": ("India", "Asia"),
+    "Visakhapatnam": ("India", "Asia"),
 }
 
 # Real maritime chokepoints used purely for route *geometry* -- summing
@@ -65,4 +88,19 @@ EXTRA_WAYPOINT_COORDINATES: Dict[str, Tuple[float, float]] = {
     "Off Cape Verde": (15.00, -25.00),
     "Southern North Sea": (52.60, 3.20),
     "German Bight": (54.00, 7.50),
+    # Offshore points around the Indian subcontinent, so a lane between
+    # a west-coast Indian port and Colombo/Singapore rounds Cape Comorin
+    # and Sri Lanka's south tip over water instead of cutting across the
+    # peninsula, and an east-coast one passes Sri Lanka's east side and
+    # the Nicobars' Ten Degree Channel.
+    "Off Goa": (15.00, 72.40),
+    "Off Kochi": (9.00, 75.00),
+    "Cape Comorin": (7.20, 77.50),
+    "South of Sri Lanka": (5.55, 80.20),
+    "East of Sri Lanka": (8.00, 82.60),
+    "Southeast of Sri Lanka": (5.60, 81.60),
+    "Ten Degree Channel": (9.80, 92.80),
+    "Off Sabang": (6.40, 95.20),
+    "Northern Strait of Malacca": (5.40, 98.50),
+    "Gulf of Oman": (24.60, 58.60),
 }

@@ -12,7 +12,7 @@ from fastapi.testclient import TestClient
 
 from app.agents.ingestion.live_conditions_client import LiveConditionsClient, MONITORED_LOCATIONS
 from app.main import app
-from app.twin.coordinates import EXTRA_WAYPOINT_COORDINATES, PORT_COORDINATES
+from app.twin.coordinates import EXTRA_WAYPOINT_COORDINATES, PORT_COORDINATES, PORTS_WITHOUT_CONGESTION_DATA
 from app.twin.digital_twin import DigitalTwin, WAYPOINT_COORDINATES, haversine_nm
 from app.twin.lanes import SHIPPING_LANES
 
@@ -150,14 +150,86 @@ class TestGraphStructure:
     def test_edge_count_matches_curated_lanes(self, twin):
         assert twin.graph.number_of_edges() == len(SHIPPING_LANES)
 
-    def test_every_node_has_real_congestion_data(self, twin):
-        """All 20 curated ports are drawn from port_congestion.csv's own
-        port list, so every node should find a matching row -- a
-        mismatch here would mean the CSV and the curated coordinates
-        have silently drifted apart."""
+    def test_every_csv_port_has_real_congestion_data(self, twin):
+        """The 20 ports drawn from port_congestion.csv's own port list
+        must each find a matching row -- a mismatch here would mean the
+        CSV and the curated coordinates have silently drifted apart.
+        (Ports listed in PORTS_WITHOUT_CONGESTION_DATA are checked below.)"""
         for port, attrs in twin.graph.nodes(data=True):
+            if port in PORTS_WITHOUT_CONGESTION_DATA:
+                continue
+            assert attrs["has_congestion_data"] is True, f"{port} has no congestion row"
             assert attrs["congestion_index"] is not None, f"{port} has no congestion data"
             assert attrs["country"] is not None, f"{port} has no country"
+
+
+class TestIndianPorts:
+    """Ports the congestion dataset doesn't cover: real coordinates and
+    lanes, but no invented congestion figures."""
+
+    INDIAN = ["Nhava Sheva (Mumbai)", "Mundra", "Chennai", "Cochin", "Visakhapatnam"]
+
+    @pytest.fixture
+    def twin(self):
+        return DigitalTwin()
+
+    def test_all_five_are_in_the_twin_with_indian_coordinates(self, twin):
+        for port in self.INDIAN:
+            node = twin.graph.nodes[port]
+            assert node["country"] == "India"
+            assert 8 <= node["lat"] <= 24 and 68 <= node["lon"] <= 85, port
+
+    def test_they_never_get_made_up_congestion_numbers(self, twin):
+        for port in self.INDIAN:
+            node = twin.graph.nodes[port]
+            assert node["has_congestion_data"] is False
+            assert node["congestion_index"] is None and node["congestion_percentile"] is None
+            assert node["avg_wait_days"] is None and node["berth_delay_hrs"] is None
+
+    def test_every_indian_port_is_connected_to_the_network(self, twin):
+        for port in self.INDIAN:
+            assert twin.graph.degree(port) >= 2, f"{port} has too few lanes"
+
+    def test_lane_distances_are_realistic(self, twin):
+        """Loose bounds around real sailing distances (nm)."""
+        expected = {
+            "nhavasheva-colombo": (800, 1100),
+            "nhavasheva-singapore": (2300, 2900),
+            "nhavasheva-rotterdam-suez": (5900, 6800),
+            "mundra-dubai": (700, 1200),
+            "chennai-colombo": (550, 900),
+            "chennai-singapore": (1400, 1900),
+            "cochin-colombo": (300, 500),
+        }
+        by_id = {lane.lane_id: lane for lane in SHIPPING_LANES}
+        for lane_id, (low, high) in expected.items():
+            lane = by_id[lane_id]
+            distance = twin.graph.edges[lane.port_a, lane.port_b, lane_id]["distance_nm"]
+            assert low <= distance <= high, f"{lane_id}: {distance} nm"
+
+    def test_lane_risk_rests_on_the_known_end_and_says_the_other_has_no_data(self, twin):
+        twin.annotate_risk({})
+        edge = twin.graph.edges["Nhava Sheva (Mumbai)", "Colombo", "nhavasheva-colombo"]
+        colombo_pct = twin.graph.nodes["Colombo"]["congestion_percentile"]
+        assert edge["risk"] == colombo_pct
+        assert "No congestion data for Nhava Sheva (Mumbai)" in edge["risk_reason"]
+
+    def test_a_lane_between_two_ports_with_data_has_no_missing_data_note(self, twin):
+        twin.annotate_risk({})
+        edge = twin.graph.edges["Antwerp", "Felixstowe", "antwerp-felixstowe"]
+        assert "No congestion data" not in edge["risk_reason"]
+
+    def test_the_arabian_sea_corridor_now_covers_indian_lanes(self, twin):
+        twin.annotate_risk({"Arabian Sea": 90})
+        edge = twin.graph.edges["Nhava Sheva (Mumbai)", "Dubai (Jebel Ali)", "nhavasheva-dubai"]
+        assert edge["risk"] == 90 and "sea-state" in edge["risk_reason"]
+
+    def test_indian_lanes_round_sri_lanka_in_the_right_order(self):
+        by_id = {lane.lane_id: lane for lane in SHIPPING_LANES}
+        west = by_id["nhavasheva-singapore"].waypoints
+        assert west.index("Cape Comorin") < west.index("South of Sri Lanka") < west.index("Off Sabang") < west.index("Strait of Malacca")
+        east = by_id["chennai-colombo"].waypoints
+        assert east == ["East of Sri Lanka", "Southeast of Sri Lanka", "South of Sri Lanka"]
 
     def test_cape_route_is_longer_than_suez_route(self, twin):
         """The real reason ships take Suez over the Cape at all --

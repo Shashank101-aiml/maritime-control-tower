@@ -142,7 +142,7 @@ Architected a governed, 12-agent multi-agent system (ingestion, risk, route opti
 
 Trained and benchmarked three independent LightGBM models against their own real baselines — a port/vessel congestion classifier (138K+ samples across 3 sources, ROC-AUC 0.82), a shipment-delay classifier (9.2K orders, PR-AUC 0.90 vs. a 0.02 baseline on a ~2% positive rate), and a fuel-consumption regressor (R²=0.95, 83.6% lower MAE than a naive baseline) — plus an unsupervised Isolation Forest anomaly detector over real per-port congestion history.
 
-Built a live digital twin (NetworkX graph of 20 real ports and shipping lanes) with multi-objective route optimisation (cost, delay, risk, emissions) and a what-if scenario simulator for evaluating rerouting under corridor disruption.
+Built a live digital twin (NetworkX graph of 25 real ports (20 with weekly congestion data, 5 Indian ports without) and shipping lanes) with multi-objective route optimisation (cost, delay, risk, emissions) and a what-if scenario simulator for evaluating rerouting under corridor disruption.
 Ingested real-time AIS vessel positions over WebSocket, live marine/weather conditions across 8 monitored corridors, and maritime news events (NLP classification + location extraction) into the governed pipeline, closing the loop with human-in-the-loop feedback and per-prediction model explainability (LightGBM feature attribution).
 
 Tech Stack: Python, FastAPI, LightGBM, scikit-learn, NetworkX, PostgreSQL (SQLAlchemy, Alembic), React, Vite, Leaflet, Docker, GitHub Actions
