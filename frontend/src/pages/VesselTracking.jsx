@@ -74,7 +74,7 @@ export default function VesselTracking() {
         <div>
           <h1 className="page-title">
             <Ship size={24} color="var(--primary)" />
-            Corridor Tracking
+            Corridors &amp; Vessels
           </h1>
           <p className="page-subtitle">
             Live sea state at the maritime chokepoints and corridors under monitoring.
@@ -183,7 +183,7 @@ export default function VesselTracking() {
                     size={17}
                     color={ais?.connected ? 'var(--success)' : 'var(--text-subtle)'}
                   />
-                  Live AIS vessels{ais?.count ? ` (${ais.count})` : ''}
+                  Live AIS traffic (all ships){ais?.count ? ` (${ais.count})` : ''}
                 </h3>
                 {ais?.configured && (
                   <span

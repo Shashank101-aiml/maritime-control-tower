@@ -10,7 +10,7 @@ const NAV_GROUPS = [
     label: 'Operations',
     items: [
       { id: 'dashboard', label: 'Fleet Overview', icon: Activity },
-      { id: 'tracking', label: 'Vessel Tracking', icon: Ship },
+      { id: 'tracking', label: 'Corridors & Vessels', icon: Ship },
       { id: 'fleet', label: 'My Fleet', icon: Container },
       { id: 'monitor', label: 'Event Monitor', icon: Radio },
     ],

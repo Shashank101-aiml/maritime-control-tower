@@ -92,7 +92,7 @@ export default function RouteRecommendations({ setActiveTab }) {
     })();
   }, []);
 
-  // A corridor selected elsewhere (Vessel Tracking, Risk Analysis)
+  // A corridor selected elsewhere (Corridors & Vessels, Risk Analysis)
   // overrides the default with a real lane that actually crosses it --
   // a corridor is a sea-state zone, not a port, so it can't be an
   // origin/destination itself.

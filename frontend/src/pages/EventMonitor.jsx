@@ -68,9 +68,9 @@ export default function EventMonitor() {
   // Shared across tabs (see CorridorContext.jsx). This page both reads a
   // selection made elsewhere (to drive the dedicated status panel below)
   // and writes one from the Corridor Status list further down -- so a
-  // corridor picked here shows up on Vessel Tracking's map, Risk
+  // corridor picked here shows up on the Corridors & Vessels map, Risk
   // Analysis's highlighted card, and Route Planning's auto-filled
-  // origin/destination, exactly as a selection made on Vessel Tracking
+  // origin/destination, exactly as a selection made on Corridors & Vessels
   // shows up here.
   const { selectedCorridor, selectCorridor, clearCorridor } = useCorridorContext();
 
@@ -168,7 +168,7 @@ export default function EventMonitor() {
       {/* Selected Corridor -- Live Status. A dedicated, always-visible
           section (not just a filtered list row) showing everything
           currently known about whichever corridor is selected, whether
-          that selection was made here or on Vessel Tracking's map. */}
+          that selection was made here or on the Corridors & Vessels map. */}
       {selectedCorridor && (
         <div
           className="glass-panel"
@@ -257,7 +257,7 @@ export default function EventMonitor() {
               </div>
 
               <p className="form-note" style={{ marginTop: '12px' }}>
-                This selection is shared across tabs — it also focuses the map on Vessel Tracking,
+                This selection is shared across tabs — it also focuses the map on Corridors &amp; Vessels,
                 highlights the corridor on Risk Analysis, and auto-fills Route Planning.
               </p>
             </>
@@ -384,7 +384,7 @@ export default function EventMonitor() {
             monitored corridor, worst-first), so no extra network call.
             Clicking a corridor here both narrows the log feed on this
             page AND updates the shared CorridorContext, so the same pick
-            is reflected on Vessel Tracking's map, Risk Analysis's
+            is reflected on the Corridors & Vessels map, Risk Analysis's
             highlighted card, and Route Planning's auto-filled route. */}
         <div className="panel">
           <div className="section-header">
@@ -397,7 +397,7 @@ export default function EventMonitor() {
             Live sea state per monitored corridor, with how it has moved over the last 24 hours. The
             arrow is the change since the previous reading (the source updates every 15 minutes).
             Select a corridor to see its full status above, filter the log feed here, and focus it
-            across Vessel Tracking, Risk Analysis, and Route Planning.
+            across Corridors &amp; Vessels, Risk Analysis, and Route Planning.
           </p>
 
           {loading && rawHistory.length === 0 ? (

@@ -17,7 +17,7 @@ export const getTwin = async () => {
 
 /**
  * Real lanes whose real waypoints include this corridor, worst risk
- * first. Turns "the user selected a corridor on Vessel Tracking" into
+ * first. Turns "the user selected a corridor on Corridors & Vessels" into
  * a real port pair to route-optimize around -- a corridor is a sea-
  * state monitoring zone, not a port, so it can't be an origin or
  * destination itself; this finds the actual shipping lanes that

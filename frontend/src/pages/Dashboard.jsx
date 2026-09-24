@@ -20,7 +20,7 @@ export default function Dashboard({ activeTab, setActiveTab }) {
   const [executing, setExecuting] = useState(false);
   const [error, setError] = useState(null);
   // Shared across tabs (see CorridorContext.jsx) -- picking a corridor
-  // from the hazard feed here focuses it on Vessel Tracking's map,
+  // from the hazard feed here focuses it on the Corridors & Vessels map,
   // highlights it on Risk Analysis, and auto-fills Route Planning, the
   // same as a selection made on any of those pages already does.
   const { selectCorridor } = useCorridorContext();
