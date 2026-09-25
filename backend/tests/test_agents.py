@@ -71,3 +71,6 @@ def test_agents_endpoint_reports_every_registered_agent_with_its_real_status():
     assert by_id["fuel-agent"]["status"] == "DEGRADED"
     assert by_id["route-agent"]["status"] == "QUARANTINED"
     assert by_id["delay-agent"]["last_active"] is None  # never ran: no invented timestamp
+    # what the hover panel shows: the agent's objective and its real governance settings
+    assert "live ETA" in by_id["delay-agent"]["synopsis"]
+    assert by_id["risk-agent"]["confidence_threshold"] == 0.7 and by_id["risk-agent"]["executions"] == 3

@@ -323,7 +323,7 @@ export default function Dashboard({ activeTab, setActiveTab }) {
 
             <div className="agents-list">
               {agents.map((ag, i) => (
-                <div key={ag.agent_name || i} className="agent-item">
+                <div key={ag.agent_name || i} className="agent-item agent-has-pop" tabIndex={0}>
                   <div className="agent-info">
                     <div className="agent-avatar">
                       <Cpu size={16} />
@@ -337,6 +337,19 @@ export default function Dashboard({ activeTab, setActiveTab }) {
                     <span className="pulse-dot" />
                     {ag.status}
                   </span>
+                  {ag.synopsis && (
+                    <div className="agent-pop" role="tooltip">
+                      <strong>{ag.agent_name}</strong>
+                      <p>{ag.synopsis}</p>
+                      <div className="kpi-pop-row"><span>Approval needed below</span><b>{Math.round(ag.confidence_threshold * 100)}% confidence</b></div>
+                      <div className="kpi-pop-row"><span>Risk level</span><b>{ag.risk_level?.toLowerCase()}</b></div>
+                      <div className="kpi-pop-row"><span>Runs so far</span><b>{ag.executions}</b></div>
+                      <div className="kpi-pop-row"><span>Last active</span><b style={{ textTransform: 'none' }}>{ag.last_active || 'never'}</b></div>
+                      {ag.permissions?.length > 0 && (
+                        <div className="kpi-pop-row"><span>Allowed to</span><b style={{ textTransform: 'none' }}>{ag.permissions.join(', ')}</b></div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
