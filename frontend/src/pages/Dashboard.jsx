@@ -12,6 +12,23 @@ import SeaTrend from '../components/SeaTrend';
 import { useSeaStateHistory } from '../hooks/useSeaStateHistory';
 import { useCorridorContext } from '../context/CorridorContext';
 
+/** A KPI tile whose details appear on hover or keyboard focus. */
+function KpiCard({ label, value, suffix, valueColor, icon, iconColor, pop }) {
+  return (
+    <div className="kpi-card kpi-has-pop" tabIndex={0}>
+      <div>
+        <div className="kpi-label">{label}</div>
+        <div className="kpi-val" style={{ color: valueColor }}>
+          {value}
+          {suffix && <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-subtle)' }}>{suffix}</span>}
+        </div>
+      </div>
+      <div className="kpi-icon-box" style={{ color: iconColor }}>{icon}</div>
+      <div className="kpi-pop" role="tooltip">{pop}</div>
+    </div>
+  );
+}
+
 export default function Dashboard({ activeTab, setActiveTab }) {
   const [stats, setStats] = useState(null);
   const [agents, setAgents] = useState([]);
@@ -99,52 +116,59 @@ export default function Dashboard({ activeTab, setActiveTab }) {
       </div>
 
       <div className="kpi-grid">
-        <div className="kpi-card">
-          <div>
-            <div className="kpi-label">Active vessels</div>
-            <div className="kpi-val">{stats?.active_vessels ?? '—'}</div>
-          </div>
-          <div className="kpi-icon-box" style={{ color: 'var(--info)' }}>
-            <Ship size={18} />
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div>
-            <div className="kpi-label">Weather alerts</div>
-            <div className="kpi-val" style={{ color: alerts > 1 ? 'var(--warning)' : undefined }}>
-              {alerts ?? '—'}
-            </div>
-          </div>
-          <div className="kpi-icon-box" style={{ color: 'var(--warning)' }}>
-            <Wind size={18} />
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div>
-            <div className="kpi-label">Fleet hazard risk</div>
-            <div className="kpi-val" style={{ color: riskScore > 50 ? 'var(--danger)' : undefined }}>
-              {riskScore != null ? `${riskScore}` : '—'}
-              {riskScore != null && (
-                <span style={{ fontSize: '0.9rem', fontWeight: 500, color: 'var(--text-subtle)' }}> /100</span>
-              )}
-            </div>
-          </div>
-          <div className="kpi-icon-box" style={{ color: riskScore > 50 ? 'var(--danger)' : 'var(--success)' }}>
-            <ShieldCheck size={18} />
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div>
-            <div className="kpi-label">Active agents</div>
-            <div className="kpi-val">{agents.length || '—'}</div>
-          </div>
-          <div className="kpi-icon-box" style={{ color: 'var(--primary)' }}>
-            <Cpu size={18} />
-          </div>
-        </div>
+        <KpiCard
+          label="Active vessels" icon={<Ship size={18} />} iconColor="var(--info)" value={stats?.active_vessels ?? '—'}
+          pop={(
+            <>
+              <strong>Ships heard on AIS in the last 24 hours</strong>
+              <p>Coastal receivers only hear ships near land, so this is dense around Singapore and Europe and thin elsewhere; it is not the world fleet.</p>
+              {(stats?.vessels_by_corridor || []).map((c) => (
+                <div key={c.location} className="kpi-pop-row"><span>{c.location}</span><b>{c.vessels}</b></div>
+              ))}
+            </>
+          )}
+        />
+        <KpiCard
+          label="Weather alerts" icon={<Wind size={18} />} iconColor="var(--warning)" value={alerts ?? '—'}
+          valueColor={alerts > 1 ? 'var(--warning)' : undefined}
+          pop={(
+            <>
+              <strong>Corridors at warning level or above</strong>
+              <p>Counted from live wave, swell and wind readings for the 8 monitored corridors.</p>
+              {(stats?.alerts || []).length === 0
+                ? <div className="kpi-pop-row"><span>No corridor is at warning level right now.</span></div>
+                : stats.alerts.map((a) => (
+                  <div key={a.location} className="kpi-pop-row"><span>{a.location}</span><b>{a.severity}</b></div>
+                ))}
+            </>
+          )}
+        />
+        <KpiCard
+          label="Fleet hazard risk" icon={<ShieldCheck size={18} />} iconColor={riskScore > 50 ? 'var(--danger)' : 'var(--success)'}
+          value={riskScore != null ? `${riskScore}` : '—'} suffix={riskScore != null ? ' /100' : null}
+          valueColor={riskScore > 50 ? 'var(--danger)' : undefined}
+          pop={(
+            <>
+              <strong>Average of the 8 corridors&apos; risk scores</strong>
+              <p>Each corridor is scored 0–100 from its live sea state. Above 50 turns red.</p>
+              {[...(stats?.risk_by_corridor || [])].sort((x, y) => y.score - x.score).map((c) => (
+                <div key={c.location} className="kpi-pop-row"><span>{c.location}</span><b>{c.score}</b></div>
+              ))}
+            </>
+          )}
+        />
+        <KpiCard
+          label="Active agents" icon={<Cpu size={18} />} iconColor="var(--primary)" value={agents.filter((a) => a.status === 'ONLINE').length || '—'}
+          pop={(
+            <>
+              <strong>Agents registered with governance</strong>
+              <p>{agents.length} registered; status comes from each agent&apos;s health record.</p>
+              {agents.map((a) => (
+                <div key={a.id || a.agent_name} className="kpi-pop-row"><span>{a.agent_name}</span><b>{a.status.toLowerCase()}</b></div>
+              ))}
+            </>
+          )}
+        />
       </div>
 
       {activeTab === 'workflow' ? (
