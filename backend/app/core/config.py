@@ -48,6 +48,9 @@ class Settings(BaseSettings):
     # Unset -> the AIS collector stays dormant and /api/vessels reports
     # configured: false rather than showing stale or invented vessels.
     AISSTREAM_API_KEY: Optional[str] = None
+    # Key from https://www.oilpriceapi.com for live bunker (marine fuel) prices
+    # on the Fuel & Cost page. Unset -> cost is left out rather than guessed.
+    OIL_PRICE_API: Optional[str] = None
 
     # Operator fleets. AISStream allows at most 50 MMSIs per subscription,
     # so that is the ceiling on vessels tracked across all operators.

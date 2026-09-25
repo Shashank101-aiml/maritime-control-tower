@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -8,3 +10,4 @@ class FuelPredictionRequest(BaseModel):
     weather_conditions: str
     distance: float
     month_num: int
+    price_hub: Optional[str] = None
