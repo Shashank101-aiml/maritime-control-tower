@@ -16,6 +16,9 @@ from typing import List
 
 router = APIRouter()
 
+# The statuses the governance engine understands (see AgentIdentity.status).
+AGENT_STATUSES = {"ACTIVE", "PAUSED", "DEGRADED", "QUARANTINED", "DISABLED"}
+
 @router.get("/agents")
 def read_agents(db: Session = Depends(get_db)):
     agents = db.query(AgentIdentity).all()
@@ -106,6 +109,8 @@ def update_agent_status(
     """Quarantining or re-enabling an agent halts or resumes the whole
     pipeline, so it is admin-only.
     """
+    if status not in AGENT_STATUSES:
+        raise HTTPException(status_code=422, detail=f"status must be one of: {', '.join(sorted(AGENT_STATUSES))}")
     agent = db.query(AgentIdentity).filter(AgentIdentity.id == agent_id).first()
     if not agent:
         raise HTTPException(status_code=404, detail="Agent not found")

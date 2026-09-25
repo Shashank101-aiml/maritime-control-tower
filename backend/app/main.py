@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
@@ -47,7 +49,8 @@ from app.api.dependencies.auth import get_current_active_user
 
 from app.core.constants import UserRole
 from app.core.logging import get_logger
-from app.core.security import hash_password
+from app.core.passwords import check_password_strength
+from app.core.security import hash_password, verify_password
 from app.database.base import Base
 from app.api.dependencies.database import SessionLocal, engine
 from app.models.governance import AgentIdentity, AgentHealth, AgentPermission
@@ -64,6 +67,7 @@ async def lifespan(app: FastAPI):
     # ais_collector) has finished importing.
     seed_governance_agents()
     seed_first_superuser()
+    warn_about_weak_passwords()
     ais_collector.start()  # No-op when AISSTREAM_API_KEY is unset.
     fleet_tracker.start()  # Same; idles until vessels are registered.
     sync_fleet_tracker()
@@ -85,6 +89,19 @@ app = FastAPI(
 # module back.
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.exception_handler(RequestValidationError)
+async def _validation_error_handler(request, exc: RequestValidationError):
+    """422 with where and why, but never the offending value. FastAPI's own
+    reply echoes the input back, which crashes the response for values JSON
+    can't represent (inf, NaN) and would reflect whatever a caller sent."""
+    return JSONResponse(
+        status_code=422,
+        content={"detail": [
+            {"type": e.get("type"), "loc": list(e.get("loc", ())), "msg": e.get("msg")} for e in exc.errors()
+        ]},
+    )
 app.add_middleware(SlowAPIMiddleware)
 
 # Explicit origin allowlist. `allow_origins=["*"]` with
@@ -116,6 +133,14 @@ def seed_first_superuser():
         if db.query(User).count() > 0:
             return
 
+        problem = check_password_strength(settings.FIRST_SUPERUSER_PASSWORD, settings.FIRST_SUPERUSER_USERNAME)
+        if problem:
+            # Refuse rather than create an admin with a guessable password.
+            raise RuntimeError(
+                f"FIRST_SUPERUSER_PASSWORD {problem}. Set a strong one in .env "
+                "(or run `python scripts/bootstrap.py` to generate it) and start again."
+            )
+
         admin = User(
             email=settings.FIRST_SUPERUSER_EMAIL,
             username=settings.FIRST_SUPERUSER_USERNAME,
@@ -127,15 +152,22 @@ def seed_first_superuser():
         )
         db.add(admin)
         db.commit()
+        logger.info("Seeded initial superuser '%s'.", settings.FIRST_SUPERUSER_USERNAME)
+    finally:
+        db.close()
 
-        if settings.FIRST_SUPERUSER_PASSWORD == "admin":
-            logger.warning(
-                "Seeded superuser '%s' with the default password. Change "
-                "FIRST_SUPERUSER_PASSWORD before exposing this service.",
-                settings.FIRST_SUPERUSER_USERNAME,
-            )
-        else:
-            logger.info("Seeded initial superuser '%s'.", settings.FIRST_SUPERUSER_USERNAME)
+
+def warn_about_weak_passwords():
+    """Existing accounts made before the password policy may still use a
+    well-known password; say so at every start until they are changed."""
+    db = SessionLocal()
+    try:
+        for user in db.query(User).filter(User.is_active.is_(True)).all():
+            if any(verify_password(guess, user.hashed_password) for guess in ("admin", "change-me", user.username)):
+                logger.warning(
+                    "Account '%s' still uses a well-known password. Change it: "
+                    "`python -m app.cli.set_password %s`", user.username, user.username,
+                )
     finally:
         db.close()
 

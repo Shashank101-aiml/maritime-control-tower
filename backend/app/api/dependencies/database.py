@@ -1,17 +1,3 @@
-from typing import Generator
+"""FastAPI's database dependency. The engine itself lives in app.database.connection."""
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
-
-from app.core.config import settings
-
-engine = create_engine(str(settings.DATABASE_URL), connect_args={"check_same_thread": False} if str(settings.DATABASE_URL).startswith("sqlite") else {})
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-def get_db() -> Generator[Session, None, None]:
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from app.database.connection import SessionLocal, engine, get_db  # noqa: F401

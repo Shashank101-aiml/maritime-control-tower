@@ -9,6 +9,10 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    env:
+      # The app refuses to start without a real-looking secret key. This one exists
+      # only for CI runs and protects nothing; tests also generate their own.
+      SECRET_KEY: ci-only-throwaway-key-0123456789-abcdefghijklmnop
     defaults:
       run:
         working-directory: backend

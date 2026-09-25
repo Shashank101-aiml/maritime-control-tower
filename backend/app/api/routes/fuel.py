@@ -16,6 +16,9 @@ from app.schemas.fuel import FuelPredictionRequest
 from app.core.limiter import RATE_LIMIT, limiter
 from app.twin.digital_twin import get_digital_twin
 
+from app.core.logging import get_logger
+
+logger = get_logger(__name__)
 router = APIRouter()
 
 
@@ -34,8 +37,13 @@ def predict_fuel(request: Request, payload: FuelPredictionRequest, db: Session =
         trace, requires_approval = engine.execute_agent_task(
             "fuel-agent", "PREDICT", features, run
         )
-    except Exception as exc:
+    except ValueError as exc:
         return {"status": "FAILED", "session_id": session_id, "error": str(exc)}
+    except Exception:
+        # Anything else is ours to fix, not the caller's to read: log it in full
+        # and give them a message that leaks nothing (database errors, paths).
+        logger.exception("Fuel estimate failed")
+        return {"status": "FAILED", "session_id": session_id, "error": "The estimate could not be produced. Please try again."}
 
     trace.request_id = session_id
     db.commit()

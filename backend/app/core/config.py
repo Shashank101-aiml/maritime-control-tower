@@ -3,11 +3,14 @@ from typing import Dict, List, Optional
 from typing_extensions import Annotated
 
 from pydantic_settings import BaseSettings, NoDecode
-from pydantic import AnyUrl, field_validator
+from pydantic import AnyUrl, field_validator, model_validator
 
 
 class Settings(BaseSettings):
-    SECRET_KEY: str = "change-this-secret"
+    # Signs every login token, so it must be long and secret. There is no
+    # default on purpose: a known default would let anyone forge an admin
+    # token. `python scripts/bootstrap.py` generates one into .env.
+    SECRET_KEY: str = ""
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     DATABASE_URL: AnyUrl = "sqlite:///./sql_app.db"
@@ -33,7 +36,9 @@ class Settings(BaseSettings):
 
     FIRST_SUPERUSER_EMAIL: str = "admin@example.com"
     FIRST_SUPERUSER_USERNAME: str = "admin"
-    FIRST_SUPERUSER_PASSWORD: str = "admin"
+    # Required the first time the app starts on an empty database; must pass
+    # app.core.passwords.check_password_strength. No default on purpose.
+    FIRST_SUPERUSER_PASSWORD: str = ""
     OPENAI_API_KEY: Optional[str] = None
     WEATHER_API_KEY: Optional[str] = None
     NEWS_API_KEY: Optional[str] = None
@@ -99,6 +104,17 @@ class Settings(BaseSettings):
                 for key, raw in (pair.split(":", 1) for pair in pairs)
             }
         return value
+
+    @model_validator(mode="after")
+    def _require_a_real_secret_key(self):
+        placeholders = {"", "change-this-secret", "change-me", "secret", "changeme"}
+        key = self.SECRET_KEY.strip()
+        if key.lower() in placeholders or key.lower().startswith("change-me") or len(key) < 32:
+            raise ValueError(
+                "SECRET_KEY is missing or too weak (it must be at least 32 random characters). "
+                "Run `python scripts/bootstrap.py` to create a .env with a generated one."
+            )
+        return self
 
     class Config:
         # The project's single .env lives at the repo root (backend/app/core

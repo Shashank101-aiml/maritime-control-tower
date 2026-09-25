@@ -4,7 +4,7 @@ services:
     container_name: maritime-db
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-maritime}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-maritime}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Missing POSTGRES_PASSWORD - run python scripts/bootstrap.py first}
       POSTGRES_DB: ${POSTGRES_DB:-maritime}
     volumes:
       # Named volume, so history survives `docker compose down`.
@@ -14,7 +14,8 @@ services:
       # already holds 5432 on the host, and Docker will happily bind
       # alongside it, leaving host connections silently reaching the
       # wrong server. Containers talk to this one as db:5432 regardless.
-      - "${POSTGRES_HOST_PORT:-5433}:5432"
+      # 127.0.0.1 only: reachable from this computer, not from the network.
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5433}:5432"
     healthcheck:
       # The backend waits for this rather than racing the database on
       # startup and failing its migrations.
@@ -36,7 +37,7 @@ services:
       # rather than silently misrouting the way the 5432/Postgres case
       # did -- but it's still one more thing to override per machine.
       # Containers still talk to this one as backend:8000 regardless.
-      - "${BACKEND_HOST_PORT:-8001}:8000"
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8001}:8000"
     volumes:
       # The congestion/delay/fuel/risk agents locate the trained models by
       # walking up from their own file (parents[4]), which on the host
@@ -58,7 +59,7 @@ services:
     environment:
       # Overrides the .env value so the container talks to the db
       # service rather than a host-local SQLite file.
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-maritime}:${POSTGRES_PASSWORD:-maritime}@db:5432/${POSTGRES_DB:-maritime}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-maritime}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-maritime}
     depends_on:
       db:
         condition: service_healthy
@@ -79,7 +80,7 @@ services:
         VITE_API_BASE_URL: http://localhost:${BACKEND_HOST_PORT:-8001}
     container_name: maritime-frontend
     ports:
-      - "80:80"
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-80}:80"
     depends_on:
       - backend
     restart: unless-stopped

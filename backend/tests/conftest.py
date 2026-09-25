@@ -1,3 +1,12 @@
+import os
+import secrets
+
+# The app refuses to start without a real secret key and a strong first-admin
+# password. Tests get throwaway ones for this run only, so nothing has to be
+# configured (or committed) for the suite to run, locally or in CI.
+os.environ.setdefault("SECRET_KEY", secrets.token_urlsafe(48))
+os.environ.setdefault("FIRST_SUPERUSER_PASSWORD", secrets.token_urlsafe(18))
+
 import pytest
 
 from app.agents.ingestion import live_conditions_client
@@ -37,6 +46,15 @@ def authenticated_by_default():
     yield
     app.dependency_overrides.pop(get_current_active_user, None)
     app.dependency_overrides.pop(get_current_active_superuser, None)
+
+
+@pytest.fixture(autouse=True)
+def fresh_login_guard():
+    from app.core import login_guard
+
+    login_guard.reset()
+    yield
+    login_guard.reset()
 
 
 @pytest.fixture

@@ -84,11 +84,9 @@ class TestIngestionAgentNewsUnderstanding:
 
 class TestUnderstandApiRoute:
     def _token(self):
-        res = client.post(
-            "/api/auth/login",
-            data={"username": "admin@example.com", "password": "admin"},
-        )
-        return res.json()["access_token"]
+        # Sign-in is stubbed for every test (see conftest.authenticated_by_default), so the
+        # header only has to be present; this must not depend on a real account or password.
+        return "unused-auth-is-overridden"
 
     def test_understand_endpoint_returns_real_classification(self):
         token = self._token()

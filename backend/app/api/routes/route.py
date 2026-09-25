@@ -1,3 +1,4 @@
+import math
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
@@ -25,6 +26,9 @@ def optimize_route(
     See RouteOptimizer (agents/route/optimizer.py) for how candidates
     are found and scored.
     """
+    if origin.strip().lower() == destination.strip().lower():
+        raise HTTPException(422, "Origin and destination must be different ports.")
+
     parsed_weights = None
     if weights:
         try:
@@ -39,6 +43,11 @@ def optimize_route(
                 422,
                 f"Malformed weights {weights!r}; expected 'risk:0.4,cost:0.25,delay:0.25,emissions:0.1'.",
             )
+        unknown = set(parsed_weights) - {"risk", "cost", "delay", "emissions"}
+        if unknown:
+            raise HTTPException(422, f"Unknown weight(s): {', '.join(sorted(unknown))}. Use risk, cost, delay, emissions.")
+        if any(not math.isfinite(w) or w < 0 for w in parsed_weights.values()) or sum(parsed_weights.values()) <= 0:
+            raise HTTPException(422, "Weights must be finite, not negative, and add up to more than zero.")
 
     try:
         recommendation = RouteAgent().suggest_route(origin, destination, weights=parsed_weights)
