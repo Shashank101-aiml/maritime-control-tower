@@ -1,3 +1,4 @@
+import { formatTransit } from '../utils/duration';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Navigation, ShieldCheck, RefreshCw, AlertCircle, CheckCircle2, MapPin, Sliders, X, Waves,
@@ -427,7 +428,7 @@ export default function RouteRecommendations({ setActiveTab }) {
                 </p>
                 <div style={{ display: 'flex', gap: '20px', marginTop: '14px', fontSize: '0.85rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                   <span>Distance: <strong style={{ color: 'var(--text-strong)' }}>{Math.round(route.distance_nm).toLocaleString()} nm</strong></span>
-                  <span>Transit: <strong style={{ color: 'var(--text-strong)' }}>{route.transit_days.toFixed(1)} days</strong></span>
+                  <span>Transit: <strong style={{ color: 'var(--text-strong)' }}>{formatTransit(route.transit_days)}</strong></span>
                   <span>Risk: <strong style={{ color: route.risk > 50 ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>{route.risk}/100</strong></span>
                   <span>Alternatives considered: <strong style={{ color: 'var(--text-strong)' }}>{route.alternatives.length}</strong></span>
                 </div>

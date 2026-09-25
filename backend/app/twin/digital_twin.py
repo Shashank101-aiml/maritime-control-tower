@@ -174,7 +174,7 @@ class DigitalTwin:
                 lane_port_b=lane.port_b,
                 waypoints=list(lane.waypoints),
                 distance_nm=round(distance_nm),
-                transit_days=round(transit_days, 1),
+                transit_days=round(transit_days, 3),
                 cost_usd=round(distance_nm * COST_PER_NM_USD),
                 cost_model="distance_based_placeholder",
                 emissions_estimate=round(distance_nm * EMISSIONS_PER_NM),

@@ -14,6 +14,18 @@ from app.schemas.agent_io import RouteAlternative, RouteRecommendation
 from app.twin.digital_twin import fetch_live_corridor_scores, get_digital_twin
 
 
+def _duration(days: float) -> str:
+    """Whole days and hours: '12 days 2 hours', '1 day', '8 hours'."""
+    total_hours = max(1, round(days * 24))
+    d, h = divmod(total_hours, 24)
+    parts = []
+    if d:
+        parts.append(f"{d} day{'s' if d != 1 else ''}")
+    if h:
+        parts.append(f"{h} hour{'s' if h != 1 else ''}")
+    return " ".join(parts)
+
+
 class RouteAgent:
     def __init__(self, optimizer: Optional[RouteOptimizer] = None) -> None:
         self.optimizer = optimizer or RouteOptimizer()
@@ -58,7 +70,7 @@ class RouteAgent:
         hops = f"{len(candidate.lane_ids)}-leg" if len(candidate.lane_ids) > 1 else "direct"
         return (
             f"{hops.capitalize()} route via {', '.join(candidate.lane_ids)} -- "
-            f"{candidate.distance_nm:.0f} nm, ~{candidate.transit_days:.1f} days, "
+            f"{candidate.distance_nm:.0f} nm, ~{_duration(candidate.transit_days)}, "
             f"risk {candidate.risk}/100."
         )
 

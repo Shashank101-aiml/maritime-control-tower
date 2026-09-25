@@ -120,7 +120,7 @@ class RouteOptimizer:
             origin=origin,
             destination=destination,
             distance_nm=round(distance_nm),
-            transit_days=round(transit_days, 1),
+            transit_days=round(transit_days, 3),
             cost_usd=round(cost_usd),
             emissions_estimate=round(emissions_estimate),
             risk=max(risks),

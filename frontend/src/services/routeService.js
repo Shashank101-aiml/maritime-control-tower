@@ -1,3 +1,4 @@
+import { formatTransit } from '../utils/duration';
 import { createRecommendation } from '../types/Recommendation';
 import { apiFetch } from './apiClient';
 
@@ -33,7 +34,7 @@ export const candidateToCorridorCard = (candidate, { recommended, index }) => ({
   id: candidate.lane_ids.join('+') || `alt-${index}`,
   name: candidate.lane_ids.join(' + '),
   distance: `${Math.round(candidate.distance_nm).toLocaleString()} nm`,
-  estTime: `${candidate.transit_days.toFixed(1)} days`,
+  estTime: formatTransit(candidate.transit_days),
   fuelConsumption: `~$${Math.round(candidate.cost_usd).toLocaleString()} est.`,
   reason: candidate.risk >= 60
     ? `Risk ${candidate.risk}/100 -- elevated exposure on this lane right now.`
