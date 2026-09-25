@@ -49,6 +49,42 @@ PORT_COORDINATES: Dict[str, Tuple[float, float]] = {
     "Visakhapatnam": (17.69, 83.30),
 }
 
+# Where each port's lanes begin and end: an open-water approach point just
+# off the port (river mouth, roads or pilot area), never on land. The port
+# coordinates above sit on quays and up rivers, inside the coastline, so a
+# lane drawn to them would run over land for its last stretch. Lane geometry
+# and distances start and end here; the port marker stays at the port.
+# Proposed by pipeline/generate_sea_legs.py (nearest water at least ~3 nm
+# from any coast) and reviewed by hand; Hamburg is set to the Elbe mouth
+# because its nearest open water is the Baltic, on the wrong side.
+PORT_APPROACH_COORDINATES: Dict[str, Tuple[float, float]] = {
+    "Antwerp": (51.77, 3.48),
+    "Busan": (34.97, 129.33),
+    "Colombo": (6.97, 79.63),
+    "Dubai (Jebel Ali)": (25.22, 54.93),
+    "Felixstowe": (51.82, 1.58),
+    "Guangzhou": (21.97, 113.97),
+    "Hamburg": (54.00, 8.10),
+    "Hong Kong": (21.97, 114.03),
+    "Laem Chabang": (13.07, 100.68),
+    "Long Beach": (33.42, -118.12),
+    "Los Angeles": (33.42, -118.12),
+    "New York": (40.38, -73.72),
+    "Ningbo": (30.32, 121.78),
+    "Qingdao": (35.88, 120.58),
+    "Rotterdam": (52.02, 3.83),
+    "Shanghai": (31.22, 122.08),
+    "Shenzhen": (22.22, 114.58),
+    "Singapore": (1.42, 104.47),
+    "Tanjung Pelepas": (1.38, 103.18),
+    "Tanjung Priok": (-5.83, 106.83),
+    "Nhava Sheva (Mumbai)": (18.97, 72.58),
+    "Mundra": (22.62, 69.28),
+    "Chennai": (13.07, 80.53),
+    "Cochin": (9.92, 76.03),
+    "Visakhapatnam": (17.58, 83.53),
+}
+
 # Ports that are in the twin but absent from port_congestion.csv, so
 # their country/region can't come from it and they have no congestion
 # metrics at all. DigitalTwin marks them `has_congestion_data: False`
@@ -104,3 +140,9 @@ EXTRA_WAYPOINT_COORDINATES: Dict[str, Tuple[float, float]] = {
     "Northern Strait of Malacca": (5.40, 98.50),
     "Gulf of Oman": (24.60, 58.60),
 }
+
+# The Suez Canal is a strip a few hundred metres wide, so it is absent from
+# the coastline data used to check that lanes stay at sea (Natural Earth 1:10m
+# shows it as land). This centreline, Suez to Port Said, is treated as water
+# by pipeline/generate_sea_legs.py and pipeline/check_lane_land.py.
+SUEZ_CANAL_CENTERLINE = [(29.93, 32.56), (30.30, 32.37), (30.60, 32.28), (30.85, 32.33), (31.26, 32.30), (31.60, 32.30)]

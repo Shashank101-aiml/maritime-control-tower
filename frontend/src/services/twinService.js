@@ -67,15 +67,20 @@ export const buildCoordLookup = (twin, corridorReadings) => {
 export const lanePathToPoints = (twin, laneIds, origin, coordLookup) => {
   const points = [];
   let current = origin;
-  if (coordLookup[current]) points.push({ name: current, ...coordLookup[current] });
   for (const laneId of laneIds || []) {
     const edge = twin?.edges?.find((e) => e.lane_id === laneId);
     if (!edge) break;
     const forward = edge.port_a === current;
     const next = forward ? edge.port_b : edge.port_a;
-    const wps = forward ? (edge.waypoints || []) : [...(edge.waypoints || [])].reverse();
-    wps.forEach((name) => { if (coordLookup[name]) points.push({ name, ...coordLookup[name] }); });
-    if (coordLookup[next]) points.push({ name: next, ...coordLookup[next] });
+    // The lane's own sea-only path (backend lane_geometry.py): it starts and ends at
+    // each port's open-water approach and includes turning points that keep it off
+    // land. Unnamed points are pure geometry -- they draw the line but get no marker.
+    const path = forward ? (edge.path || []) : [...(edge.path || [])].reverse();
+    path.forEach((p) => {
+      points.push(p.name
+        ? { ...(coordLookup[p.name] || {}), name: p.name, lat: p.lat, lon: p.lon }
+        : { name: null, type: 'geometry', lat: p.lat, lon: p.lon });
+    });
     current = next;
   }
   return points;

@@ -38,6 +38,7 @@ from app.agents.ingestion.live_conditions_client import (
     LiveConditionsClient,
 )
 from app.core.logging import get_logger
+from app.twin.lane_geometry import lane_points
 from app.twin.coordinates import EXTRA_WAYPOINT_COORDINATES, PORT_COORDINATES, PORTS_WITHOUT_CONGESTION_DATA
 from app.twin.lanes import SHIPPING_LANES
 
@@ -91,19 +92,12 @@ def haversine_nm(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 def _route_distance_nm(port_a: str, port_b: str, waypoints: List[str]) -> float:
-    """Sum of great-circle segments through each named waypoint, in
-    order. A lane with no waypoints is a single port-to-port segment --
-    fine for routes that don't cross a monitored strait/canal/cape, but
-    still a straight line rather than a real sailed track."""
-    points = [PORT_COORDINATES[port_a]]
-    for name in waypoints:
-        points.append(WAYPOINT_COORDINATES[name])
-    points.append(PORT_COORDINATES[port_b])
-
-    total = 0.0
-    for (lat1, lon1), (lat2, lon2) in zip(points, points[1:]):
-        total += haversine_nm(lat1, lon1, lat2, lon2)
-    return total
+    """Length of the lane's drawn path: its sea-only geometry from the
+    origin port's approach, through each named waypoint, to the destination
+    port's approach (see lane_geometry.py). Excludes the last few miles up a
+    river or into a berth."""
+    points = lane_points(port_a, waypoints, port_b, WAYPOINT_COORDINATES)
+    return sum(haversine_nm(a["lat"], a["lon"], b["lat"], b["lon"]) for a, b in zip(points, points[1:]))
 
 
 class DigitalTwin:
@@ -270,7 +264,10 @@ class DigitalTwin:
         # reported here must be the lane's, or a client walking the lane
         # draws its waypoints backwards.
         edges = [
-            {**attrs, "port_a": attrs["lane_port_a"], "port_b": attrs["lane_port_b"]}
+            {
+                **attrs, "port_a": attrs["lane_port_a"], "port_b": attrs["lane_port_b"],
+                "path": lane_points(attrs["lane_port_a"], attrs["waypoints"], attrs["lane_port_b"], WAYPOINT_COORDINATES),
+            }
             for _, _, attrs in self.graph.edges(data=True)
         ]
 

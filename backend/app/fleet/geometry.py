@@ -7,6 +7,7 @@ from math import cos, hypot, radians
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from app.twin.coordinates import PORT_COORDINATES
+from app.twin.lane_geometry import lane_points
 from app.twin.digital_twin import WAYPOINT_COORDINATES, haversine_nm
 
 NM_PER_DEGREE = 60.0
@@ -30,10 +31,8 @@ def distance_to_segment_nm(lat: float, lon: float, a: Tuple[float, float], b: Tu
 
 
 def lane_polyline(edge: Dict[str, Any]) -> List[Tuple[float, float]]:
-    points = [PORT_COORDINATES[edge["lane_port_a"]]]
-    points += [WAYPOINT_COORDINATES[name] for name in edge["waypoints"] if name in WAYPOINT_COORDINATES]
-    points.append(PORT_COORDINATES[edge["lane_port_b"]])
-    return points
+    points = lane_points(edge["lane_port_a"], edge["waypoints"], edge["lane_port_b"], WAYPOINT_COORDINATES)
+    return [(p["lat"], p["lon"]) for p in points]
 
 
 def nearest_lane(lat: float, lon: float, edges: Iterable[Dict[str, Any]]) -> Optional[Tuple[Dict[str, Any], float]]:

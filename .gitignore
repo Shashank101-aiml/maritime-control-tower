@@ -74,3 +74,4 @@ models/saved_models/*.joblib
 # (Slice 14) -- reproducible the same way the .joblib files are, so
 # not tracked for the same reason.
 models/saved_models/*_metrics.json
+pipeline/.cache/

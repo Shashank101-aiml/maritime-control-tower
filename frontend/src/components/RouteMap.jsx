@@ -50,7 +50,7 @@ export default function RouteMap({ candidates = [], selectedId, onSelect, height
     if (!selected) return [];
     const seen = new Map();
     selected.points.forEach((p) => {
-      if (!seen.has(p.name)) seen.set(p.name, p);
+      if (p.name && !seen.has(p.name)) seen.set(p.name, p);
     });
     return [...seen.values()];
   }, [selected]);

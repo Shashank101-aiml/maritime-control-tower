@@ -73,7 +73,7 @@ MONITORED_LOCATIONS: List[Dict[str, Any]] = [
     {"name": "Strait of Malacca", "lat": 2.50, "lon": 101.30},
     {"name": "Arabian Sea", "lat": 18.00, "lon": 65.00},
     {"name": "Port of Singapore", "lat": 1.26, "lon": 103.84},
-    {"name": "Cape of Good Hope", "lat": -34.60, "lon": 19.50},
+    {"name": "Cape of Good Hope", "lat": -35.20, "lon": 19.50},
     {"name": "English Channel (Dover)", "lat": 50.90, "lon": 1.40},
 ]
 
