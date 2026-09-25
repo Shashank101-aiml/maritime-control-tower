@@ -1,0 +1,15 @@
+{
+  "source": "data/cleaned/container_tracking.csv",
+  "rows_in": 1830,
+  "rows_kept": 1448,
+  "dropped": {
+    "missing loading or discharge port": 271,
+    "missing loading or discharge date": 76,
+    "ocean transit outside 3-150 days (bad dates)": 2,
+    "loaded outside 2020-01-01 to 2022-12-31 (typo'd years)": 33,
+    "same loading and discharge port": 0
+  },
+  "lanes": 283,
+  "loaded_from": "2020-01-08",
+  "loaded_to": "2022-02-28"
+}

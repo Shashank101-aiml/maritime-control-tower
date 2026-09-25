@@ -66,12 +66,19 @@ data/raw/*
 # default. Without it a fresh clone has no offline event source.
 !data/raw/example.json
 
-data/cleaned/
-data/features/
+# Derived files are not tracked (rebuild them with the pipeline/ scripts) EXCEPT the
+# few the running app reads, so a fresh clone works without the raw datasets.
+data/cleaned/*
+!data/cleaned/port_congestion.csv
+data/features/*
+!data/features/transit_journeys.csv
+!data/features/transit_journeys_summary.json
 data/processed/
 models/saved_models/*.joblib
-# Real metrics each train_*.py script persists alongside its model
-# (Slice 14) -- reproducible the same way the .joblib files are, so
-# not tracked for the same reason.
-models/saved_models/*_metrics.json
+!models/saved_models/risk_model.joblib
+!models/saved_models/congestion_model.joblib
+!models/saved_models/fuel_model.joblib
+!models/saved_models/anomaly_model.joblib
+# The metrics each train_*.py script saves next to its model ARE tracked:
+# the Evaluation page reads them.
 pipeline/.cache/

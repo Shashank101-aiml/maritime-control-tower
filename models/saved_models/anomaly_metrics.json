@@ -1,0 +1,10 @@
+{
+  "n_samples": 6260,
+  "n_ports": 20,
+  "contamination": 0.05,
+  "flagged_count": 313,
+  "flagged_rate": 0.05,
+  "score_min": -0.2094,
+  "score_max": 0.2204,
+  "trained_at": "2026-09-05T10:27:02.539432+00:00"
+}

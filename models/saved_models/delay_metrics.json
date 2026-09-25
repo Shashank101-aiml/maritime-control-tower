@@ -1,0 +1,33 @@
+{
+  "kind": "backtest",
+  "n_journeys": 1134,
+  "n_lanes": 44,
+  "folds": "rolling out-of-time (3 expanding windows)",
+  "transit_days": {
+    "lane_median_mae_days": 12.13,
+    "lightgbm_mae_days": 12.38,
+    "folds_where_model_beat_baseline": 1
+  },
+  "delayed": [
+    {
+      "threshold_days": 7,
+      "test_delayed_share": 0.378,
+      "lane_history_auc": 0.61,
+      "lightgbm_auc": 0.596,
+      "logistic_auc": 0.479,
+      "folds": 3
+    },
+    {
+      "threshold_days": 10,
+      "test_delayed_share": 0.324,
+      "lane_history_auc": 0.61,
+      "lightgbm_auc": 0.551,
+      "logistic_auc": 0.443,
+      "folds": 3
+    }
+  ],
+  "model_beats_baseline": false,
+  "served_method": "lane statistics",
+  "conclusion": "No model predicted a journey's transit time or delay better than the lane's own history across the out-of-time folds, so the service reports lane statistics rather than a model score.",
+  "trained_at": "2026-09-24T18:00:36.584278+00:00"
+}

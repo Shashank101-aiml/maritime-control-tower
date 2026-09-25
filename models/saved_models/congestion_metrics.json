@@ -1,0 +1,28 @@
+{
+  "n_train": 110874,
+  "n_test": 27806,
+  "roc_auc": 0.8168,
+  "pr_auc": 0.6257,
+  "no_skill_pr_auc": 0.2072,
+  "per_source": {
+    "global_loitering_weekly": {
+      "n": 25985,
+      "roc_auc": 0.8066,
+      "pr_auc": 0.621,
+      "positive_rate": 0.2131
+    },
+    "la_lb_visit_2023h2": {
+      "n": 561,
+      "roc_auc": 0.9115,
+      "pr_auc": 0.8147,
+      "positive_rate": 0.3316
+    },
+    "port_congestion_2019_2024": {
+      "n": 1260,
+      "roc_auc": 0.8308,
+      "pr_auc": 0.1166,
+      "positive_rate": 0.0302
+    }
+  },
+  "trained_at": "2026-09-05T10:26:47.134633+00:00"
+}

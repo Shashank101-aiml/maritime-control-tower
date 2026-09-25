@@ -1,0 +1,1449 @@
+origin,destination,loaded_on,discharged_on,ocean_days
+Southampton,Busan,2020-01-08,2020-02-29,52
+Vancouver,Nansha,2020-01-18,2020-02-25,38
+Gwangyang,Piraeus,2020-01-29,2020-03-03,34
+Jeddah,Kaohsiung,2020-03-03,2020-05-11,69
+Xiamen,Karachi,2020-03-07,2020-04-06,30
+Ba Ria,Long Beach,2020-03-19,2020-04-13,25
+Oakland,Shanghai,2020-04-01,2020-04-23,22
+Ningbo,Thessaloniki,2020-04-05,2020-05-22,47
+Ningbo,Long Beach,2020-04-12,2020-04-30,18
+Melbourne,Nansha,2020-04-13,2020-05-17,34
+Beirut,Dammam,2020-04-14,2020-05-11,27
+Dalian,Long Beach,2020-04-22,2020-05-27,35
+Long Beach,Ningbo,2020-05-02,2020-05-23,21
+Ningbo,Long Beach,2020-05-24,2020-06-11,18
+Ningbo,Long Beach,2020-05-24,2020-06-11,18
+Antwerpen,Manila,2020-05-26,2020-07-27,62
+Yantian,Felixstowe,2020-05-27,2020-06-28,32
+Pelabuhan Klang,Osaka,2020-05-28,2020-06-09,12
+Dalian,La Spezia,2020-06-13,2020-08-01,49
+Helsingborg,Aqaba,2020-06-15,2020-08-06,52
+Ningbo,Dunkerque,2020-06-26,2020-07-28,32
+Tokyo,Los Angeles,2020-07-21,2020-08-11,21
+Tianjin Xingang,Los Angeles,2020-08-04,2020-08-23,19
+Ningbo,Long Beach,2020-08-13,2020-09-14,32
+Qingdao,Lome,2020-08-17,2020-10-07,51
+Shanghai,Long Beach,2020-08-20,2020-09-22,33
+Cai Mep,Long Beach,2020-08-21,2020-09-15,25
+Los Angeles,Tianjin Xingang,2020-09-02,2020-09-20,18
+Long Beach,Ningbo,2020-09-23,2020-10-11,18
+Ningbo,Long Beach,2020-09-25,2020-10-20,25
+Jiujiang,Rotterdam,2020-09-26,2020-11-03,38
+Ningbo,Port Muhammad Bin Qasim,2020-09-28,2020-10-17,19
+Shanghai,Rotterdam,2020-10-03,2020-11-03,31
+Cai Mep,Long Beach,2020-10-15,2020-11-21,37
+Qingdao,Kaohsiung,2020-10-18,2020-10-25,7
+Ho Chi Minh City,Incheon,2020-10-21,2020-10-29,8
+Cai Mep,Long Beach,2020-10-21,2020-11-15,25
+Shanghai,Los Angeles,2020-10-22,2020-11-18,27
+Ningbo,Malta Freeport,2020-10-26,2020-11-25,30
+Nagoya,Melbourne,2020-11-02,2020-11-25,23
+Cai Mep,Long Beach,2020-11-14,2021-03-30,136
+Iquique,Santo Domingo,2020-11-17,2020-12-11,24
+Subic,Long Beach,2020-12-03,2021-02-02,61
+Shanghai,Hamburg,2020-12-09,2021-01-11,33
+Seattle,Kaohsiung,2020-12-10,2021-01-03,24
+Yantian,Long Beach,2020-12-11,2020-12-28,17
+Antwerpen,Montreal,2020-12-14,2020-12-26,12
+Huangpu,Casablanca,2020-12-14,2021-02-13,61
+Yantian,Los Angeles,2020-12-21,2021-02-21,62
+Melbourne,Pelabuhan Klang,2020-12-21,2021-01-04,14
+Yantian,Long Beach,2020-12-23,2021-01-28,36
+Shanghai,Fort Worth,2020-12-25,2021-02-21,58
+Yantian,Los Angeles,2020-12-26,2021-02-20,56
+Beirut,Lagos,2020-12-26,2021-03-24,88
+Long Beach,Huangpu,2020-12-28,2021-02-01,35
+Tianjin Xingang,Los Angeles,2020-12-29,2021-02-12,45
+Zhongshan,Long Beach,2020-12-29,2021-03-16,77
+Yantian,Long Beach,2020-12-31,2021-02-19,50
+Yantian,Long Beach,2020-12-31,2021-02-12,43
+Yantian,Long Beach,2020-12-31,2021-02-19,50
+Yantian,Long Beach,2020-12-31,2021-02-19,50
+Yantian,Los Angeles,2021-01-08,2021-03-16,67
+Shanghai,Long Beach,2021-01-10,2021-02-01,22
+Qingdao,Sydney,2021-01-10,2021-02-03,24
+Yantian,Los Angeles,2021-01-10,2021-03-30,79
+Long Beach,Shanghai,2021-01-10,2021-01-31,21
+Yantian,Long Beach,2021-01-11,2021-01-30,19
+Tianjin Xingang,Los Angeles,2021-01-13,2021-02-27,45
+Yantian,Los Angeles,2021-01-14,2021-03-30,75
+Shanghai,Los Angeles,2021-01-17,2021-02-18,32
+Cai Mep,Long Beach,2021-01-19,2021-03-08,48
+Yantian,Vancouver,2021-01-20,2021-03-09,48
+Yantian,Los Angeles,2021-01-20,2021-03-11,50
+Ningbo,Long Beach,2021-01-21,2021-02-10,20
+Zhuhai,Long Beach,2021-01-22,2021-02-15,24
+Qingdao,Long Beach,2021-01-24,2021-03-26,61
+Shanghai Hongqiao International,Los Angeles,2021-01-26,2021-03-09,42
+Fuzhou,Los Angeles,2021-01-27,2021-04-03,66
+Pelabuhan Klang,Los Angeles,2021-01-28,2021-03-15,46
+Long Beach,Haiphong,2021-01-29,2021-04-19,80
+Houston,Le Havre,2021-01-29,2021-02-13,15
+Shanghai,Oakland,2021-01-29,2021-02-25,27
+Nagoya,Los Angeles,2021-01-30,2021-02-28,29
+Yantian,Long Beach,2021-01-30,2021-02-15,16
+Xiamen,Los Angeles,2021-01-31,2021-04-14,73
+Ningbo,Southampton,2021-01-31,2021-03-06,34
+Yantian,Long Beach,2021-02-01,2021-03-05,32
+Kobe,Los Angeles,2021-02-02,2021-03-19,45
+Vung Tau,Long Beach,2021-02-02,2021-03-04,30
+Yantian,Los Angeles,2021-02-04,2021-03-26,50
+Casablanca,Abidjan,2021-02-04,2021-02-28,24
+Chattogram,Los Angeles,2021-02-05,2021-03-31,54
+Shanghai,Long Beach,2021-02-05,2021-02-21,16
+Shanghai,Long Beach,2021-02-05,2021-02-21,16
+Tianjin Xingang,Fort Worth,2021-02-06,2021-04-02,55
+Shanghai,Fort Worth,2021-02-06,2021-03-20,42
+Tianjin Xingang,Fort Worth,2021-02-06,2021-04-02,55
+Ho Chi Minh City,Los Angeles,2021-02-07,2021-04-05,57
+Mundra,Thilawa,2021-02-07,2021-02-26,19
+Huangpu,Memphis,2021-02-07,2021-04-08,60
+Ba Ria,Long Beach,2021-02-07,2021-03-30,51
+Tianjin Xingang,Los Angeles,2021-02-08,2021-03-23,43
+Tianjin Xingang,Los Angeles,2021-02-08,2021-03-27,47
+Tianjin Xingang,Los Angeles,2021-02-08,2021-03-27,47
+Long Beach,Haiphong,2021-02-09,2021-03-14,33
+Ningbo,Kiamari,2021-02-09,2021-02-28,19
+Ningbo,Long Beach,2021-02-09,2021-03-01,20
+Qingdao,Buenos Aires,2021-02-10,2021-03-30,48
+Shanghai,Long Beach,2021-02-10,2021-03-22,40
+Jakarta,Savannah,2021-02-11,2021-03-26,43
+Shanghai,Rio de Janeiro,2021-02-11,2021-03-13,30
+Yantian,Prince Rupert,2021-02-13,2021-03-01,16
+Vung Tau,Long Beach,2021-02-14,2021-04-27,72
+Saint Petersburg,Tema,2021-02-14,2021-03-25,39
+Antwerpen,Mombasa,2021-02-14,2021-03-28,42
+Shanghai,Tacoma,2021-02-15,2021-03-09,22
+Los Angeles,Haiphong,2021-02-15,2021-04-19,63
+Wuhu,Jawaharlal Nehru,2021-02-16,2021-04-01,44
+Gijon,Pelabuhan Klang,2021-02-17,2021-04-10,52
+Rotterdam,Busan,2021-02-19,2021-03-29,38
+Valencia,Huangpu,2021-02-19,2021-04-09,49
+Ho Chi Minh City,Meerhout,2021-02-21,2021-03-25,32
+Los Angeles,Fremantle,2021-02-23,2021-04-21,57
+Valencia,Callao,2021-02-23,2021-04-02,38
+Shekou,Sydney,2021-02-23,2021-03-11,16
+Acajutla,Seattle,2021-02-24,2021-05-12,77
+Shanghai,Houston,2021-02-26,2021-04-12,45
+Tianjin Xingang,Charleston,2021-02-27,2021-04-17,49
+Xiamen,Rotterdam,2021-02-27,2021-04-17,49
+Nansha,Los Angeles,2021-02-28,2021-05-03,64
+Tianjin Xingang,Colombo,2021-03-03,2021-04-02,30
+Norfolk,Qingdao,2021-03-03,2021-05-13,71
+Ennore,Savannah,2021-03-03,2021-04-30,58
+Houston,Livorno,2021-03-04,2021-04-27,54
+Fuqing,Savannah,2021-03-05,2021-04-20,46
+Valencia,Casablanca,2021-03-05,2021-03-27,22
+Yantian,Los Angeles,2021-03-05,2021-04-15,41
+Chattogram,Los Angeles,2021-03-06,2021-04-27,52
+Chattogram,Los Angeles,2021-03-06,2021-04-26,51
+Rotterdam,Shanghai,2021-03-06,2021-04-16,41
+Shanghai,New York City,2021-03-06,2021-04-11,36
+Yantian,Long Beach,2021-03-07,2021-04-01,25
+Yantian,Long Beach,2021-03-07,2021-03-31,24
+Shanghai,Los Angeles,2021-03-07,2021-04-14,38
+Port Muhammad Bin Qasim,Savannah,2021-03-08,2021-04-29,52
+Civet,Los Angeles,2021-03-08,2021-04-20,43
+Shanghai,Charleston,2021-03-09,2021-04-20,42
+Tianjin Xingang,Tema,2021-03-09,2021-04-26,48
+Rotterdam,New York City,2021-03-10,2021-03-21,11
+Shanghai,Long Beach,2021-03-10,2021-04-06,27
+Shekou,Manzanillo,2021-03-11,2021-04-15,35
+Zhenjiang,Dammam,2021-03-11,2021-04-29,49
+Long Beach,Xinpu,2021-03-11,2021-04-12,32
+Ho Chi Minh City,Los Angeles,2021-03-11,2021-05-04,54
+Ho Chi Minh City,Los Angeles,2021-03-11,2021-05-08,58
+Ho Chi Minh City,Los Angeles,2021-03-11,2021-05-04,54
+Vung Tau,Charleston,2021-03-12,2021-04-27,46
+Yantian,Los Angeles,2021-03-12,2021-03-30,18
+Houston,Chennai,2021-03-12,2021-05-18,67
+Xinpu,Dongguan,2021-03-13,2021-03-31,18
+Xiamen,Le Havre,2021-03-13,2021-04-15,33
+Shanghai,Long Beach,2021-03-15,2021-04-02,18
+Rotterdam,Shanghai,2021-03-15,2021-04-25,41
+Yantian,Long Beach,2021-03-15,2021-04-01,17
+Haiphong,Melbourne,2021-03-15,2021-04-05,21
+Yantian,Long Beach,2021-03-15,2021-04-01,17
+Gdansk,Shanghai,2021-03-16,2021-05-14,59
+Ningbo,Long Beach,2021-03-16,2021-04-04,19
+Yantian,Long Beach,2021-03-16,2021-04-15,30
+Yantian,Long Beach,2021-03-17,2021-05-01,45
+Tianjin Xingang,Ciudad Lazaro Cardenas,2021-03-17,2021-04-22,36
+Yantian,Los Angeles,2021-03-17,2021-04-09,23
+Savannah,Abu Dhabi,2021-03-17,2021-05-06,50
+Yantian,Long Beach,2021-03-17,2021-04-15,29
+Qingdao,Los Angeles,2021-03-18,2021-04-07,20
+Sydney,Jakarta,2021-03-18,2021-03-29,11
+Gwangyang,Fos-sur-Mer,2021-03-18,2021-05-12,55
+Shanghai,Long Beach,2021-03-19,2021-04-04,16
+Shanghai,Long Beach,2021-03-19,2021-04-04,16
+Surabaya,Tacoma,2021-03-19,2021-05-17,59
+Jakarta,Vancouver,2021-03-19,2021-05-10,52
+Shanghai,Long Beach,2021-03-19,2021-04-07,19
+Ningbo,Los Angeles,2021-03-19,2021-04-27,39
+Yantian,Los Angeles,2021-03-19,2021-04-09,21
+Xiamen,Los Angeles,2021-03-20,2021-05-20,61
+Cape Town,Rotterdam,2021-03-20,2021-04-09,20
+Yantian,Long Beach,2021-03-20,2021-04-07,18
+Chattogram,Los Angeles,2021-03-20,2021-05-19,60
+Tianjin Xingang,Rotterdam,2021-03-20,2021-05-01,42
+Yantian,Long Beach,2021-03-20,2021-04-07,18
+Vung Tau,Savannah,2021-03-21,2021-04-28,38
+Ningbo,Long Beach,2021-03-22,2021-04-09,18
+Ningbo,Long Beach,2021-03-22,2021-04-11,20
+New Orleans,Antwerpen,2021-03-22,2021-04-30,39
+Ningbo,Long Beach,2021-03-22,2021-04-11,20
+Ningbo,Rotterdam,2021-03-22,2021-04-24,33
+Houston,Paramaribo,2021-03-22,2021-04-23,32
+Jawaharlal Nehru,Los Angeles,2021-03-23,2021-05-08,46
+Nansha,Jawaharlal Nehru,2021-03-23,2021-04-05,13
+Ningbo,Dar es Salaam,2021-03-23,2021-04-29,37
+Shanghai,Los Angeles,2021-03-23,2021-04-18,26
+Ningbo,Tema,2021-03-23,2021-04-26,34
+Yantian,Los Angeles,2021-03-24,2021-05-07,44
+Ningbo,Long Beach,2021-03-24,2021-04-26,33
+Long Beach,Dammam,2021-03-24,2021-05-16,53
+Ningbo,Sokhna Port,2021-03-24,2021-04-17,24
+Tianjin Xingang,Los Angeles,2021-03-24,2021-04-25,32
+Fuqing,Vancouver,2021-03-24,2021-05-01,38
+Sydney,Kaohsiung,2021-03-24,2021-04-12,19
+Qingdao,Apapa,2021-03-25,2021-05-18,54
+Los Angeles,Tokyo,2021-03-25,2021-04-13,19
+Tianjin Xingang,Oakland,2021-03-25,2021-05-19,55
+Ningbo,Los Angeles,2021-03-25,2021-04-29,35
+Shanghai,Long Beach,2021-03-25,2021-04-11,17
+Yantian,Los Angeles,2021-03-26,2021-04-27,32
+Long Beach,Kaohsiung,2021-03-26,2021-04-11,16
+Ningbo,Los Angeles,2021-03-26,2021-05-01,36
+Nanjing,Manzanillo,2021-03-26,2021-05-12,47
+Chattogram,Los Angeles,2021-03-26,2021-05-10,45
+Long Beach,Kaohsiung,2021-03-26,2021-04-10,15
+Charleston,Pelabuhan Klang,2021-03-26,2021-05-12,47
+Cai Mep,Los Angeles,2021-03-27,2021-04-25,29
+Yantian,Los Angeles,2021-03-27,2021-04-19,23
+Yantian,Los Angeles,2021-03-27,2021-05-05,39
+Kolkata,Haiphong,2021-03-28,2021-04-14,17
+Xiamen,Gdansk,2021-03-29,2021-05-08,40
+Jebel Ali,Tema,2021-03-29,2021-05-10,42
+Shanghai,Vancouver,2021-03-29,2021-04-18,20
+Vung Tau,Los Angeles,2021-03-29,2021-05-16,48
+Cai Mep,Long Beach,2021-03-30,2021-04-20,21
+Yantian,Los Angeles,2021-03-30,2021-07-07,99
+Ningbo,Melbourne,2021-03-30,2021-04-19,20
+Nagoya,Izmit,2021-03-30,2021-05-08,39
+Ningbo,Felixstowe,2021-03-30,2021-05-08,39
+Yantian,Los Angeles,2021-03-31,2021-05-05,35
+Long Beach,Cai Mep,2021-03-31,2021-04-19,19
+Long Beach,Ho Chi Minh City,2021-03-31,2021-04-29,29
+Shanghai,New York City,2021-03-31,2021-05-01,31
+Buenos Aires,Genova,2021-03-31,2021-05-09,39
+Shantou,Dammam,2021-03-31,2021-05-04,34
+Tianjin Xingang,Long Beach,2021-03-31,2021-05-02,32
+Tokyo,Laem Chabang,2021-04-01,2021-04-12,11
+Yantian,Los Angeles,2021-04-01,2021-07-07,97
+Shanghai,Norfolk,2021-04-01,2021-05-08,37
+Yantian,Los Angeles,2021-04-01,2021-07-21,111
+Yantian,Long Beach,2021-04-01,2021-04-29,28
+Cai Mep,Long Beach,2021-04-01,2021-05-05,34
+Cai Mep,Long Beach,2021-04-01,2021-05-04,33
+Ningbo,Long Beach,2021-04-02,2021-05-19,47
+Zhuhai,Long Beach,2021-04-02,2021-05-01,29
+Busan,Koper,2021-04-02,2021-04-26,24
+Ningbo,Long Beach,2021-04-02,2021-05-18,46
+Tianjin Xingang,Los Angeles,2021-04-03,2021-05-23,50
+Yantian,Los Angeles,2021-04-03,2021-05-29,56
+Jebel Ali,Mombasa,2021-04-03,2021-05-03,30
+Latakia,Rotterdam,2021-04-03,2021-04-26,23
+Kobe,Los Angeles,2021-04-04,2021-04-28,24
+Yantian,Long Beach,2021-04-04,2021-04-19,15
+Ningbo,Long Beach,2021-04-04,2021-04-20,16
+Ningbo,Long Beach,2021-04-04,2021-04-20,16
+Yokohama,Singapore,2021-04-04,2021-04-12,8
+Ningbo,Long Beach,2021-04-04,2021-04-20,16
+Ningbo,Long Beach,2021-04-04,2021-04-20,16
+Ningbo,Long Beach,2021-04-04,2021-04-20,16
+Laem Chabang,Fremantle,2021-04-04,2021-04-19,15
+Haiphong,Vancouver,2021-04-04,2021-05-09,35
+Tianjin Xingang,Semarang,2021-04-04,2021-04-23,19
+Chattogram,Los Angeles,2021-04-05,2021-05-20,45
+Shanghai,Los Angeles,2021-04-05,2021-04-21,16
+Yantian,Long Beach,2021-04-05,2021-04-20,15
+Chattogram,Los Angeles,2021-04-05,2021-05-18,43
+Abidjan,Ho Chi Minh City,2021-04-06,2021-05-26,50
+Qingdao,Melbourne,2021-04-07,2021-05-01,24
+Ningbo,Long Beach,2021-04-07,2021-04-25,18
+Long Beach,Haiphong,2021-04-07,2021-05-02,25
+Yantian,Los Angeles,2021-04-07,2021-04-23,16
+Ningbo,Long Beach,2021-04-07,2021-04-27,20
+Shanghai,Long Beach,2021-04-07,2021-04-20,13
+Shanghai,Long Beach,2021-04-07,2021-04-20,13
+Ningbo,Long Beach,2021-04-07,2021-04-24,17
+Ningbo,Long Beach,2021-04-07,2021-04-26,19
+Ningbo,Long Beach,2021-04-07,2021-04-27,20
+Zhuhai,Long Beach,2021-04-08,2021-05-09,31
+Long Beach,Dalian,2021-04-08,2021-05-01,23
+Seattle,Kwangyang,2021-04-08,2021-05-05,27
+Yantian,Seattle,2021-04-08,2021-04-25,17
+Vung Tau,Los Angeles,2021-04-09,2021-05-09,30
+Vung Tau,Los Angeles,2021-04-09,2021-05-08,29
+Laem Chabang,Tokyo,2021-04-09,2021-04-19,10
+Shanghai,Los Angeles,2021-04-09,2021-04-30,21
+Shanghai,Los Angeles,2021-04-09,2021-04-27,18
+Shanghai,Los Angeles,2021-04-09,2021-04-28,19
+Long Beach,Qingdao,2021-04-10,2021-04-27,17
+Shanghai,Los Angeles,2021-04-10,2021-05-17,37
+Long Beach,Qingdao,2021-04-10,2021-04-27,17
+Imaricho-ko,Haiphong,2021-04-10,2021-04-30,20
+Jakarta,Kobe,2021-04-10,2021-04-24,14
+Vung Tau,Los Angeles,2021-04-10,2021-05-08,28
+Singapore,Chennai,2021-04-10,2021-04-15,5
+Cai Mep,Los Angeles,2021-04-11,2021-05-11,30
+Shanghai,Long Beach,2021-04-11,2021-04-24,13
+Ningbo,Long Beach,2021-04-11,2021-06-03,53
+Shanghai,Long Beach,2021-04-11,2021-04-27,16
+Shanghai,Long Beach,2021-04-11,2021-04-25,14
+Ningbo,Long Beach,2021-04-11,2021-06-04,54
+Xiamen,Gdansk,2021-04-11,2021-05-11,30
+Shanghai,Long Beach,2021-04-11,2021-04-25,14
+Norfolk,Iyomishima,2021-04-12,2021-05-13,31
+Yantian,Los Angeles,2021-04-12,2021-07-06,85
+Savannah,Manzanillo,2021-04-12,2021-04-25,13
+Long Beach,Ho Chi Minh City,2021-04-13,2021-05-05,22
+Ningbo,Long Beach,2021-04-13,2021-05-07,24
+Ningbo,Long Beach,2021-04-13,2021-05-07,24
+Ningbo,Long Beach,2021-04-13,2021-05-05,22
+Tianjin Xingang,Long Beach,2021-04-13,2021-05-07,24
+Qingdao,Los Angeles,2021-04-13,2021-05-06,23
+Xiamen,Los Angeles,2021-04-13,2021-05-17,34
+Yantian,Long Beach,2021-04-14,2021-05-03,19
+Yantian,Long Beach,2021-04-14,2021-04-29,15
+Yantian,Long Beach,2021-04-14,2021-04-29,15
+Yantian,Fort Worth,2021-04-15,2021-06-03,49
+Zhuhai,Los Angeles,2021-04-15,2021-05-21,36
+Los Angeles,Kiamari,2021-04-16,2021-05-21,35
+Shanghai,Long Beach,2021-04-16,2021-05-24,38
+Shanghai,Long Beach,2021-04-17,2021-05-05,18
+Shanghai,Long Beach,2021-04-17,2021-05-05,18
+Shanghai,Long Beach,2021-04-17,2021-05-07,20
+Xiamen,Los Angeles,2021-04-17,2021-06-11,55
+Shanghai,Long Beach,2021-04-17,2021-05-05,18
+Xiamen,Los Angeles,2021-04-17,2021-05-18,31
+Yantian,New York City,2021-04-17,2021-05-27,40
+Shanghai,Los Angeles,2021-04-18,2021-05-04,16
+Xiamen,Felixstowe,2021-04-18,2021-05-12,24
+Ningbo,Long Beach,2021-04-19,2021-05-03,14
+Ningbo,Long Beach,2021-04-20,2021-05-11,21
+Rotterdam,Savannah,2021-04-20,2021-05-04,14
+Ningbo,Long Beach,2021-04-20,2021-05-11,21
+Yantian,Long Beach,2021-04-21,2021-05-11,20
+Qingdao,Santos,2021-04-21,2021-06-04,44
+Qingdao,Mombasa,2021-04-21,2021-05-23,32
+Yantian,Long Beach,2021-04-21,2021-05-06,15
+Shanghai,Cruz de Pau,2021-04-21,2021-06-04,44
+Laem Chabang,Shanghai,2021-04-22,2021-05-01,9
+Yantian,Los Angeles,2021-04-22,2021-05-04,12
+Shanghai,Long Beach,2021-04-23,2021-05-13,20
+Shanghai,Long Beach,2021-04-23,2021-05-13,20
+Shanghai,Barcelona,2021-04-23,2021-05-19,26
+Shanghai,Rotterdam,2021-04-23,2021-05-25,32
+Yantian,Los Angeles,2021-04-23,2021-06-17,55
+Shanghai,Long Beach,2021-04-23,2021-05-11,18
+Shanghai,Long Beach,2021-04-23,2021-05-09,16
+Tianjin Xingang,Los Angeles,2021-04-24,2021-06-14,51
+Chattogram,Los Angeles,2021-04-24,2021-06-10,47
+Tianjin Xingang,Los Angeles,2021-04-24,2021-06-22,59
+Tianjin Xingang,Ho Chi Minh City,2021-04-24,2021-05-04,10
+Yantian,Los Angeles,2021-04-24,2021-06-16,53
+Xiamen,Los Angeles,2021-04-24,2021-06-16,53
+Tianjin Xingang,Los Angeles,2021-04-24,2021-06-07,44
+Shanghai,Los Angeles,2021-04-24,2021-05-19,25
+Chattogram,Los Angeles,2021-04-24,2021-06-10,47
+Chattogram,Los Angeles,2021-04-24,2021-06-10,47
+Tianjin Xingang,Los Angeles,2021-04-24,2021-06-21,58
+Shanghai,Rotterdam,2021-04-25,2021-05-19,24
+Yantian,Los Angeles,2021-04-25,2021-05-25,30
+Cai Mep,Long Beach,2021-04-25,2021-05-15,20
+Yantian,Los Angeles,2021-04-25,2021-05-25,30
+Ningbo,Long Beach,2021-04-26,2021-05-14,18
+Long Beach,Ho Chi Minh City,2021-04-26,2021-05-10,14
+Long Beach,Cai Mep,2021-04-26,2021-05-12,16
+Ningbo,Long Beach,2021-04-26,2021-05-14,18
+Klaipeda,Pelabuhan Klang,2021-04-27,2021-06-01,35
+Jakarta,Dammam,2021-04-27,2021-05-23,26
+Long Beach,Shanghai,2021-04-27,2021-05-16,19
+Qingdao,Ho Chi Minh City,2021-04-27,2021-05-03,6
+Jebel Ali,Qingdao,2021-04-28,2021-05-23,25
+Xiamen,Jacksonville,2021-04-28,2021-06-16,49
+Jawaharlal Nehru,Los Angeles,2021-04-28,2021-06-25,58
+Los Angeles,Kobe,2021-04-28,2021-05-14,16
+Xiamen,Fort Worth,2021-04-28,2021-06-09,42
+Yantian,Long Beach,2021-04-29,2021-05-14,15
+Ho Chi Minh City,Los Angeles,2021-04-29,2021-06-14,46
+Ningbo,Hamburg,2021-04-29,2021-05-28,29
+DA CHAN BAY,Fremantle,2021-04-30,2021-05-18,18
+Cai Mep,Long Beach,2021-04-30,2021-05-28,28
+Yantian,Long Beach,2021-04-30,2021-05-15,15
+Laem Chabang,Shanghai,2021-05-01,2021-05-08,7
+Shanghai,Long Beach,2021-05-02,2021-05-14,12
+Shanghai,Long Beach,2021-05-02,2021-05-16,14
+Hong Kong,Saint Petersburg,2021-05-02,2021-06-16,45
+Shanghai,Long Beach,2021-05-02,2021-05-14,12
+Ningbo,Long Beach,2021-05-03,2021-05-21,18
+Ningbo,Long Beach,2021-05-03,2021-05-23,20
+Shanghai,Long Beach,2021-05-05,2021-05-21,16
+Shanghai,Long Beach,2021-05-05,2021-05-21,16
+Chattogram,Los Angeles,2021-05-05,2021-06-18,44
+Chattogram,Los Angeles,2021-05-05,2021-06-18,44
+Shanghai,Long Beach,2021-05-05,2021-05-21,16
+Ningbo,Long Beach,2021-05-06,2021-06-04,29
+Yantian,Long Beach,2021-05-07,2021-05-22,15
+Yantian,Los Angeles,2021-05-07,2021-06-03,27
+Yantian,Long Beach,2021-05-07,2021-05-23,16
+Yantian,Long Beach,2021-05-07,2021-05-23,16
+Qingdao,Long Beach,2021-05-07,2021-06-07,31
+Yantian,Long Beach,2021-05-07,2021-05-22,15
+Yantian,Los Angeles,2021-05-08,2021-06-06,29
+Ningbo,Los Angeles,2021-05-08,2021-05-27,19
+Yantian,Los Angeles,2021-05-08,2021-06-06,29
+Yantian,Los Angeles,2021-05-08,2021-06-06,29
+Yantian,Long Beach,2021-05-08,2021-06-21,44
+Ningbo,Los Angeles,2021-05-08,2021-05-27,19
+Yantian,Los Angeles,2021-05-08,2021-06-04,27
+Yantian,Los Angeles,2021-05-09,2021-06-06,28
+Jawaharlal Nehru,Los Angeles,2021-05-09,2021-07-13,65
+Tianjin Xingang,Los Angeles,2021-05-09,2021-06-23,45
+Cai Mep,Long Beach,2021-05-10,2021-06-05,26
+Kaohsiung,Long Beach,2021-05-10,2021-06-13,34
+Tianjin Xingang,Los Angeles,2021-05-10,2021-06-23,44
+Cai Mep,Long Beach,2021-05-10,2021-06-05,26
+Yantian,Los Angeles,2021-05-10,2021-06-03,24
+Cai Mep,Long Beach,2021-05-10,2021-06-03,24
+Cai Mep,Long Beach,2021-05-10,2021-06-04,25
+Cai Mep,Long Beach,2021-05-10,2021-06-06,27
+Tianjin Xingang,Los Angeles,2021-05-10,2021-07-01,52
+Cai Mep,Long Beach,2021-05-10,2021-06-03,24
+Shanghai,Long Beach,2021-05-13,2021-05-28,15
+Shanghai,Long Beach,2021-05-13,2021-05-27,14
+Shanghai,Long Beach,2021-05-13,2021-05-27,14
+Hong Kong,Long Beach,2021-05-14,2021-06-05,22
+Ningbo,Los Angeles,2021-05-14,2021-06-03,20
+Yantian,Long Beach,2021-05-14,2021-05-29,15
+Yantian,Long Beach,2021-05-14,2021-05-28,14
+Yantian,Long Beach,2021-05-14,2021-05-28,14
+Yantian,Oakland,2021-05-14,2021-07-23,70
+Yantian,Long Beach,2021-05-14,2021-05-28,14
+Yantian,Long Beach,2021-05-14,2021-05-29,15
+Ningbo,Los Angeles,2021-05-14,2021-06-02,19
+Yantian,Oakland,2021-05-14,2021-07-31,78
+Yantian,Long Beach,2021-05-14,2021-05-30,16
+Ningbo,Los Angeles,2021-05-14,2021-06-03,20
+Yantian,Long Beach,2021-05-16,2021-06-04,19
+Yantian,Long Beach,2021-05-16,2021-06-02,17
+Yantian,Long Beach,2021-05-18,2021-07-16,59
+Chattogram,Los Angeles,2021-05-18,2021-06-25,38
+Yantian,Long Beach,2021-05-19,2021-08-02,75
+Yantian,Long Beach,2021-05-19,2021-06-29,41
+Yantian,Long Beach,2021-05-19,2021-07-16,58
+Yantian,Long Beach,2021-05-19,2021-07-23,65
+Yantian,Long Beach,2021-05-19,2021-06-29,41
+Yantian,Long Beach,2021-05-19,2021-07-17,59
+Yantian,Long Beach,2021-05-19,2021-07-16,58
+Shanghai,Los Angeles,2021-05-19,2021-07-06,48
+Yantian,Long Beach,2021-05-19,2021-07-19,61
+Ho Chi Minh City,Long Beach,2021-05-20,2021-07-15,56
+Yantian,Long Beach,2021-05-20,2021-07-16,57
+Yantian,Long Beach,2021-05-20,2021-07-06,47
+Yantian,Long Beach,2021-05-20,2021-07-14,55
+Ho Chi Minh City,Long Beach,2021-05-20,2021-07-15,56
+Shanghai,Long Beach,2021-05-21,2021-06-04,14
+Yantian,Long Beach,2021-05-21,2021-07-17,57
+Cai Mep,Los Angeles,2021-05-21,2021-06-20,30
+Yantian,Long Beach,2021-05-21,2021-07-06,46
+Yantian,Long Beach,2021-05-21,2021-07-16,56
+Ningbo,Los Angeles,2021-05-22,2021-06-09,18
+Ningbo,Los Angeles,2021-05-23,2021-06-08,16
+Ningbo,Los Angeles,2021-05-23,2021-06-09,17
+Xiamen,Long Beach,2021-05-23,2021-08-02,71
+Yantian,Long Beach,2021-05-24,2021-06-13,20
+Yantian,Long Beach,2021-05-24,2021-06-11,18
+Yantian,Long Beach,2021-05-24,2021-06-10,17
+Yantian,Long Beach,2021-05-24,2021-06-11,18
+Yantian,Long Beach,2021-05-24,2021-06-14,21
+Chattogram,Long Beach,2021-05-24,2021-08-02,70
+Tianjin Xingang,Los Angeles,2021-05-25,2021-07-22,58
+Los Angeles,Batu Ampar,2021-05-25,2021-07-08,44
+Yantian,Los Angeles,2021-05-25,2021-06-23,29
+Shanghai,Los Angeles,2021-05-25,2021-06-13,19
+Cai Mep,Long Beach,2021-05-27,2021-06-23,27
+Ho Chi Minh City,Long Beach,2021-05-27,2021-07-19,53
+Ho Chi Minh City,Long Beach,2021-05-28,2021-07-07,40
+Ho Chi Minh City,Long Beach,2021-05-28,2021-07-07,40
+Ningbo,Houston,2021-05-28,2021-07-09,42
+Vung Tau,Los Angeles,2021-05-28,2021-06-25,28
+Ho Chi Minh City,Long Beach,2021-05-28,2021-07-23,56
+Ho Chi Minh City,Long Beach,2021-05-29,2021-07-19,51
+Ho Chi Minh City,Long Beach,2021-05-29,2021-07-19,51
+Ho Chi Minh City,Long Beach,2021-05-29,2021-07-19,51
+Ho Chi Minh City,Long Beach,2021-05-30,2021-07-08,39
+Ho Chi Minh City,Long Beach,2021-05-30,2021-07-19,50
+Yantian,Los Angeles,2021-05-30,2021-06-23,24
+Cai Mep,Los Angeles,2021-05-30,2021-07-07,38
+Ho Chi Minh City,Long Beach,2021-05-31,2021-07-22,52
+Ho Chi Minh City,Long Beach,2021-05-31,2021-07-23,53
+Ho Chi Minh City,Long Beach,2021-05-31,2021-07-26,56
+Ho Chi Minh City,Long Beach,2021-05-31,2021-07-17,47
+Vung Tau,Los Angeles,2021-05-31,2021-06-29,29
+Ho Chi Minh City,Long Beach,2021-05-31,2021-07-27,57
+Ho Chi Minh City,Long Beach,2021-06-01,2021-07-22,51
+Ho Chi Minh City,Long Beach,2021-06-01,2021-07-07,36
+Ho Chi Minh City,Long Beach,2021-06-01,2021-07-22,51
+Ho Chi Minh City,Long Beach,2021-06-01,2021-07-08,37
+Ho Chi Minh City,Long Beach,2021-06-01,2021-07-17,46
+Ho Chi Minh City,Long Beach,2021-06-01,2021-07-17,46
+Mundra,Savannah,2021-06-02,2021-07-15,43
+Ho Chi Minh City,Long Beach,2021-06-02,2021-07-26,54
+Ho Chi Minh City,Long Beach,2021-06-02,2021-07-26,54
+Shanghai,Long Beach,2021-06-02,2021-06-17,15
+Shanghai,Long Beach,2021-06-02,2021-06-18,16
+Ningbo,Los Angeles,2021-06-04,2021-06-26,22
+Chattogram,Long Beach,2021-06-04,2021-08-17,74
+Chattogram,Long Beach,2021-06-04,2021-08-08,65
+Yantian,Long Beach,2021-06-05,2021-06-24,19
+Yantian,Long Beach,2021-06-05,2021-06-24,19
+Yantian,Long Beach,2021-06-05,2021-06-23,18
+Yantian,Long Beach,2021-06-05,2021-06-23,18
+Ho Chi Minh City,Long Beach,2021-06-05,2021-07-08,33
+Ho Chi Minh City,Long Beach,2021-06-05,2021-07-17,42
+Ho Chi Minh City,Long Beach,2021-06-05,2021-07-23,48
+Nansha,Oakland,2021-06-05,2021-07-17,42
+Ningbo,Houston,2021-06-05,2021-07-20,45
+Shanghai,Long Beach,2021-06-06,2021-06-19,13
+Shanghai,Long Beach,2021-06-06,2021-06-19,13
+Ningbo,Los Angeles,2021-06-07,2021-06-22,15
+Nansha,Oakland,2021-06-07,2021-07-12,35
+Ningbo,Los Angeles,2021-06-07,2021-06-22,15
+Nansha,Oakland,2021-06-07,2021-07-12,35
+Chattogram,Long Beach,2021-06-09,2021-08-18,70
+Shekou,Long Beach,2021-06-10,2021-07-28,48
+Shekou,Long Beach,2021-06-10,2021-07-28,48
+Ho Chi Minh City,Long Beach,2021-06-10,2021-07-22,42
+Ho Chi Minh City,Long Beach,2021-06-10,2021-07-22,42
+Shekou,Long Beach,2021-06-10,2021-07-28,48
+Ho Chi Minh City,Long Beach,2021-06-10,2021-07-12,32
+Ho Chi Minh City,Long Beach,2021-06-10,2021-07-17,37
+Ho Chi Minh City,Long Beach,2021-06-11,2021-07-17,36
+Vung Tau,Los Angeles,2021-06-11,2021-08-06,56
+Ho Chi Minh City,Long Beach,2021-06-11,2021-07-22,41
+Shekou,Long Beach,2021-06-12,2021-08-16,65
+Cai Mep,Long Beach,2021-06-12,2021-07-14,32
+Ho Chi Minh City,Long Beach,2021-06-12,2021-07-23,41
+Vung Tau,Los Angeles,2021-06-12,2021-06-29,17
+Shanghai,Long Beach,2021-06-13,2021-06-30,17
+Ningbo,Houston,2021-06-13,2021-07-14,31
+Fuzhou,Los Angeles,2021-06-13,2021-08-05,53
+Kaohsiung,Seattle,2021-06-14,2021-07-01,17
+Ningbo,Los Angeles,2021-06-15,2021-07-02,17
+Ningbo,Houston,2021-06-16,2021-08-04,49
+Cai Mep,Los Angeles,2021-06-16,2021-07-16,30
+Vung Tau,Los Angeles,2021-06-16,2021-07-20,34
+Chattogram,Long Beach,2021-06-17,2021-08-23,67
+Chattogram,Long Beach,2021-06-17,2021-08-27,71
+Cai Mep,Long Beach,2021-06-17,2021-07-23,36
+Chattogram,Long Beach,2021-06-17,2021-08-23,67
+Chattogram,Long Beach,2021-06-17,2021-08-23,67
+Cai Mep,Long Beach,2021-06-17,2021-07-08,21
+Chattogram,Long Beach,2021-06-17,2021-08-23,67
+Cai Mep,Long Beach,2021-06-17,2021-07-21,34
+Vung Tau,Los Angeles,2021-06-18,2021-08-01,44
+Los Angeles,Laem Chabang,2021-06-18,2021-07-19,31
+Tianjin Xingang,Los Angeles,2021-06-19,2021-08-19,61
+Vung Tau,Los Angeles,2021-06-19,2021-08-08,50
+Shanghai,Houston,2021-06-19,2021-07-20,31
+Vung Tau,Los Angeles,2021-06-19,2021-08-08,50
+Shanghai,Houston,2021-06-19,2021-07-21,32
+Vung Tau,Los Angeles,2021-06-19,2021-08-08,50
+Los Angeles,Contecar,2021-06-19,2021-07-16,27
+Ningbo,Houston,2021-06-19,2021-07-25,36
+Shanghai,Houston,2021-06-19,2021-07-20,31
+Vung Tau,Los Angeles,2021-06-19,2021-08-08,50
+Ningbo,Houston,2021-06-19,2021-07-17,28
+Xiamen,Los Angeles,2021-06-20,2021-07-03,13
+Vung Tau,Los Angeles,2021-06-20,2021-08-01,42
+Vung Tau,Los Angeles,2021-06-20,2021-08-08,49
+Cai Mep,Los Angeles,2021-06-21,2021-07-08,17
+Shanghai,Los Angeles,2021-06-22,2021-07-17,25
+Shanghai,Los Angeles,2021-06-22,2021-07-16,24
+Cai Mep,Long Beach,2021-06-22,2021-07-26,34
+Los Angeles,Xiamen,2021-06-23,2021-07-28,35
+Ho Chi Minh City,Long Beach,2021-06-23,2021-07-24,31
+Ningbo,Houston,2021-06-24,2021-08-20,57
+Ho Chi Minh City,Long Beach,2021-06-24,2021-07-25,31
+Los Angeles,Singapore,2021-06-24,2021-07-17,23
+Long Beach,Cai Mep,2021-06-26,2021-07-13,17
+Vung Tau,Los Angeles,2021-06-26,2021-07-26,30
+Ho Chi Minh City,Long Beach,2021-06-26,2021-07-30,34
+Vung Tau,Los Angeles,2021-06-26,2021-07-26,30
+Ho Chi Minh City,Long Beach,2021-06-26,2021-08-04,39
+Shanghai,Long Beach,2021-06-26,2021-07-12,16
+Long Beach,Kaohsiung,2021-06-26,2021-07-11,15
+Ningbo,Los Angeles,2021-06-27,2021-07-14,17
+Los Angeles,Port Muhammad Bin Qasim,2021-06-27,2021-08-14,48
+New Orleans,Buenos Aires,2021-06-27,2021-07-22,25
+Ningbo,Los Angeles,2021-06-27,2021-07-14,17
+Tianjin Xingang,Los Angeles,2021-06-27,2021-08-19,53
+Ho Chi Minh City,Long Beach,2021-06-27,2021-08-04,38
+Nansha,Los Angeles,2021-06-27,2021-07-25,28
+Nansha,Los Angeles,2021-06-27,2021-07-24,27
+Tianjin Xingang,Los Angeles,2021-06-28,2021-08-16,49
+Ho Chi Minh City,Long Beach,2021-06-28,2021-08-05,38
+Yantian,Los Angeles,2021-06-29,2021-08-17,49
+Ningbo,Sokhna Port,2021-06-29,2021-07-25,26
+Long Beach,Kaohsiung,2021-06-29,2021-07-14,15
+Vung Tau,Los Angeles,2021-06-29,2021-08-14,46
+Ningbo,Houston,2021-06-29,2021-08-18,50
+Ningbo,Houston,2021-06-29,2021-08-19,51
+Ningbo,Houston,2021-06-29,2021-08-19,51
+Long Beach,Kaohsiung,2021-06-29,2021-07-14,15
+Ningbo,Vancouver,2021-06-30,2021-07-19,19
+Chattogram,Long Beach,2021-06-30,2021-09-12,74
+Yantian,Rotterdam,2021-06-30,2021-07-31,31
+Ningbo,Houston,2021-06-30,2021-08-19,50
+Shanghai,Los Angeles,2021-06-30,2021-08-05,36
+Shekou,Long Beach,2021-06-30,2021-07-22,22
+Ningbo,Houston,2021-06-30,2021-08-17,48
+Vung Tau,Los Angeles,2021-06-30,2021-08-14,45
+Vung Tau,Los Angeles,2021-07-01,2021-08-10,40
+Cai Mep,Los Angeles,2021-07-01,2021-07-27,26
+Huangpu,Los Angeles,2021-07-01,2021-08-24,54
+Shanghai,Seattle,2021-07-01,2021-07-22,21
+Vung Tau,Los Angeles,2021-07-01,2021-09-22,83
+Shekou,Long Beach,2021-07-01,2021-08-25,55
+Tianjin Xingang,Los Angeles,2021-07-02,2021-08-29,58
+Tianjin Xingang,Los Angeles,2021-07-02,2021-09-23,83
+Tianjin Xingang,Los Angeles,2021-07-02,2021-09-02,62
+Cai Mep,Los Angeles,2021-07-02,2021-08-01,30
+Tianjin Xingang,Los Angeles,2021-07-02,2021-09-03,63
+Cai Mep,Los Angeles,2021-07-02,2021-07-27,25
+Cai Mep,Los Angeles,2021-07-02,2021-07-31,29
+Nansha,Long Beach,2021-07-03,2021-07-21,18
+Ningbo,Los Angeles,2021-07-03,2021-07-26,23
+Tianjin Xingang,Long Beach,2021-07-03,2021-09-04,63
+Ho Chi Minh City,Long Beach,2021-07-03,2021-08-18,46
+Nansha,Long Beach,2021-07-03,2021-07-23,20
+Nansha,Long Beach,2021-07-03,2021-07-23,20
+Ningbo,Hamburg,2021-07-04,2021-08-16,43
+Vung Tau,Los Angeles,2021-07-04,2021-08-10,37
+Nansha,Long Beach,2021-07-05,2021-07-29,24
+Nansha,Long Beach,2021-07-05,2021-07-27,22
+Nansha,Long Beach,2021-07-05,2021-07-29,24
+Shanghai,Houston,2021-07-05,2021-08-11,37
+Nansha,Long Beach,2021-07-05,2021-07-29,24
+Nansha,Long Beach,2021-07-05,2021-08-04,30
+Nansha,Long Beach,2021-07-05,2021-08-03,29
+Nansha,Long Beach,2021-07-05,2021-08-02,28
+Nansha,Long Beach,2021-07-05,2021-07-26,21
+Nansha,Long Beach,2021-07-05,2021-07-26,21
+Shanghai,Hamburg,2021-07-06,2021-08-11,36
+Shanghai,Oakland,2021-07-06,2021-08-18,43
+Ho Chi Minh City,Long Beach,2021-07-08,2021-08-19,42
+Ho Chi Minh City,Long Beach,2021-07-08,2021-08-31,54
+Vung Tau,Los Angeles,2021-07-09,2021-08-12,34
+Vung Tau,Long Beach,2021-07-09,2021-08-12,34
+Los Angeles,Taichung,2021-07-10,2021-08-15,36
+Yantian,Houston,2021-07-11,2021-09-11,62
+Los Angeles,Hong Kong,2021-07-11,2021-08-07,27
+Ho Chi Minh City,Long Beach,2021-07-11,2021-08-18,38
+Ho Chi Minh City,Long Beach,2021-07-12,2021-09-02,52
+Shanghai,Houston,2021-07-12,2021-09-17,67
+Yantian,Houston,2021-07-13,2021-09-12,61
+Yantian,Houston,2021-07-14,2021-08-30,47
+Tianjin Xingang,Los Angeles,2021-07-14,2021-08-18,35
+Ningbo,Houston,2021-07-14,2021-08-14,31
+Yantian,Houston,2021-07-14,2021-08-23,40
+Qingdao,Long Beach,2021-07-15,2021-09-21,68
+Long Beach,Busan,2021-07-15,2021-08-02,18
+Long Beach,Busan,2021-07-15,2021-08-07,23
+Hong Kong,Long Beach,2021-07-15,2021-08-14,30
+Long Beach,Shanghai,2021-07-15,2021-07-31,16
+Yantian,Los Angeles,2021-07-15,2021-09-15,62
+Shanghai,Houston,2021-07-16,2021-08-21,36
+Shanghai,Houston,2021-07-16,2021-09-10,56
+Yantian,Houston,2021-07-16,2021-08-24,39
+Ningbo,Felixstowe,2021-07-16,2021-08-18,33
+Shanghai,Houston,2021-07-16,2021-08-21,36
+Ningbo,Durban,2021-07-16,2021-08-07,22
+Qingdao,Los Angeles,2021-07-17,2021-08-16,30
+Ningbo,Los Angeles,2021-07-17,2021-09-23,68
+Long Beach,Shanghai,2021-07-17,2021-07-29,12
+Ho Chi Minh City,Long Beach,2021-07-17,2021-08-29,43
+Ho Chi Minh City,Long Beach,2021-07-17,2021-09-02,47
+Nansha,Los Angeles,2021-07-17,2021-08-22,36
+Ningbo,Los Angeles,2021-07-17,2021-09-22,67
+Long Beach,Ho Chi Minh City,2021-07-19,2021-08-19,31
+Chattogram,Long Beach,2021-07-19,2021-10-03,76
+Cai Mep,Long Beach,2021-07-19,2021-08-22,34
+Long Beach,Kaohsiung,2021-07-19,2021-08-04,16
+Ho Chi Minh City,Long Beach,2021-07-20,2021-09-01,43
+Ho Chi Minh City,Long Beach,2021-07-20,2021-08-30,41
+Cai Mep,Long Beach,2021-07-20,2021-08-14,25
+Vung Tau,Los Angeles,2021-07-20,2021-08-26,37
+Cai Mep,Long Beach,2021-07-20,2021-08-13,24
+Cai Mep,Long Beach,2021-07-20,2021-08-13,24
+Houston,Santos,2021-07-20,2021-08-05,16
+Los Angeles,Manila,2021-07-21,2021-09-14,55
+Ho Chi Minh City,Long Beach,2021-07-21,2021-09-08,49
+Cai Mep,Long Beach,2021-07-21,2021-08-07,17
+Ho Chi Minh City,Long Beach,2021-07-21,2021-09-05,46
+Oakland,Tianjin Xingang,2021-07-22,2021-09-10,50
+Ningbo,Latakia,2021-07-22,2021-08-30,39
+Ho Chi Minh City,Long Beach,2021-07-22,2021-09-06,46
+Houston,Cartagena,2021-07-22,2021-08-07,16
+Ho Chi Minh City,Long Beach,2021-07-22,2021-09-08,48
+Ho Chi Minh City,Long Beach,2021-07-23,2021-09-03,42
+Ho Chi Minh City,Long Beach,2021-07-23,2021-09-02,41
+Ho Chi Minh City,Long Beach,2021-07-23,2021-09-05,44
+Ho Chi Minh City,Long Beach,2021-07-23,2021-09-02,41
+Ho Chi Minh City,Long Beach,2021-07-23,2021-09-07,46
+Ho Chi Minh City,Long Beach,2021-07-24,2021-09-02,40
+Ho Chi Minh City,Long Beach,2021-07-24,2021-09-05,43
+Los Angeles,Chattogram,2021-07-24,2021-08-29,36
+Ho Chi Minh City,Long Beach,2021-07-24,2021-09-05,43
+Vung Tau,Los Angeles,2021-07-26,2021-08-25,30
+Vung Tau,Los Angeles,2021-07-26,2021-08-25,30
+Long Beach,Cai Mep,2021-07-26,2021-08-12,17
+Yantian,Long Beach,2021-07-27,2021-08-16,20
+Los Angeles,Cai Mep,2021-07-27,2021-08-14,18
+Yantian,Long Beach,2021-07-27,2021-08-13,17
+Yantian,Long Beach,2021-07-27,2021-08-14,18
+Cai Mep,Long Beach,2021-07-27,2021-08-26,30
+Cai Mep,Long Beach,2021-07-27,2021-08-26,30
+Cai Mep,Long Beach,2021-07-27,2021-08-27,31
+Los Angeles,Ningbo,2021-07-27,2021-08-15,19
+Cai Mep,Los Angeles,2021-07-28,2021-08-30,33
+Savannah,Port Muhammad Bin Qasim,2021-07-28,2021-09-09,43
+Tianjin Xingang,Long Beach,2021-07-29,2021-10-01,64
+Tianjin Xingang,Long Beach,2021-07-29,2021-09-27,60
+Tianjin Xingang,Long Beach,2021-07-29,2021-09-29,62
+Shanghai,Houston,2021-07-29,2021-09-08,41
+Shanghai,Houston,2021-07-29,2021-09-09,42
+Houston,Ningbo,2021-07-29,2021-09-06,39
+Ningbo,Long Beach,2021-07-30,2021-08-31,32
+Zhongshan,Los Angeles,2021-07-30,2021-10-05,67
+Ho Chi Minh City,Long Beach,2021-07-30,2021-09-13,45
+Ningbo,Houston,2021-07-30,2021-09-10,42
+Dallas,Pelabuhan Klang,2021-07-30,2021-09-12,44
+Ho Chi Minh City,Long Beach,2021-07-31,2021-09-14,45
+Tianjin Xingang,Long Beach,2021-08-01,2021-09-15,45
+Shanghai,Houston,2021-08-01,2021-08-26,25
+Tianjin Xingang,Long Beach,2021-08-01,2021-09-15,45
+Yantian,Houston,2021-08-03,2021-09-05,33
+Yantian,Houston,2021-08-03,2021-09-05,33
+Yantian,Houston,2021-08-03,2021-09-05,33
+Shanghai,Long Beach,2021-08-04,2021-09-10,37
+Ningbo,Houston,2021-08-04,2021-09-01,28
+Yantian,Long Beach,2021-08-04,2021-08-26,22
+Yantian,Long Beach,2021-08-04,2021-08-26,22
+Yantian,Long Beach,2021-08-04,2021-08-26,22
+Shanghai,Houston,2021-08-04,2021-09-09,36
+Shekou,Long Beach,2021-08-05,2021-09-23,49
+Sonipat,Houston,2021-08-07,2021-10-22,76
+Vung Tau,Los Angeles,2021-08-08,2021-09-19,42
+Long Beach,Karachi,2021-08-09,2021-09-22,44
+Yantian,Long Beach,2021-08-09,2021-09-17,39
+Shanghai,Long Beach,2021-08-09,2021-09-07,29
+Shanghai,Long Beach,2021-08-09,2021-09-07,29
+Shanghai,Long Beach,2021-08-09,2021-09-07,29
+Vung Tau,Los Angeles,2021-08-09,2021-09-17,39
+Yantian,Rotterdam,2021-08-09,2021-09-08,30
+Vung Tau,Los Angeles,2021-08-09,2021-09-19,41
+Cai Mep,Long Beach,2021-08-10,2021-09-08,29
+Chattogram,Long Beach,2021-08-10,2021-10-24,75
+Shanghai,Houston,2021-08-11,2021-09-13,33
+Los Angeles,Taipei,2021-08-11,2021-08-26,15
+Shanghai,Houston,2021-08-11,2021-09-12,32
+Los Angeles,Pelabuhan Klang,2021-08-12,2021-09-13,32
+Haiphong,Baltimore,2021-08-12,2021-11-12,92
+Los Angeles,Pelabuhan Klang,2021-08-12,2021-09-03,22
+Los Angeles,Westport,2021-08-15,2021-09-08,24
+Chattogram,Long Beach,2021-08-17,2021-10-23,67
+Chattogram,Long Beach,2021-08-17,2021-10-23,67
+Houston,Manaus,2021-08-18,2021-09-22,35
+Chattogram,Long Beach,2021-08-19,2021-10-23,65
+Busan,Savannah,2021-08-19,2021-10-06,48
+Yantian,Long Beach,2021-08-20,2021-09-07,18
+Yantian,Long Beach,2021-08-20,2021-09-07,18
+Shanghai,Houston,2021-08-20,2021-09-28,39
+Yantian,Long Beach,2021-08-20,2021-09-10,21
+Yantian,Long Beach,2021-08-20,2021-09-10,21
+Yantian,Long Beach,2021-08-20,2021-09-07,18
+Los Angeles,Kaohsiung,2021-08-21,2021-09-07,17
+Long Beach,Shanghai,2021-08-22,2021-09-11,20
+Shanghai,Long Beach,2021-08-22,2021-09-12,21
+Shanghai,Long Beach,2021-08-22,2021-09-12,21
+Los Angeles,Dalian,2021-08-22,2021-09-22,31
+Shanghai,Long Beach,2021-08-22,2021-09-11,20
+Yantian,Los Angeles,2021-08-23,2021-09-17,25
+Cai Mep,Long Beach,2021-08-24,2021-09-22,29
+Cai Mep,Long Beach,2021-08-24,2021-09-21,28
+Cai Mep,Long Beach,2021-08-24,2021-09-21,28
+Yantian,Houston,2021-08-24,2021-09-20,27
+Haiphong,Long Beach,2021-08-25,2021-10-13,49
+Cai Mep,Long Beach,2021-08-27,2021-10-13,47
+Vung Tau,Long Beach,2021-08-27,2021-10-09,43
+Zhoushan,Sydney,2021-08-27,2021-09-07,11
+Shanghai,Long Beach,2021-08-28,2021-09-17,20
+Shanghai,Long Beach,2021-08-28,2021-09-17,20
+Shanghai,Tacoma,2021-08-28,2021-10-05,38
+Shanghai,Long Beach,2021-08-28,2021-09-17,20
+Tianjin Xingang,Long Beach,2021-08-28,2021-12-10,104
+Cai Mep,Long Beach,2021-08-30,2021-09-30,31
+Yantian,Houston,2021-08-30,2021-10-07,38
+Cai Mep,Long Beach,2021-08-30,2021-10-01,32
+Yantian,Houston,2021-08-31,2021-09-26,26
+Shanghai,Tacoma,2021-08-31,2021-10-20,50
+Sonipat,Houston,2021-09-02,2021-11-13,72
+Shanghai,Long Beach,2021-09-02,2021-09-19,17
+Yantian,Houston,2021-09-03,2021-10-08,35
+Cai Mep,Long Beach,2021-09-03,2021-11-01,59
+Laem Chabang,Kobe,2021-09-03,2021-09-10,7
+Ningbo,Houston,2021-09-04,2021-10-05,31
+Ningbo,Houston,2021-09-04,2021-10-05,31
+Yantian,Long Beach,2021-09-05,2021-09-24,19
+Yantian,Long Beach,2021-09-05,2021-09-21,16
+Yantian,Long Beach,2021-09-05,2021-09-21,16
+Los Angeles,Dammam,2021-09-06,2021-10-17,41
+Houston,Kaohsiung,2021-09-07,2021-10-11,34
+Cai Mep,Long Beach,2021-09-07,2021-10-08,31
+Yantian,Houston,2021-09-08,2021-10-12,34
+Yantian,Houston,2021-09-09,2021-10-21,42
+Shanghai,Long Beach,2021-09-10,2021-09-27,17
+Semarang,Novorossiysk,2021-09-10,2021-10-27,47
+Shanghai,Long Beach,2021-09-10,2021-09-26,16
+Yantian,Long Beach,2021-09-10,2021-09-26,16
+Shanghai,Long Beach,2021-09-10,2021-09-26,16
+Yantian,Long Beach,2021-09-10,2021-09-26,16
+Shekou,Houston,2021-09-11,2021-10-28,47
+Vung Tau,Los Angeles,2021-09-11,2021-10-31,50
+Vung Tau,Los Angeles,2021-09-12,2021-11-01,50
+Vung Tau,Los Angeles,2021-09-13,2021-11-01,49
+Houston,Westport,2021-09-13,2021-11-18,66
+Vung Tau,Los Angeles,2021-09-14,2021-10-31,47
+Ningbo,Houston,2021-09-17,2021-10-26,39
+Ningbo,Houston,2021-09-17,2021-10-27,40
+Zhuhai,Houston,2021-09-17,2021-11-02,46
+Oakland,Kaohsiung,2021-09-17,2021-10-30,43
+Yantian,Long Beach,2021-09-18,2021-10-08,20
+Shanghai,Long Beach,2021-09-18,2021-10-14,26
+Yantian,Long Beach,2021-09-18,2021-10-08,20
+Yantian,Long Beach,2021-09-18,2021-10-10,22
+Yantian,Long Beach,2021-09-18,2021-10-08,20
+Ningbo,Houston,2021-09-19,2021-10-27,38
+Shanghai,Long Beach,2021-09-21,2021-10-05,14
+Houston,Kotka,2021-09-21,2021-10-19,28
+Shanghai,Long Beach,2021-09-21,2021-10-05,14
+Los Angeles,Qingdao,2021-09-21,2021-10-08,17
+Cai Mep,Long Beach,2021-09-21,2021-10-21,30
+Los Angeles,Qingdao,2021-09-21,2021-10-08,17
+Cai Mep,Long Beach,2021-09-21,2021-10-26,35
+Cai Mep,Long Beach,2021-09-21,2021-10-26,35
+Ningbo,Houston,2021-09-22,2021-10-30,38
+Xiamen,Houston,2021-09-23,2021-11-23,61
+Xiamen,Houston,2021-09-23,2021-11-23,61
+Los Angeles,Tokyo,2021-09-23,2021-10-10,17
+Yantian,Long Beach,2021-09-24,2021-10-17,23
+Ningbo,Houston,2021-09-24,2021-10-29,35
+Vung Tau,Los Angeles,2021-09-24,2021-11-11,48
+Yantian,Long Beach,2021-09-24,2021-10-15,21
+Yantian,Long Beach,2021-09-24,2021-10-17,23
+Yantian,Savannah,2021-09-24,2021-10-18,24
+Shanghai,Houston,2021-09-25,2021-11-04,40
+Yantian,Houston,2021-09-25,2021-11-06,42
+Vung Tau,Los Angeles,2021-09-26,2021-11-09,44
+Vung Tau,Los Angeles,2021-09-27,2021-11-11,45
+Fuzhou,Los Angeles,2021-09-27,2021-12-21,85
+Zhuhai,Houston,2021-09-27,2021-11-15,49
+Vung Tau,Los Angeles,2021-09-28,2021-11-11,44
+Vancouver,Tianjin Xingang,2021-09-28,2021-10-31,33
+Yantian,Long Beach,2021-09-30,2021-10-19,19
+Yantian,Long Beach,2021-09-30,2021-10-20,20
+Yantian,Long Beach,2021-09-30,2021-10-19,19
+Ningbo,Long Beach,2021-10-01,2021-10-27,26
+Vung Tau,Los Angeles,2021-10-01,2021-11-15,45
+Ningbo,Long Beach,2021-10-01,2021-10-25,24
+Vung Tau,Los Angeles,2021-10-01,2021-11-15,45
+Ningbo,Long Beach,2021-10-01,2021-10-24,23
+Shanghai,Long Beach,2021-10-02,2021-10-20,18
+Vung Tau,Los Angeles,2021-10-02,2021-11-15,44
+Vung Tau,Los Angeles,2021-10-02,2021-11-15,44
+Shanghai,Long Beach,2021-10-02,2021-10-20,18
+Vung Tau,Los Angeles,2021-10-02,2021-11-27,56
+Shanghai,Long Beach,2021-10-02,2021-10-20,18
+Vung Tau,Los Angeles,2021-10-03,2021-11-15,43
+Yantian,Oakland,2021-10-05,2021-11-03,29
+Yantian,Oakland,2021-10-06,2021-11-02,27
+Yantian,Long Beach,2021-10-07,2021-10-29,22
+Yantian,Oakland,2021-10-07,2021-11-03,27
+Yantian,Long Beach,2021-10-07,2021-10-28,21
+Yantian,Long Beach,2021-10-07,2021-10-25,18
+Shekou,Houston,2021-10-07,2021-11-11,35
+Vung Tau,Los Angeles,2021-10-09,2021-12-01,53
+Vung Tau,Los Angeles,2021-10-09,2021-11-30,52
+Vung Tau,Los Angeles,2021-10-10,2021-12-01,52
+Ningbo,Houston,2021-10-10,2021-11-11,32
+Vung Tau,Los Angeles,2021-10-10,2021-12-01,52
+Yantian,Long Beach,2021-10-11,2021-10-31,20
+Oakland,Dalian,2021-10-11,2021-11-12,32
+Yantian,Long Beach,2021-10-11,2021-10-30,19
+Yantian,Long Beach,2021-10-11,2021-11-01,21
+Yantian,Long Beach,2021-10-11,2021-11-03,23
+Yantian,Long Beach,2021-10-11,2021-10-31,20
+Shanghai,Long Beach,2021-10-12,2021-10-29,17
+Shanghai,Long Beach,2021-10-12,2021-10-29,17
+Shanghai,Long Beach,2021-10-12,2021-10-28,16
+Chattogram,Long Beach,2021-10-14,2022-01-29,107
+Chattogram,Long Beach,2021-10-14,2022-01-29,107
+Chattogram,Long Beach,2021-10-14,2022-01-24,102
+Yantian,Los Angeles,2021-10-14,2021-12-30,77
+Chattogram,Long Beach,2021-10-14,2022-01-29,107
+Tianjin Xingang,Long Beach,2021-10-16,2021-12-02,47
+Tacoma,Jakarta,2021-10-16,2021-11-19,34
+Shanghai Hongqiao International,Long Beach,2021-10-16,2021-12-14,59
+Ningbo,Houston,2021-10-16,2021-12-01,46
+Antwerpen,Stavanger,2021-10-17,2021-11-04,18
+Shanghai,Long Beach,2021-10-18,2021-11-03,16
+Shanghai,Long Beach,2021-10-18,2021-11-03,16
+Shanghai,Long Beach,2021-10-18,2021-11-03,16
+Ningbo,Fort Worth,2021-10-18,2021-12-10,53
+Shekou,Long Beach,2021-10-19,2021-11-18,30
+Yantian,Houston,2021-10-19,2021-11-14,26
+New York City,Jeddah,2021-10-20,2021-11-17,28
+Ningbo,Fort Worth,2021-10-20,2021-12-02,43
+Vung Tau,Oakland,2021-10-21,2021-11-19,29
+Vung Tau,Oakland,2021-10-21,2021-11-19,29
+Vung Tau,Oakland,2021-10-21,2021-11-19,29
+Vung Tau,Oakland,2021-10-21,2021-11-19,29
+Vung Tau,Oakland,2021-10-22,2021-11-19,28
+Izmit,Newark,2021-10-22,2021-11-23,32
+Vung Tau,Los Angeles,2021-10-22,2021-12-04,43
+Vung Tau,Oakland,2021-10-22,2021-11-20,29
+Vung Tau,Oakland,2021-10-23,2021-11-19,27
+Yantian,Savannah,2021-10-23,2021-12-20,58
+Yantian,Long Beach,2021-10-23,2021-11-18,26
+Shanghai,Los Angeles,2021-10-24,2021-12-29,66
+Shanghai,Los Angeles,2021-10-25,2022-01-02,69
+Yantian,Long Beach,2021-10-25,2021-12-25,61
+Yantian,Long Beach,2021-10-25,2021-11-12,18
+Yantian,Long Beach,2021-10-25,2021-11-12,18
+Yantian,Long Beach,2021-10-25,2021-12-25,61
+Haiphong,Los Angeles,2021-10-25,2021-12-28,64
+Yantian,Long Beach,2021-10-25,2021-11-12,18
+Tianjin Xingang,Long Beach,2021-10-26,2021-12-20,55
+Shanghai,Los Angeles,2021-10-26,2022-01-02,68
+Yantian,Long Beach,2021-10-26,2021-12-25,60
+Yantian,Savannah,2021-10-26,2021-12-20,55
+Shanghai,Los Angeles,2021-10-26,2022-01-02,68
+Vung Tau,Los Angeles,2021-10-26,2021-12-21,56
+Tianjin Xingang,Long Beach,2021-10-27,2021-12-24,58
+Vung Tau,Los Angeles,2021-10-27,2021-12-21,55
+Yantian,Long Beach,2021-10-27,2021-11-15,19
+Yantian,Long Beach,2021-10-27,2021-11-15,19
+Tianjin Xingang,Long Beach,2021-10-27,2021-12-20,54
+Yantian,Long Beach,2021-10-27,2021-11-14,18
+Yantian,Long Beach,2021-10-27,2021-11-15,19
+Vung Tau,Los Angeles,2021-10-28,2021-12-17,50
+Vung Tau,Los Angeles,2021-10-28,2021-12-21,54
+Tianjin Xingang,Long Beach,2021-10-28,2021-12-24,57
+Ningbo,Fort Worth,2021-10-29,2021-12-13,45
+Vung Tau,Los Angeles,2021-10-29,2021-12-21,53
+Ningbo,Fort Worth,2021-10-29,2021-12-13,45
+Ningbo,Los Angeles,2021-10-29,2021-11-18,20
+Yantian,Long Beach,2021-10-29,2022-01-05,68
+Shanghai,Los Angeles,2021-10-29,2021-11-12,14
+Vung Tau,Los Angeles,2021-10-29,2021-12-21,53
+Vung Tau,Los Angeles,2021-10-29,2021-12-21,53
+Vung Tau,Los Angeles,2021-10-29,2021-12-21,53
+Yantian,Long Beach,2021-10-30,2022-01-10,72
+Ningbo,Fort Worth,2021-10-30,2021-12-12,43
+Shekou,Long Beach,2021-10-30,2021-11-30,31
+Chattogram,Long Beach,2021-10-31,2022-02-01,93
+Chattogram,Long Beach,2021-10-31,2022-02-01,93
+Chattogram,Long Beach,2021-10-31,2022-02-01,93
+Chattogram,Long Beach,2021-10-31,2022-02-01,93
+Chattogram,Long Beach,2021-10-31,2022-02-01,93
+Vung Tau,Los Angeles,2021-10-31,2021-12-21,51
+Chattogram,Long Beach,2021-10-31,2022-02-02,94
+Chattogram,Long Beach,2021-10-31,2022-02-01,93
+Chattogram,Long Beach,2021-10-31,2022-02-01,93
+Chattogram,Long Beach,2021-10-31,2022-02-01,93
+Xiamen,Houston,2021-11-01,2021-11-30,29
+Vung Tau,Los Angeles,2021-11-01,2021-12-21,50
+Yantian,Los Angeles,2021-11-01,2021-12-11,40
+Yantian,Los Angeles,2021-11-01,2021-12-12,41
+Vung Tau,Los Angeles,2021-11-02,2021-12-21,49
+Shanghai,Houston,2021-11-04,2021-12-21,47
+Tianjin Xingang,Long Beach,2021-11-04,2022-01-22,79
+Ningbo,Fort Worth,2021-11-05,2021-12-21,46
+Shekou,Houston,2021-11-05,2021-12-06,31
+Yantian,Long Beach,2021-11-06,2021-12-21,45
+Yantian,Los Angeles,2021-11-06,2021-12-20,44
+Yantian,Long Beach,2021-11-07,2021-12-26,49
+Yantian,Fort Worth,2021-11-08,2021-12-25,47
+Yantian,Fort Worth,2021-11-08,2021-12-25,47
+Jawaharlal Nehru,New York City,2021-11-09,2022-01-04,56
+Ningbo,Houston,2021-11-10,2021-12-05,25
+Shanghai,Los Angeles,2021-11-11,2022-01-14,64
+Ningbo,Long Beach,2021-11-11,2021-12-18,37
+Vung Tau,Long Beach,2021-11-12,2022-01-07,56
+Vung Tau,Long Beach,2021-11-12,2022-01-06,55
+Yantian,Long Beach,2021-11-12,2021-11-26,14
+Yantian,Long Beach,2021-11-12,2021-11-26,14
+Vung Tau,Long Beach,2021-11-12,2022-01-07,56
+Ningbo,Houston,2021-11-12,2021-12-12,30
+Yantian,Long Beach,2021-11-12,2021-11-26,14
+Vung Tau,Long Beach,2021-11-13,2022-01-06,54
+Yantian,Los Angeles,2021-11-13,2021-12-12,29
+Vung Tau,Los Angeles,2021-11-13,2022-01-09,57
+Yantian,Long Beach,2021-11-13,2022-02-09,88
+Cai Mep,Long Beach,2021-11-14,2021-12-11,27
+Yantian,Long Beach,2021-11-14,2022-02-09,87
+Cai Mep,Long Beach,2021-11-14,2021-12-12,28
+Mundra,Houston,2021-11-14,2021-12-23,39
+Vung Tau,Long Beach,2021-11-14,2022-01-06,53
+Cai Mep,Long Beach,2021-11-14,2021-12-11,27
+Tianjin Xingang,Oakland,2021-11-15,2022-02-18,95
+Vung Tau,Long Beach,2021-11-15,2022-01-08,54
+Tianjin Xingang,Oakland,2021-11-15,2022-02-18,95
+Vung Tau,Long Beach,2021-11-15,2022-01-06,52
+Tianjin Xingang,Oakland,2021-11-15,2022-02-18,95
+Shanghai,Los Angeles,2021-11-15,2021-12-02,17
+Tianjin Xingang,Oakland,2021-11-15,2022-02-18,95
+Shanghai,Los Angeles,2021-11-15,2021-12-18,33
+Vung Tau,Long Beach,2021-11-15,2022-01-07,53
+Vung Tau,Long Beach,2021-11-15,2022-01-06,52
+Chattogram,Los Angeles,2021-11-15,2022-02-16,93
+Vung Tau,Long Beach,2021-11-15,2022-01-08,54
+Shanghai,Oakland,2021-11-15,2021-12-11,26
+Shanghai,Los Angeles,2021-11-15,2021-12-20,35
+Yantian,Oakland,2021-11-15,2022-01-06,52
+Tianjin Xingang,Oakland,2021-11-15,2022-02-18,95
+Chattogram,Los Angeles,2021-11-15,2022-02-16,93
+Vung Tau,Long Beach,2021-11-15,2022-01-08,54
+Shanghai,Long Beach,2021-11-15,2021-12-19,34
+Shanghai,Long Beach,2021-11-15,2021-12-17,32
+Chattogram,Los Angeles,2021-11-15,2022-02-16,93
+Shanghai,Long Beach,2021-11-16,2021-12-03,17
+Shanghai,Los Angeles,2021-11-16,2021-12-20,34
+Shanghai,Long Beach,2021-11-16,2021-11-30,14
+Vung Tau,Long Beach,2021-11-16,2022-01-06,51
+Shanghai,Long Beach,2021-11-16,2021-12-03,17
+Shanghai,Los Angeles,2021-11-16,2021-12-18,32
+Ningbo,Oakland,2021-11-17,2021-12-22,35
+Yantian,Long Beach,2021-11-17,2021-12-07,20
+Yantian,Long Beach,2021-11-17,2021-12-10,23
+Yantian,Long Beach,2021-11-17,2021-12-10,23
+Yantian,Long Beach,2021-11-17,2021-12-03,16
+Yantian,Long Beach,2021-11-17,2021-12-10,23
+Yantian,Long Beach,2021-11-18,2022-02-12,86
+Yantian,Long Beach,2021-11-19,2022-02-09,82
+Cai Mep,Long Beach,2021-11-19,2022-01-02,44
+Yantian,Long Beach,2021-11-19,2022-02-09,82
+Cai Mep,Long Beach,2021-11-19,2021-12-31,42
+Cai Mep,Long Beach,2021-11-19,2021-12-29,40
+Yantian,Long Beach,2021-11-19,2022-02-12,85
+Yantian,Long Beach,2021-11-19,2022-02-12,85
+Qingdao,Los Angeles,2021-11-20,2021-12-18,28
+Shanghai,Long Beach,2021-11-21,2021-12-08,17
+Shanghai,Long Beach,2021-11-21,2021-12-05,14
+Shanghai,Long Beach,2021-11-21,2021-12-06,15
+Nagoya,Tacoma,2021-11-22,2022-02-11,81
+Yantian,Oakland,2021-11-23,2022-01-05,43
+Yantian,Long Beach,2021-11-23,2021-12-11,18
+Yantian,Long Beach,2021-11-23,2021-12-11,18
+Shanghai,Long Beach,2021-11-23,2021-12-17,24
+Yantian,Long Beach,2021-11-23,2021-12-11,18
+Tianjin Xingang,Long Beach,2021-11-23,2022-02-04,73
+Yantian,Long Beach,2021-11-23,2021-12-11,18
+Shanghai,Long Beach,2021-11-23,2021-12-17,24
+Yantian,Long Beach,2021-11-23,2021-12-09,16
+Shanghai,Long Beach,2021-11-23,2021-12-15,22
+Tianjin Xingang,Long Beach,2021-11-24,2022-02-12,80
+Shanghai,Los Angeles,2021-11-25,2022-02-04,71
+Vung Tau,Los Angeles,2021-11-25,2022-01-11,47
+Tianjin Xingang,Long Beach,2021-11-25,2022-02-05,72
+Yantian,Oakland,2021-11-26,2022-01-19,54
+Fuzhou,Houston,2021-11-26,2022-01-24,59
+Xiamen,Los Angeles,2021-11-26,2022-01-16,51
+Shanghai,Los Angeles,2021-11-26,2022-02-03,69
+Yantian,Long Beach,2021-11-27,2021-12-29,32
+Yantian,Long Beach,2021-11-27,2021-12-27,30
+Yantian,Long Beach,2021-11-27,2021-12-30,33
+Yantian,Long Beach,2021-11-27,2021-12-27,30
+Yantian,Long Beach,2021-11-27,2021-12-27,30
+Xiamen,Los Angeles,2021-11-27,2022-01-16,50
+Cai Mep,Long Beach,2021-11-28,2022-01-03,36
+Cai Mep,Long Beach,2021-11-28,2021-12-31,33
+Vung Tau,Long Beach,2021-11-28,2022-01-18,51
+Cai Mep,Long Beach,2021-11-28,2022-01-03,36
+Ningbo,Houston,2021-11-29,2022-01-11,43
+Shanghai,Long Beach,2021-11-29,2021-12-27,28
+Ningbo,Houston,2021-11-29,2022-01-11,43
+Shanghai,Long Beach,2021-11-29,2021-12-27,28
+Yantian,Oakland,2021-11-29,2022-01-06,38
+Shanghai,Long Beach,2021-11-29,2021-12-26,27
+Yantian,Oakland,2021-11-30,2022-01-06,37
+Vung Tau,Long Beach,2021-11-30,2022-02-02,64
+Vung Tau,Long Beach,2021-12-01,2022-01-18,48
+Vung Tau,Long Beach,2021-12-01,2022-01-18,48
+Ningbo,Houston,2021-12-02,2022-01-03,32
+Vung Tau,Long Beach,2021-12-02,2022-01-17,46
+Vung Tau,Long Beach,2021-12-02,2022-01-18,47
+Vung Tau,Long Beach,2021-12-02,2022-01-19,48
+Vung Tau,Long Beach,2021-12-02,2022-01-18,47
+Ningbo,Houston,2021-12-02,2022-01-08,37
+Vung Tau,Long Beach,2021-12-02,2022-01-17,46
+Vung Tau,Long Beach,2021-12-02,2022-01-19,48
+Ningbo,Houston,2021-12-02,2022-01-12,41
+Yantian,Long Beach,2021-12-03,2021-12-30,27
+Yantian,Long Beach,2021-12-03,2022-01-02,30
+Yantian,Los Angeles,2021-12-03,2022-02-17,76
+Yantian,Long Beach,2021-12-03,2021-12-27,24
+Yantian,Oakland,2021-12-03,2022-01-19,47
+Yantian,Long Beach,2021-12-03,2021-12-29,26
+Yantian,Oakland,2021-12-04,2022-01-19,46
+Yantian,Oakland,2021-12-04,2022-01-19,46
+Vung Tau,Long Beach,2021-12-04,2022-01-18,45
+Yantian,Los Angeles,2021-12-04,2022-02-20,78
+Yantian,Los Angeles,2021-12-04,2022-02-17,75
+Vung Tau,Long Beach,2021-12-05,2022-01-18,44
+Qingdao,Los Angeles,2021-12-05,2022-01-03,29
+Vung Tau,Long Beach,2021-12-05,2022-01-19,45
+Shanghai,Long Beach,2021-12-05,2022-02-13,70
+Yantian,Los Angeles,2021-12-05,2022-02-18,75
+Yantian,Los Angeles,2021-12-05,2022-02-18,75
+Tianjin Xingang,Houston,2021-12-05,2022-02-08,65
+Shanghai,Long Beach,2021-12-05,2022-02-13,70
+Vung Tau,Long Beach,2021-12-05,2022-01-19,45
+Ningbo,Houston,2021-12-06,2022-01-13,38
+Shanghai,Los Angeles,2021-12-07,2022-01-05,29
+Ningbo,Houston,2021-12-08,2022-01-17,40
+Ningbo,Houston,2021-12-08,2022-01-18,41
+Ningbo,Houston,2021-12-08,2022-01-17,40
+Ningbo,Houston,2021-12-08,2022-01-17,40
+Ningbo,Houston,2021-12-08,2022-01-07,30
+Cai Mep,Long Beach,2021-12-10,2022-01-04,25
+Shanghai,Oakland,2021-12-10,2022-01-08,29
+Shanghai,Oakland,2021-12-10,2022-01-07,28
+Vung Tau,Los Angeles,2021-12-10,2022-01-31,52
+Vung Tau,Los Angeles,2021-12-10,2022-01-31,52
+Cai Mep,Long Beach,2021-12-10,2022-01-04,25
+Cai Mep,Long Beach,2021-12-10,2022-01-04,25
+Cai Mep,Long Beach,2021-12-10,2022-01-04,25
+Shanghai,Oakland,2021-12-10,2022-01-08,29
+Shanghai,Oakland,2021-12-11,2022-01-11,31
+Tianjin Xingang,Long Beach,2021-12-11,2022-02-08,59
+Shanghai,Oakland,2021-12-11,2022-01-10,30
+Vung Tau,Los Angeles,2021-12-12,2022-01-31,50
+Cai Mep,Long Beach,2021-12-12,2022-01-17,36
+Vung Tau,Los Angeles,2021-12-12,2022-01-31,50
+Cai Mep,Long Beach,2021-12-12,2022-01-13,32
+Shanghai,Los Angeles,2021-12-12,2022-01-07,26
+Shanghai,Los Angeles,2021-12-12,2022-01-26,45
+Yantian,Oakland,2021-12-12,2022-02-19,69
+Vung Tau,Los Angeles,2021-12-12,2022-01-31,50
+Vung Tau,Los Angeles,2021-12-12,2022-01-31,50
+Shanghai,Los Angeles,2021-12-12,2022-01-24,43
+Yantian,Oakland,2021-12-12,2022-02-19,69
+Vung Tau,Los Angeles,2021-12-12,2022-01-31,50
+Tianjin Xingang,Long Beach,2021-12-12,2022-02-08,58
+Cai Mep,Long Beach,2021-12-12,2022-01-15,34
+Yantian,Oakland,2021-12-12,2022-02-19,69
+Vung Tau,Los Angeles,2021-12-13,2022-01-31,49
+Yantian,Houston,2021-12-13,2022-01-23,41
+Vung Tau,Los Angeles,2021-12-13,2022-01-31,49
+Vung Tau,Los Angeles,2021-12-13,2022-01-31,49
+Shekou,Houston,2021-12-13,2022-01-25,43
+Vung Tau,Los Angeles,2021-12-13,2022-01-31,49
+Shanghai,Los Angeles,2021-12-14,2022-02-17,65
+Yantian,Long Beach,2021-12-16,2022-01-07,22
+Yantian,Long Beach,2021-12-16,2022-01-09,24
+Yantian,Long Beach,2021-12-16,2022-01-18,33
+Ningbo,Houston,2021-12-16,2022-01-23,38
+Ningbo,Houston,2021-12-16,2022-01-23,38
+Yantian,Long Beach,2021-12-16,2022-01-17,32
+Ningbo,Houston,2021-12-16,2022-01-17,32
+Yantian,Long Beach,2021-12-16,2022-01-08,23
+Ningbo,Houston,2021-12-16,2022-01-23,38
+Ningbo,Houston,2021-12-16,2022-01-23,38
+Yantian,Long Beach,2021-12-16,2022-01-09,24
+Yantian,Long Beach,2021-12-16,2022-01-15,30
+Yantian,Long Beach,2021-12-16,2022-01-16,31
+Yantian,Houston,2021-12-16,2022-02-07,53
+Ningbo,Houston,2021-12-16,2022-01-23,38
+Yantian,Long Beach,2021-12-17,2022-01-04,18
+Yantian,Long Beach,2021-12-17,2022-01-09,23
+Cai Mep,Long Beach,2021-12-17,2022-01-17,31
+Cai Mep,Long Beach,2021-12-17,2022-01-16,30
+Yantian,Long Beach,2021-12-17,2022-01-04,18
+Yantian,Long Beach,2021-12-17,2022-01-04,18
+Cai Mep,Long Beach,2021-12-17,2022-01-17,31
+Chattogram,Los Angeles,2021-12-18,2022-03-16,88
+Chattogram,Los Angeles,2021-12-18,2022-03-16,88
+Chattogram,Los Angeles,2021-12-18,2022-03-16,88
+Chattogram,Los Angeles,2021-12-18,2022-03-16,88
+Yantian,Houston,2021-12-18,2022-02-08,52
+Chattogram,Los Angeles,2021-12-18,2022-03-16,88
+Shanghai,Houston,2021-12-19,2022-02-11,54
+Mundra,Houston,2021-12-19,2022-02-20,63
+Shanghai,Houston,2021-12-19,2022-02-11,54
+Yantian,Houston,2021-12-19,2022-01-26,38
+Shanghai,Long Beach,2021-12-20,2022-01-18,29
+Shanghai,Long Beach,2021-12-20,2022-01-19,30
+Ningbo,Los Angeles,2021-12-21,2022-01-22,32
+Ningbo,Houston,2021-12-22,2022-02-02,42
+Ningbo,Houston,2021-12-22,2022-01-30,39
+Yantian,Los Angeles,2021-12-22,2022-02-08,48
+Ningbo,Houston,2021-12-22,2022-02-02,42
+Ningbo,Houston,2021-12-22,2022-01-22,31
+Ningbo,Houston,2021-12-22,2022-02-03,43
+Ningbo,Houston,2021-12-22,2022-01-21,30
+Ningbo,Houston,2021-12-22,2022-01-30,39
+Vung Tau,Los Angeles,2021-12-23,2022-02-08,47
+Shanghai Hongqiao International,Oakland,2021-12-23,2022-02-19,58
+Vung Tau,Los Angeles,2021-12-23,2022-02-08,47
+Vung Tau,Long Beach,2021-12-23,2022-02-08,47
+Vung Tau,Los Angeles,2021-12-23,2022-02-04,43
+Shanghai Hongqiao International,Oakland,2021-12-23,2022-02-19,58
+Vung Tau,Los Angeles,2021-12-23,2022-02-08,47
+Shekou,Houston,2021-12-24,2022-02-05,43
+Vung Tau,Los Angeles,2021-12-24,2022-02-08,46
+Yantian,Los Angeles,2021-12-24,2022-02-01,39
+Shanghai,Los Angeles,2021-12-24,2022-01-10,17
+Vung Tau,Los Angeles,2021-12-24,2022-02-08,46
+Shanghai,Long Beach,2021-12-25,2022-01-20,26
+Shanghai,Long Beach,2021-12-25,2022-01-22,28
+Ningbo,Long Beach,2021-12-25,2022-02-06,43
+Yantian,Los Angeles,2021-12-25,2022-02-13,50
+Shanghai,Long Beach,2021-12-25,2022-01-20,26
+Yantian,Los Angeles,2021-12-28,2022-02-03,37
+Xiamen,Los Angeles,2021-12-29,2022-02-12,45
+Tianjin Xingang,Long Beach,2021-12-29,2022-02-25,58
+Tianjin Xingang,Dallas,2021-12-29,2022-03-29,90
+Tianjin Xingang,Dallas,2021-12-29,2022-03-29,90
+Ningbo,Long Beach,2021-12-29,2022-02-07,40
+Ningbo,Houston,2021-12-29,2022-02-07,40
+Ningbo,Houston,2021-12-29,2022-02-08,41
+Ningbo,Houston,2021-12-29,2022-02-07,40
+Vung Tau,Long Beach,2021-12-30,2022-02-08,40
+Vung Tau,Long Beach,2021-12-30,2022-02-08,40
+Yantian,Houston,2021-12-30,2022-02-17,49
+Shanghai,Houston,2021-12-30,2022-02-10,42
+Vung Tau,Long Beach,2021-12-30,2022-02-08,40
+Vung Tau,Long Beach,2021-12-30,2022-02-07,39
+Vung Tau,Long Beach,2021-12-30,2022-02-08,40
+Vung Tau,Long Beach,2021-12-31,2022-02-08,39
+Shanghai,Long Beach,2022-01-01,2022-01-21,20
+Shanghai,Long Beach,2022-01-01,2022-01-24,23
+Ningbo,Long Beach,2022-01-01,2022-02-01,31
+Shanghai,Long Beach,2022-01-01,2022-01-21,20
+Cai Mep,Long Beach,2022-01-02,2022-02-17,46
+Cai Mep,Los Angeles,2022-01-02,2022-02-02,31
+Vung Tau,Los Angeles,2022-01-03,2022-02-22,50
+Yantian,Los Angeles,2022-01-03,2022-02-11,39
+Vung Tau,Los Angeles,2022-01-04,2022-03-04,59
+Yantian,Los Angeles,2022-01-04,2022-03-04,59
+Shanghai,Los Angeles,2022-01-04,2022-01-22,18
+Yantian,Los Angeles,2022-01-04,2022-03-04,59
+Yantian,Los Angeles,2022-01-04,2022-03-04,59
+Yantian,Los Angeles,2022-01-04,2022-02-25,52
+Vung Tau,Los Angeles,2022-01-05,2022-02-22,48
+Cai Mep,Long Beach,2022-01-05,2022-01-30,25
+Vung Tau,Los Angeles,2022-01-05,2022-02-22,48
+Cai Mep,Long Beach,2022-01-05,2022-01-31,26
+Ningbo,Los Angeles,2022-01-05,2022-02-09,35
+Ningbo,Long Beach,2022-01-05,2022-02-12,38
+Vung Tau,Los Angeles,2022-01-05,2022-02-22,48
+Yantian,Los Angeles,2022-01-05,2022-02-25,51
+Vung Tau,Los Angeles,2022-01-05,2022-02-22,48
+Cai Mep,Long Beach,2022-01-05,2022-01-30,25
+Yantian,Los Angeles,2022-01-06,2022-03-04,57
+Vung Tau,Los Angeles,2022-01-06,2022-02-22,47
+Vung Tau,Los Angeles,2022-01-06,2022-02-22,47
+Ningbo,Long Beach,2022-01-06,2022-02-14,39
+Yantian,Los Angeles,2022-01-06,2022-03-04,57
+Vung Tau,Los Angeles,2022-01-06,2022-02-22,47
+Ningbo,Long Beach,2022-01-07,2022-02-12,36
+Yantian,Houston,2022-01-07,2022-02-19,43
+Xiamen,Los Angeles,2022-01-08,2022-03-04,55
+Xiamen,Los Angeles,2022-01-08,2022-03-04,55
+Shanghai,Houston,2022-01-08,2022-02-22,45
+Yantian,Houston,2022-01-09,2022-02-19,41
+Yantian,Long Beach,2022-01-09,2022-02-11,33
+Yantian,Houston,2022-01-10,2022-02-19,40
+Ningbo,Long Beach,2022-01-10,2022-02-07,28
+Yantian,Long Beach,2022-01-10,2022-02-12,33
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Yantian,Los Angeles,2022-01-11,2022-02-19,39
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Chattogram,Los Angeles,2022-01-11,2022-04-15,94
+Xiamen,Long Beach,2022-01-12,2022-02-08,27
+Yantian,Long Beach,2022-01-12,2022-01-29,17
+Shanghai,Long Beach,2022-01-12,2022-01-28,16
+Yantian,Long Beach,2022-01-12,2022-01-29,17
+Xiamen,Long Beach,2022-01-12,2022-02-09,28
+Yantian,Oakland,2022-01-12,2022-02-28,47
+Yantian,Long Beach,2022-01-12,2022-02-18,37
+Shanghai,Long Beach,2022-01-12,2022-01-27,15
+Yantian,Long Beach,2022-01-12,2022-01-29,17
+Tianjin Xingang,Houston,2022-01-12,2022-03-15,62
+Yantian,Long Beach,2022-01-12,2022-01-29,17
+Yantian,Oakland,2022-01-12,2022-02-28,47
+Shanghai,Long Beach,2022-01-12,2022-01-27,15
+Shanghai,Long Beach,2022-01-12,2022-01-27,15
+Yantian,Long Beach,2022-01-13,2022-01-31,18
+Tianjin Xingang,Long Beach,2022-01-13,2022-03-02,48
+Tianjin Xingang,Long Beach,2022-01-13,2022-02-16,34
+Tianjin Xingang,Long Beach,2022-01-13,2022-03-02,48
+Yantian,Long Beach,2022-01-13,2022-01-31,18
+Yantian,Long Beach,2022-01-13,2022-01-30,17
+Yantian,Long Beach,2022-01-13,2022-01-31,18
+Tianjin Xingang,Long Beach,2022-01-13,2022-03-12,58
+Yantian,Oakland,2022-01-13,2022-02-28,46
+Yantian,Oakland,2022-01-14,2022-02-24,41
+Yantian,Oakland,2022-01-14,2022-02-24,41
+Yantian,Long Beach,2022-01-14,2022-02-25,42
+Yantian,Dallas,2022-01-14,2022-02-17,34
+Yantian,Long Beach,2022-01-14,2022-02-10,27
+Yantian,Dallas,2022-01-14,2022-02-17,34
+Yantian,Oakland,2022-01-14,2022-02-24,41
+Vung Tau,Los Angeles,2022-01-15,2022-03-04,48
+Yantian,Long Beach,2022-01-15,2022-02-25,41
+Yantian,Long Beach,2022-01-15,2022-02-25,41
+Yantian,Long Beach,2022-01-15,2022-02-25,41
+Yantian,Los Angeles,2022-01-16,2022-03-12,55
+Yantian,Los Angeles,2022-01-16,2022-03-04,47
+Yantian,Los Angeles,2022-01-16,2022-03-12,55
+Vung Tau,Los Angeles,2022-01-16,2022-03-04,47
+Vung Tau,Los Angeles,2022-01-16,2022-03-04,47
+Vung Tau,Los Angeles,2022-01-17,2022-03-04,46
+Yantian,Los Angeles,2022-01-17,2022-03-16,58
+Yantian,Long Beach,2022-01-17,2022-02-11,25
+Yantian,Los Angeles,2022-01-17,2022-03-16,58
+Vung Tau,Los Angeles,2022-01-17,2022-03-04,46
+Yantian,Long Beach,2022-01-17,2022-02-12,26
+Vung Tau,Los Angeles,2022-01-17,2022-03-04,46
+Yantian,Los Angeles,2022-01-17,2022-03-04,46
+Yantian,Los Angeles,2022-01-17,2022-03-16,58
+Shanghai,Long Beach,2022-01-18,2022-02-06,19
+Shanghai,Long Beach,2022-01-18,2022-02-04,17
+Shanghai,Long Beach,2022-01-18,2022-02-06,19
+Shanghai,Long Beach,2022-01-18,2022-02-04,17
+Shanghai,Long Beach,2022-01-18,2022-02-06,19
+Yantian,Los Angeles,2022-01-19,2022-03-12,52
+Zhapu,Los Angeles,2022-01-19,2022-02-20,32
+Yantian,Los Angeles,2022-01-19,2022-03-12,52
+Shanghai,Long Beach,2022-01-20,2022-02-17,28
+Vung Tau,Long Beach,2022-01-20,2022-04-11,81
+Vung Tau,Long Beach,2022-01-20,2022-04-11,81
+Vung Tau,Long Beach,2022-01-20,2022-04-11,81
+Shanghai,Long Beach,2022-01-20,2022-02-16,27
+Yantian,Los Angeles,2022-01-20,2022-03-12,51
+Yantian,Houston,2022-01-21,2022-02-17,27
+Tianjin Xingang,Houston,2022-01-21,2022-02-28,38
+Shanghai,Long Beach,2022-01-21,2022-02-16,26
+Yantian,Los Angeles,2022-01-22,2022-03-12,49
+Yantian,Los Angeles,2022-01-23,2022-03-12,48
+Yantian,Los Angeles,2022-01-23,2022-03-12,48
+Yantian,Los Angeles,2022-01-23,2022-03-12,48
+Yantian,Los Angeles,2022-01-23,2022-03-12,48
+Tianjin Xingang,Long Beach,2022-01-24,2022-02-16,23
+Tianjin Xingang,Long Beach,2022-01-24,2022-02-14,21
+Tianjin Xingang,Long Beach,2022-01-24,2022-02-16,23
+Ningbo,Long Beach,2022-01-25,2022-03-09,43
+Chattogram,Long Beach,2022-01-25,2022-03-13,47
+Cai Mep,Long Beach,2022-01-25,2022-02-16,22
+Cai Mep,Long Beach,2022-01-25,2022-02-16,22
+Chattogram,Long Beach,2022-01-25,2022-03-12,46
+Cai Mep,Long Beach,2022-01-25,2022-02-16,22
+Shanghai Hongqiao International,Houston,2022-01-26,2022-03-07,40
+Ningbo,Los Angeles,2022-01-26,2022-03-05,38
+Shanghai Hongqiao International,Houston,2022-01-26,2022-03-07,40
+Vung Tau,Los Angeles,2022-01-28,2022-03-12,43
+Vung Tau,Los Angeles,2022-01-28,2022-03-12,43
+Vung Tau,Los Angeles,2022-01-28,2022-03-12,43
+Ningbo,Houston,2022-01-28,2022-02-28,31
+Tianjin Xingang,Houston,2022-01-28,2022-03-15,46
+Shanghai Hongqiao International,Houston,2022-01-28,2022-02-27,30
+Tianjin Xingang,Houston,2022-01-28,2022-03-15,46
+Vung Tau,Los Angeles,2022-01-28,2022-03-12,43
+Shanghai Hongqiao International,Oakland,2022-01-29,2022-03-15,45
+Vung Tau,Los Angeles,2022-01-29,2022-03-12,42
+Shanghai Hongqiao International,Oakland,2022-01-29,2022-03-15,45
+Vung Tau,Los Angeles,2022-01-29,2022-03-12,42
+Cai Mep,Long Beach,2022-01-30,2022-02-21,22
+Ningbo,Los Angeles,2022-01-30,2022-02-20,21
+Ningbo,Los Angeles,2022-01-30,2022-02-20,21
+Cai Mep,Long Beach,2022-01-30,2022-02-20,21
+Cai Mep,Long Beach,2022-01-30,2022-02-21,22
+Cai Mep,Long Beach,2022-02-01,2022-03-11,38
+Cai Mep,Long Beach,2022-02-01,2022-03-03,30
+Cai Mep,Long Beach,2022-02-01,2022-03-05,32
+Cai Mep,Long Beach,2022-02-01,2022-03-05,32
+Cai Mep,Long Beach,2022-02-01,2022-03-05,32
+Cai Mep,Long Beach,2022-02-01,2022-03-05,32
+Cai Mep,Long Beach,2022-02-01,2022-03-01,28
+Yantian,Long Beach,2022-02-02,2022-02-16,14
+Yantian,Long Beach,2022-02-02,2022-02-16,14
+Yantian,Houston,2022-02-04,2022-03-07,31
+Vung Tau,Los Angeles,2022-02-05,2022-03-16,39
+Yantian,Long Beach,2022-02-06,2022-02-25,19
+Yantian,Long Beach,2022-02-06,2022-02-25,19
+Cai Mep,Long Beach,2022-02-07,2022-02-28,21
+Cai Mep,Long Beach,2022-02-07,2022-02-28,21
+Cai Mep,Long Beach,2022-02-07,2022-02-26,19
+Mundra,Houston,2022-02-07,2022-03-28,49
+Shanghai,Long Beach,2022-02-08,2022-02-24,16
+Shanghai,Long Beach,2022-02-08,2022-02-24,16
+Qingdao,Los Angeles,2022-02-08,2022-03-12,32
+Shanghai,Long Beach,2022-02-08,2022-02-24,16
+Cai Mep,Long Beach,2022-02-09,2022-03-01,20
+Cai Mep,Long Beach,2022-02-10,2022-03-01,19
+Cai Mep,Long Beach,2022-02-10,2022-03-06,24
+Cai Mep,Long Beach,2022-02-10,2022-03-06,24
+Ningbo,Long Beach,2022-02-10,2022-03-04,22
+Ningbo,Long Beach,2022-02-10,2022-02-27,17
+Cai Mep,Long Beach,2022-02-10,2022-03-06,24
+Cai Mep,Long Beach,2022-02-10,2022-03-06,24
+Cai Mep,Long Beach,2022-02-10,2022-03-06,24
+Laem Chabang,Koper,2022-02-10,2022-03-20,38
+Cai Mep,Long Beach,2022-02-10,2022-03-06,24
+Cai Mep,Long Beach,2022-02-10,2022-03-06,24
+Ningbo,Long Beach,2022-02-10,2022-03-03,21
+Shanghai,Long Beach,2022-02-12,2022-02-25,13
+Vung Tau,Los Angeles,2022-02-15,2022-03-27,40
+Yantian,Long Beach,2022-02-15,2022-02-28,13
+Yantian,Long Beach,2022-02-15,2022-03-01,14
+Yantian,Long Beach,2022-02-15,2022-03-01,14
+Xiamen,Los Angeles,2022-02-15,2022-03-21,34
+Vung Tau,Los Angeles,2022-02-16,2022-03-27,39
+Vung Tau,Los Angeles,2022-02-17,2022-03-27,38
+Shanghai,Long Beach,2022-02-18,2022-03-08,18
+Shanghai,Long Beach,2022-02-20,2022-03-03,11
+Shanghai,Long Beach,2022-02-20,2022-03-16,24
+Shanghai,Long Beach,2022-02-20,2022-03-23,31
+Shanghai,Long Beach,2022-02-20,2022-03-23,31
+Shanghai,Long Beach,2022-02-20,2022-03-03,11
+Shanghai,Long Beach,2022-02-22,2022-03-16,22
+Shanghai,Long Beach,2022-02-22,2022-03-16,22
+Shanghai,Long Beach,2022-02-22,2022-03-16,22
+Yantian,Long Beach,2022-02-23,2022-03-08,13
+Yantian,Long Beach,2022-02-23,2022-03-08,13
+Vung Tau,Los Angeles,2022-02-28,2022-03-23,23
