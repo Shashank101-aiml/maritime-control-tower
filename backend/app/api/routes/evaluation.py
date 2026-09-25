@@ -61,9 +61,9 @@ def get_governance_impact(db: Session = Depends(get_db)):
         "human_overrides": human_overrides,
         "override_rate": round(human_overrides / total_feedback, 4) if total_feedback else None,
         "note": (
-            "Without governance, all total_executions would have proceeded automatically. "
-            "gated_for_approval were actually held for a human decision instead of proceeding "
-            "unreviewed; human_overrides is how many recorded decisions a reviewer rejected or "
-            "changed rather than accepting as-is."
+            "Without governance every recorded execution would have gone ahead automatically. "
+            "The runs gated for approval were instead held for a person to decide. "
+            "The override rate is the share of recorded reviewer decisions that rejected or changed "
+            "the agent's recommendation rather than accepting it as it was."
         ),
     }

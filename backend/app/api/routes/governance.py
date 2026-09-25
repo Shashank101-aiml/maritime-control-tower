@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from app.api.dependencies.auth import get_current_active_superuser, require_role
 from app.core.constants import UserRole
@@ -181,4 +181,53 @@ def read_activity(hours: int = 24, db: Session = Depends(get_db)):
             }
             for hour, data in sorted(buckets.items())
         ],
+    }
+
+
+@router.get("/summary", dependencies=[Depends(require_role(UserRole.SUPERVISOR))])
+def read_summary(db: Session = Depends(get_db)):
+    """Real totals behind the governance tiles. The tiles used to count the
+    rows of the latest-50 executions and latest-100 audit lists, so they
+    could never read above 50 or 100 however much had happened."""
+    since = datetime.utcnow() - timedelta(hours=24)
+
+    def count(query):
+        return query.scalar() or 0
+
+    exec_q = db.query(func.count(AgentExecutionTrace.id))
+    top_agents = (
+        db.query(AgentExecutionTrace.agent_id, func.count(AgentExecutionTrace.id))
+        .filter(AgentExecutionTrace.started_at >= since)
+        .group_by(AgentExecutionTrace.agent_id)
+        .order_by(func.count(AgentExecutionTrace.id).desc())
+        .limit(5)
+        .all()
+    )
+    violation_q = db.query(func.count(AuditLog.id)).filter(AuditLog.event_type == "POLICY_VIOLATION")
+    latest_violations = (
+        db.query(AuditLog).filter(AuditLog.event_type == "POLICY_VIOLATION")
+        .order_by(AuditLog.timestamp.desc()).limit(3).all()
+    )
+    pending = db.query(ApprovalRequest.agent_id, func.count(ApprovalRequest.id)).filter(
+        ApprovalRequest.status == "PENDING"
+    ).group_by(ApprovalRequest.agent_id).all()
+
+    return {
+        "agents_by_status": dict(db.query(AgentIdentity.status, func.count(AgentIdentity.id)).group_by(AgentIdentity.status).all()),
+        "executions": {
+            "total": count(exec_q),
+            "last_24h": count(exec_q.filter(AgentExecutionTrace.started_at >= since)),
+            "failed": count(exec_q.filter(AgentExecutionTrace.error.isnot(None))),
+            "in_flight": count(exec_q.filter(AgentExecutionTrace.started_at >= datetime.utcnow() - timedelta(minutes=10), AgentExecutionTrace.completed_at.is_(None), AgentExecutionTrace.error.is_(None), or_(AgentExecutionTrace.approval_status.is_(None), AgentExecutionTrace.approval_status != "PENDING"))),
+            "awaiting_approval": count(exec_q.filter(AgentExecutionTrace.approval_status == "PENDING")),
+            "busiest_24h": [{"agent_id": a, "count": n} for a, n in top_agents],
+        },
+        "approvals_pending_by_agent": [{"agent_id": a, "count": n} for a, n in pending],
+        "violations": {
+            "total": count(violation_q),
+            "last_24h": count(violation_q.filter(AuditLog.timestamp >= since)),
+            "latest": [
+                {"at": v.timestamp.isoformat() + "Z", "agent_id": v.agent_id, "reason": v.reason} for v in latest_violations
+            ],
+        },
     }

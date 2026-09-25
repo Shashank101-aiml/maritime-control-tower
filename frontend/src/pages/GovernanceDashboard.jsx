@@ -4,7 +4,7 @@ import {
   fetchGovernanceAgents, 
   fetchGovernanceExecutions, 
   fetchGovernanceAudit, 
-  fetchGovernanceApprovals, 
+  fetchGovernanceApprovals, fetchGovernanceSummary, 
   approveGovernanceRequest, 
   rejectGovernanceRequest,
   updateAgentStatus
@@ -22,6 +22,7 @@ export default function GovernanceDashboard({ user }) {
   const [executions, setExecutions] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [approvals, setApprovals] = useState([]);
+  const [summary, setSummary] = useState(null);
   const [activeTab, setActiveTab] = useState('registry');
   const [loading, setLoading] = useState(true);
   // The 5-second poll and an approve/reject's own reconciling fetch can
@@ -41,17 +42,19 @@ export default function GovernanceDashboard({ user }) {
   const loadData = async () => {
     const seq = ++requestSeqRef.current;
     try {
-      const [agData, exData, auData, apData] = await Promise.all([
+      const [agData, exData, auData, apData, sumData] = await Promise.all([
         fetchGovernanceAgents(),
         canAudit ? fetchGovernanceExecutions() : Promise.resolve([]),
         canAudit ? fetchGovernanceAudit() : Promise.resolve([]),
-        fetchGovernanceApprovals()
+        fetchGovernanceApprovals(),
+        canAudit ? fetchGovernanceSummary().catch(() => null) : Promise.resolve(null),
       ]);
       if (seq !== requestSeqRef.current) return; // superseded by a newer request
       setAgents(agData);
       setExecutions(exData);
       setAuditLogs(auData);
       setApprovals(apData);
+      setSummary(sumData);
     } catch (error) {
       console.error("Failed to load governance data:", error);
     } finally {
@@ -108,11 +111,64 @@ export default function GovernanceDashboard({ user }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-        <MetricCard title="Total Agents" value={agents.length} icon={<Cpu />} />
-        <MetricCard title="Active Executions" value={canAudit ? executions.length : '—'} icon={<Activity />} />
-        <MetricCard title="Pending Approvals" value={approvals.length} icon={<AlertTriangle color="var(--accent-amber)" />} />
-        <MetricCard title="Policy Violations" value={canAudit ? auditLogs.filter(l => l.event_type === 'POLICY_VIOLATION').length : '—'} icon={<Lock color="var(--accent-red)" />} />
+      <div className="gov-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+        <MetricCard
+          title="Total Agents" value={agents.length} icon={<Cpu />}
+          pop={(
+            <>
+              <strong>Agents registered with governance</strong>
+              <p>Each one has an identity, permissions and a health record; only active ones may run.</p>
+              {agents.map((a) => (
+                <div key={a.id} className="kpi-pop-row"><span>{a.agent_name}</span><b>{a.status.toLowerCase()}</b></div>
+              ))}
+            </>
+          )}
+        />
+        <MetricCard
+          title="Executions (24h)" value={canAudit ? (summary ? summary.executions.last_24h : executions.length) : '—'} icon={<Activity />}
+          pop={canAudit && summary ? (
+            <>
+              <strong>Governed agent runs in the last 24 hours</strong>
+              <p>Every agent call is checked, traced and logged before it runs.</p>
+              <div className="kpi-pop-row"><span>All time</span><b>{summary.executions.total}</b></div>
+              <div className="kpi-pop-row"><span>Running now</span><b>{summary.executions.in_flight}</b></div>
+              <div className="kpi-pop-row"><span>Awaiting approval</span><b>{summary.executions.awaiting_approval}</b></div>
+              <div className="kpi-pop-row"><span>Failed (all time)</span><b>{summary.executions.failed}</b></div>
+              {summary.executions.busiest_24h.length > 0 && <p style={{ margin: '10px 0 4px' }}>Busiest in the last 24 hours</p>}
+              {summary.executions.busiest_24h.map((x) => (
+                <div key={x.agent_id} className="kpi-pop-row"><span>{x.agent_id}</span><b>{x.count}</b></div>
+              ))}
+            </>
+          ) : <><strong>Execution history</strong><p>Supervisors and admins can see execution counts.</p></>}
+        />
+        <MetricCard
+          title="Pending Approvals" value={approvals.length} icon={<AlertTriangle color="var(--accent-amber)" />}
+          pop={(
+            <>
+              <strong>Agent actions waiting for a human</strong>
+              <p>An agent&apos;s output is held here when its confidence falls below its approval threshold.</p>
+              {approvals.length === 0
+                ? <div className="kpi-pop-row"><span>Nothing is waiting.</span></div>
+                : Object.entries(approvals.reduce((m, a) => ({ ...m, [a.agent_id]: (m[a.agent_id] || 0) + 1 }), {})).map(([id, n]) => (
+                  <div key={id} className="kpi-pop-row"><span>{id}</span><b>{n}</b></div>
+                ))}
+            </>
+          )}
+        />
+        <MetricCard
+          title="Policy Violations" value={canAudit ? (summary ? summary.violations.total : auditLogs.filter(l => l.event_type === 'POLICY_VIOLATION').length) : '—'} icon={<Lock color="var(--accent-red)" />}
+          pop={canAudit && summary ? (
+            <>
+              <strong>Actions governance refused</strong>
+              <p>For example an agent that was quarantined or lacked permission tried to run.</p>
+              <div className="kpi-pop-row"><span>All time</span><b>{summary.violations.total}</b></div>
+              <div className="kpi-pop-row"><span>Last 24 hours</span><b>{summary.violations.last_24h}</b></div>
+              {summary.violations.latest.map((v) => (
+                <div key={v.at} className="kpi-pop-row"><span>{v.agent_id}: {v.reason}</span><b style={{ textTransform: 'none' }}>{new Date(v.at).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</b></div>
+              ))}
+            </>
+          ) : <><strong>Policy violations</strong><p>Supervisors and admins can see violation counts.</p></>}
+        />
       </div>
 
       <div className="panel" style={{ padding: '0', display: 'flex', flexDirection: 'column' }}>
@@ -140,9 +196,9 @@ export default function GovernanceDashboard({ user }) {
   );
 }
 
-function MetricCard({ title, value, icon }) {
+function MetricCard({ title, value, icon, pop }) {
   return (
-    <div className="panel" style={{ border: '1px solid var(--border-light)' }}>
+    <div className="panel kpi-has-pop" tabIndex={0} style={{ border: '1px solid var(--border-light)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '8px' }}>{title}</div>
@@ -150,6 +206,7 @@ function MetricCard({ title, value, icon }) {
         </div>
         <div style={{ color: 'var(--text-muted)' }}>{icon}</div>
       </div>
+      {pop && <div className="kpi-pop" role="tooltip">{pop}</div>}
     </div>
   );
 }

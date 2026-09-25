@@ -44,7 +44,7 @@ function ModelMetricCard({ name, metrics }) {
 
       {isBacktest && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '10px' }}>
             <div className="result-metric">
               <div className="result-metric-label">Transit MAE — lane median</div>
               <div className="result-metric-value" style={{ color: 'var(--accent-emerald)' }}>{metrics.transit_days.lane_median_mae_days} d</div>
@@ -71,7 +71,7 @@ function ModelMetricCard({ name, metrics }) {
 
       {isClassifier && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '10px' }}>
             <div className="result-metric">
               <div className="result-metric-label">ROC-AUC</div>
               <div className="result-metric-value">{metrics.roc_auc}</div>
@@ -91,13 +91,13 @@ function ModelMetricCard({ name, metrics }) {
 
       {isRegressor && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '10px' }}>
             <div className="result-metric">
-              <div className="result-metric-label">MAE</div>
+              <div className="result-metric-label">MAE (litres)</div>
               <div className="result-metric-value">{metrics.mae}</div>
             </div>
             <div className="result-metric">
-              <div className="result-metric-label">RMSE</div>
+              <div className="result-metric-label">RMSE (litres)</div>
               <div className="result-metric-value">{metrics.rmse}</div>
             </div>
             <div className="result-metric">
@@ -115,10 +115,10 @@ function ModelMetricCard({ name, metrics }) {
 
       {name === 'anomaly' && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '12px', marginBottom: '10px' }}>
             <div className="result-metric">
               <div className="result-metric-label">Flagged (real history)</div>
-              <div className="result-metric-value">{metrics.flagged_count} / {metrics.n_samples}</div>
+              <div className="result-metric-value"><span style={{ whiteSpace: 'nowrap' }}>{metrics.flagged_count} / {metrics.n_samples}</span></div>
             </div>
             <div className="result-metric">
               <div className="result-metric-label">Contamination</div>

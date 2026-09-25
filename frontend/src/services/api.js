@@ -56,6 +56,13 @@ export const fetchGovernanceAudit = async () => {
   return res.json();
 };
 
+/** Real totals behind the governance tiles (supervisor and above). */
+export const fetchGovernanceSummary = async () => {
+  const res = await apiFetch(`${BASE_URL}/governance/summary`);
+  if (!res.ok) throw new Error('Failed to fetch governance summary');
+  return res.json();
+};
+
 export const fetchGovernanceApprovals = async () => {
   const res = await apiFetch(`${BASE_URL}/governance/approvals`);
   if (!res.ok) throw new Error('Failed to fetch governance approvals');

@@ -1874,3 +1874,6 @@ h1, h2, h3, h4 {
 .agent-has-pop:hover { z-index: 40; }
 .agent-pop strong { color: var(--text-strong); display: block; margin-bottom: 4px; }
 .agent-pop p { margin: 0 0 10px; color: var(--text-muted); line-height: 1.45; }
+
+/* Governance tiles: right-hand panels open leftwards */
+.gov-metrics > .kpi-has-pop:nth-child(n+3) .kpi-pop { left: auto; right: 0; }
